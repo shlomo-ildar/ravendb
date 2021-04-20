@@ -1623,7 +1623,7 @@ namespace Voron.Impl.Journal
 
             var compressionPagerTxState = tempEncCompressionPagerTxState ?? tx;
 
-            compressionPagerTxState.EnsurePagerStateReference(pagerState);
+            compressionPagerTxState.EnsurePagerStateReference(ref pagerState);
 
             _compressionPager.EnsureMapped(compressionPagerTxState, 0, pagesRequired);
             var txHeaderPtr = _compressionPager.AcquirePagePointer(compressionPagerTxState, 0);
@@ -1722,7 +1722,7 @@ namespace Voron.Impl.Journal
                     throw;
                 }
 
-                compressionPagerTxState.EnsurePagerStateReference(pagerState);
+                compressionPagerTxState.EnsurePagerStateReference(ref pagerState);
                 _compressionPager.EnsureMapped(compressionPagerTxState, pagesWritten, outputBufferInPages);
 
                 txHeaderPtr = _compressionPager.AcquirePagePointer(compressionPagerTxState, pagesWritten);

@@ -303,7 +303,7 @@ namespace Voron.Impl.Paging
                     goto AlreadyDisposed;
             }
 
-            tx?.EnsurePagerStateReference(state);
+            tx?.EnsurePagerStateReference(ref state);
 
             return state.MapBase + pageNumber * Constants.Storage.PageSize;
 

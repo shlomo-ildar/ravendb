@@ -183,11 +183,27 @@ namespace Voron.Impl
             Flags = TransactionFlags.Read;
             ImmutableExternalState = previous.ImmutableExternalState;
 
-            foreach (var scratchPagerState in previous._pagerStates)
+            try
             {
-                scratchPagerState.AddRef();
-                _pagerStates.Add(scratchPagerState);
+                foreach (var scratchOrDataPagerState in previous._pagerStates)
+                {
+                    var pagerState = scratchOrDataPagerState;
+
+                    EnsurePagerStateReference(ref pagerState);
+                }
             }
+            catch
+            {
+                // need to restore ref counts of already added pager states
+
+                foreach (var pagerState in _pagerStates)
+                {
+                    pagerState.Release();
+                }
+
+                throw;
+            }
+
             _pageLocator = transactionPersistentContext.AllocatePageLocator(this);
 
             _scratchPagerStates = previous._scratchPagerStates;
@@ -239,20 +255,35 @@ namespace Voron.Impl
 
             var pagers = new HashSet<AbstractPager>();
 
-            foreach (var scratchAndDataPagerState in previous._pagerStates)
+            try
             {
-                // in order to avoid "dragging" pager state ref on non active scratch - we will not copy disposed scratches from previous async tx. RavenDB-6766
-                if (scratchAndDataPagerState.DiscardOnTxCopy)
-                    continue;
+                foreach (var scratchOrDataPagerState in previous._pagerStates)
+                {
+                    // in order to avoid "dragging" pager state ref on non active scratch - we will not copy disposed scratches from previous async tx. RavenDB-6766
+                    if (scratchOrDataPagerState.DiscardOnTxCopy)
+                        continue;
 
-                // copy the "current pager" which is the last pager used, and by that do not "drag" old non used pager state refs to the next async commit (i.e. older views of data file). RavenDB-6949
-                var currentPager = scratchAndDataPagerState.CurrentPager;
-                if (pagers.Add(currentPager) == false)
-                    continue;
 
-                var state = currentPager.PagerState;
-                state.AddRef();
-                _pagerStates.Add(state);
+                    // copy the "current pager" which is the last pager used, and by that do not "drag" old non used pager state refs to the next async commit (i.e. older views of data file). RavenDB-6949
+                    var currentPager = scratchOrDataPagerState.CurrentPager;
+                    if (pagers.Add(currentPager) == false)
+                        continue;
+
+                    var pagerState = scratchOrDataPagerState;
+
+                    EnsurePagerStateReference(ref pagerState);
+                }
+            }
+            catch
+            {
+                // need to restore ref counts of already added pager states
+
+                foreach (var pagerState in _pagerStates)
+                {
+                    pagerState.Release();
+                }
+
+                throw;
             }
 
 
@@ -310,10 +341,26 @@ namespace Voron.Impl
             Flags = flags;
 
             var scratchPagerStates = env.ScratchBufferPool.GetPagerStatesOfAllScratches();
-            foreach (var scratchPagerState in scratchPagerStates.Values)
+
+            try
             {
-                scratchPagerState.AddRef();
-                _pagerStates.Add(scratchPagerState);
+                foreach (var scratchOrDataPagerState in scratchPagerStates.Values)
+                {
+                    var pagerState = scratchOrDataPagerState;
+
+                    EnsurePagerStateReference(ref pagerState);
+                }
+            }
+            catch
+            {
+                // need to restore ref counts of already added pager states
+
+                foreach (var pagerState in _pagerStates)
+                {
+                    pagerState.Release();
+                }
+
+                throw;
             }
 
             _pageLocator = transactionPersistentContext.AllocatePageLocator(this);
@@ -1220,7 +1267,7 @@ namespace Voron.Impl
         internal RacyConcurrentBag.Node ActiveTransactionNode;
         public Transaction Transaction;
 
-        public void EnsurePagerStateReference(PagerState state)
+        public void EnsurePagerStateReference(ref PagerState state)
         {
             if (state == _lastState || state == null)
                 return;

@@ -240,7 +240,9 @@ namespace Voron.Impl.Scratch
 
             try
             {
-                tx.EnsurePagerStateReference(current.File.PagerState);
+                var scratchPagerState = current.File.PagerState;
+
+                tx.EnsurePagerStateReference(ref scratchPagerState);
 
                 return current.File.Allocate(tx, numberOfPages, size);
             }
