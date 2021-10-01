@@ -74,17 +74,18 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
             {
                 var storedValue = JsBlittableBridge.Translate(indexContext,
                     documentToProcess.Engine,
-                    documentToProcess);
+                    ref documentToProcess);
 
                 instance.Add(GetStoredValueField(storedValue, writeBuffer));
                 newFields++;
             }
 
-            if (TryGetBoostedValue(documentToProcess, out var boostedValue, out var documentBoost))
+            if (TryGetBoostedValue(ref documentToProcess, out var boostedValue, out var documentBoost))
             {
                 using (boostedValue)
                 {
-                    if (IsObject(boostedValue) == false)
+                    var boostedValueAux = boostedValue;
+                    if (IsObject(ref boostedValueAux) == false)
                         throw new InvalidOperationException($"Invalid boosted value. Expected object but got '{boostedValue.ValueType}' with value '{boostedValue}'.");
 
                     documentToProcess = boostedValue.Object; // no need to KeepTrack() as we store Handle
@@ -101,15 +102,16 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
 
                 using (jsPropertyValue)
                 {
-                    var isObject = IsObject(jsPropertyValue);
+                    var jsPropertyValueAux = jsPropertyValue;
+                    var isObject = IsObject(ref jsPropertyValueAux);
                     if (isObject)
                     {
-                        if (TryGetBoostedValue(jsPropertyValue, out boostedValue, out propertyBoost))
+                        if (TryGetBoostedValue(ref jsPropertyValueAux, out boostedValue, out propertyBoost))
                         {
                             using (boostedValue)
                             {
-                                jsPropertyValue.Set(boostedValue);
-                                isObject = IsObject(jsPropertyValue);
+                                jsPropertyValue.Set(ref boostedValue);
+                                isObject = IsObject(ref jsPropertyValueAux);
                             }
                         }
 
@@ -117,13 +119,14 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
                         {
                             //In case TryDetectDynamicFieldCreation finds a dynamic field it will populate 'field.Name' with the actual property name
                             //so we must use field.Name and not property from this point on.
-                            using (InternalHandle jsValue = TryDetectDynamicFieldCreation(propertyName, jsPropertyValue, field))
+                            using (InternalHandle jsValue = TryDetectDynamicFieldCreation(propertyName, ref jsPropertyValueAux, field))
                             {
+                                var jsValueAux = jsValue;
                                 if (jsValue.IsEmpty == false)
                                 {
                                     if (jsValue.IsObject && jsValue.TryGetValue(SpatialPropertyName, out _))
                                     {
-                                        jsPropertyValue.Set(jsValue); //Here we populate the dynamic spatial field that will be handled below.
+                                        jsPropertyValue.Set(ref jsValueAux); //Here we populate the dynamic spatial field that will be handled below.
                                     }
                                     else
                                     {
@@ -213,7 +216,7 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
 
             return newFields;
 
-            static bool IsObject(InternalHandle value)
+            static bool IsObject(ref InternalHandle value)
             {
                 return value.IsObject && value.IsArray == false;
             }
@@ -245,7 +248,7 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
             }
         }
 
-        private static bool TryGetBoostedValue(InternalHandle valueToCheck, out InternalHandle jsValue, out float? boost)
+        private static bool TryGetBoostedValue(ref InternalHandle valueToCheck, out InternalHandle jsValue, out float? boost)
         {
             jsValue = InternalHandle.Empty;
             boost = null;
@@ -269,7 +272,7 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
             return true;
         }
 
-        private static InternalHandle TryDetectDynamicFieldCreation(string property, InternalHandle valueAsObject, IndexField field)
+        private static InternalHandle TryDetectDynamicFieldCreation(string property, ref InternalHandle valueAsObject, IndexField field)
         {
             //We have a field creation here _ = {"$value":val, "$name","$options":{...}}
             if (!valueAsObject.HasOwnProperty(ValuePropertyName))
@@ -305,12 +308,13 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
                     {
                         using (jsPropertyValue)
                         {
+                            var jsPropertyValueAux = jsPropertyValue;
                             if (jsPropertyValue.IsUndefined || jsPropertyValue.IsNull)
                                 continue;
 
                             if (string.Equals(propertyName, nameof(CreateFieldOptions.Indexing), StringComparison.OrdinalIgnoreCase))
                             {
-                                field.Indexing = GetEnum<FieldIndexing>(jsPropertyValue, propertyName);
+                                field.Indexing = GetEnum<FieldIndexing>(ref jsPropertyValueAux, propertyName);
 
                                 continue;
                             }
@@ -322,14 +326,14 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
                                         ? FieldStorage.Yes
                                         : FieldStorage.No;
                                 else
-                                    field.Storage = GetEnum<FieldStorage>(jsPropertyValue, propertyName);
+                                    field.Storage = GetEnum<FieldStorage>(ref jsPropertyValueAux, propertyName);
 
                                 continue;
                             }
 
                             if (string.Equals(propertyName, nameof(CreateFieldOptions.TermVector), StringComparison.OrdinalIgnoreCase))
                             {
-                                field.TermVector = GetEnum<FieldTermVector>(jsPropertyValue, propertyName);
+                                field.TermVector = GetEnum<FieldTermVector>(ref jsPropertyValueAux, propertyName);
                                 continue;
                             }
                         }
@@ -339,7 +343,7 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
 
             return value;
 
-            TEnum GetEnum<TEnum>(InternalHandle optionValue, string propertyName)
+            TEnum GetEnum<TEnum>(ref InternalHandle optionValue, string propertyName)
             {
                 if (optionValue.IsStringEx() == false)
                     throw new ArgumentException($"Could not parse dynamic field option property '{propertyName}' value ('{optionValue}') because it is not a string.");

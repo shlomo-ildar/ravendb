@@ -32,7 +32,7 @@ namespace Raven.Server.Documents.Indexes.Static
         public string IndexName { get; set; }
         public InternalHandle MapFunc;
 
-        public JavaScriptMapOperation(JavaScriptIndexUtils javaScriptIndexUtils, FunctionInstance mapFuncJint, InternalHandle mapFunc, string indexName, string mapString)
+        public JavaScriptMapOperation(JavaScriptIndexUtils javaScriptIndexUtils, FunctionInstance mapFuncJint, ref InternalHandle mapFunc, string indexName, string mapString)
         {
             _javaScriptIndexUtils = javaScriptIndexUtils;
             _engine = _javaScriptIndexUtils.Engine;

@@ -38,9 +38,9 @@ namespace Raven.Server.Documents.Patch
                 return ObjCLR.GetOwnPropertyJs(propertyName);
             }
 
-            public override InternalHandle NamedPropertySetter(ref string propertyName, InternalHandle jsValue, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
+            public override InternalHandle NamedPropertySetter(ref string propertyName, ref InternalHandle jsValue, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
             {
-                return ObjCLR.SetOwnProperty(propertyName, jsValue, attributes);
+                return ObjCLR.SetOwnProperty(propertyName, ref jsValue, attributes);
             }
 
             public override bool? NamedPropertyDeleter(ref string propertyName)
@@ -335,7 +335,7 @@ namespace Raven.Server.Documents.Patch
             return val;
         }
 
-        public InternalHandle SetOwnProperty(string propertyName, InternalHandle jsValue, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined, bool toReturnCopy = true)
+        public InternalHandle SetOwnProperty(string propertyName, ref InternalHandle jsValue, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined, bool toReturnCopy = true)
         {
             _CheckIsNotDisposed($"SetOwnProperty: ${propertyName}");
 
@@ -352,7 +352,7 @@ namespace Raven.Server.Documents.Patch
                 
                 Deletes?.Remove(propertyName);
 
-                val = new BlittableObjectProperty(this, propertyName, jsValue);
+                val = new BlittableObjectProperty(this, propertyName, ref jsValue);
                 //GC.SuppressFinalize(val);
                 val.Changed = true;
                 MarkChanged();
@@ -493,7 +493,8 @@ namespace Raven.Server.Documents.Patch
                     {
                         if (jsMetadata.IsError)
                             return jsMetadata;
-                        return SetOwnProperty(propertyName, jsMetadata, toReturnCopy: false);
+                        var jsMetadataAux = jsMetadata;
+                        return SetOwnProperty(propertyName, ref jsMetadataAux, toReturnCopy: false);
                     }
                 }
             }
@@ -503,7 +504,7 @@ namespace Raven.Server.Documents.Patch
             }
         }
 
-        public InternalHandle GetOrCreate(InternalHandle key)
+        public InternalHandle GetOrCreate(ref InternalHandle key)
         {
             return GetOrCreate(key.AsString);
         }
@@ -535,8 +536,10 @@ namespace Raven.Server.Documents.Patch
                 BlittableObjectProperty prop = null;
                 //GC.SuppressFinalize(prop);
                 if (propertyIndex == -1) {
-                    using (var jsValue = Engine.CreateObject())
-                        prop = new BlittableObjectProperty(this, propertyName, jsValue);
+                    using (var jsValue = Engine.CreateObject()) {
+                        var jsValueAux = jsValue;
+                        prop = new BlittableObjectProperty(this, propertyName, ref jsValueAux);
+                    }
                 }
                 else {
                     prop = new BlittableObjectProperty(this, propertyName);
@@ -602,7 +605,7 @@ namespace Raven.Server.Documents.Patch
                 {
                     if (_value.Equals(value))
                         return;
-                    _value.Set(value);
+                    _value.Set(ref value);
                     _OnSetValue();
                     _parent.MarkChanged();
                     Changed = true;
@@ -639,7 +642,7 @@ namespace Raven.Server.Documents.Patch
                 GC.SuppressFinalize(this);
             }
 
-            public BlittableObjectProperty(BlittableObjectInstance parent, string propertyName, InternalHandle jsValue)
+            public BlittableObjectProperty(BlittableObjectInstance parent, string propertyName, ref InternalHandle jsValue)
             {
                 Init(parent, propertyName);
                 _value = new InternalHandle(ref jsValue, true);

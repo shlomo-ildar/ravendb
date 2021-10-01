@@ -29,7 +29,7 @@ s
                 return (null, false);
             var sb = new StringBuilder();
             //Location seems to be '1' based
-            var start = Math.Max(jse.Location.Start.Line - 1, 1);
+            var start = Math.Max(ref jse.Location.Start.Line - 1, 1);
             if (start > 1)
             {
                 sb.AppendLine("...");
@@ -41,7 +41,7 @@ s
 
                 if (i == jse.Location.Start.Line)
                 {
-                    sb.Append(new string('-', Math.Max(jse.Location.Start.Column - 1, 0)));
+                    sb.Append(new string('-', Math.Max(ref jse.Location.Start.Column - 1, 0)));
                     sb.Append(new string('^', 3));
                     sb.AppendLine(new string('-', Math.Max(5, line.Length - jse.Location.Start.Column + 1)));
                 }

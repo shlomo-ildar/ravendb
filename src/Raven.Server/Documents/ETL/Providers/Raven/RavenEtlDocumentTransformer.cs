@@ -76,13 +76,13 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
             }
         }
 
-        public static void SetPropertyOrThrow(InternalHandle jsObj, string propertyName, InternalHandle jsValue)
+        public static void SetPropertyOrThrow(ref InternalHandle jsObj, string propertyName, ref InternalHandle jsValue)
         {
-            if (jsObj.SetProperty(propertyName, jsValue) == false)
+            if (jsObj.SetProperty(propertyName, ref jsValue) == false)
                 throw new InvalidOperationException($"Failed to set property {propertyName}");
         }
 
-        public static void DeletePropertyOrThrow(InternalHandle jsObj, string propertyName)
+        public static void DeletePropertyOrThrow(ref InternalHandle jsObj, string propertyName)
         {
             if (jsObj.DeleteProperty(propertyName) == false)
                 throw new InvalidOperationException($"Failed to delete property {propertyName}");
@@ -110,41 +110,45 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
                 loadedToDifferentCollection = true;
             }
 
-            using (InternalHandle metadata = document.GetOrCreate(Constants.Documents.Metadata.Key))
+            using (InternalHandle jsMetadata = document.GetOrCreate(Constants.Documents.Metadata.Key))
             {
-                if (loadedToDifferentCollection || metadata.HasProperty(Constants.Documents.Metadata.Collection) == false)
-                    SetPropertyOrThrow(metadata, Constants.Documents.Metadata.Collection, engine.CreateValue(collectionName));
+                var jsMetadataAux = jsMetadata;
+                if (loadedToDifferentCollection || jsMetadata.HasProperty(Constants.Documents.Metadata.Collection) == false) {
+                    var jsCollectionName = engine.CreateValue(collectionName);
+                    SetPropertyOrThrow(ref jsMetadataAux, Constants.Documents.Metadata.Collection, ref jsCollectionName);
+                }
 
-                if (metadata.HasProperty(Constants.Documents.Metadata.Attachments))
-                    DeletePropertyOrThrow(metadata, Constants.Documents.Metadata.Attachments);
+                if (jsMetadata.HasProperty(Constants.Documents.Metadata.Attachments))
+                    DeletePropertyOrThrow(ref jsMetadataAux, Constants.Documents.Metadata.Attachments);
 
-                if (metadata.HasProperty(Constants.Documents.Metadata.Counters))
-                    DeletePropertyOrThrow(metadata, Constants.Documents.Metadata.Counters);
+                if (jsMetadata.HasProperty(Constants.Documents.Metadata.Counters))
+                    DeletePropertyOrThrow(ref jsMetadataAux, Constants.Documents.Metadata.Counters);
             }
 
             var transformed = document.TranslateToObject(Context);
 
             var transformResult = Context.ReadObject(transformed, id);
 
-            _currentRun.Put(id, document.Instance, transformResult);
+            var jsDoc = document.Instance;
+            _currentRun.Put(id, ref jsDoc, transformResult);
 
             if (_transformation.IsAddingAttachments)
             {
-                document.Instance.SetProperty(Transformation.AddAttachment, _addAttachmentMethod, V8PropertyAttributes.ReadOnly); // or Locked
+                jsDoc.SetProperty(Transformation.AddAttachment, ref _addAttachmentMethod, V8PropertyAttributes.ReadOnly); // or Locked
             }
 
             if (_transformation.Counters.IsAddingCounters)
             {
-                document.Instance.SetProperty(Transformation.CountersTransformation.Add, _addCounterMethod, V8PropertyAttributes.ReadOnly); // or Locked
+                jsDoc.SetProperty(Transformation.CountersTransformation.Add, ref _addCounterMethod, V8PropertyAttributes.ReadOnly); // or Locked
             }
             
             if (_transformation.TimeSeries.IsAddingTimeSeries)
             {
-                document.Instance.SetProperty(Transformation.TimeSeriesTransformation.AddTimeSeries.Name, _addTimeSeriesMethod, V8PropertyAttributes.ReadOnly); // or Locked
+                jsDoc.SetProperty(Transformation.TimeSeriesTransformation.AddTimeSeries.Name, ref _addTimeSeriesMethod, V8PropertyAttributes.ReadOnly); // or Locked
             }
         }
 
-        private InternalHandle AddAttachment(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private InternalHandle AddAttachment(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 InternalHandle jsRes = InternalHandle.Empty;
@@ -169,7 +173,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
                 }
 
                 if (attachmentReference.IsNull) {
-                    return jsRes.Set(self);
+                    return jsRes.Set(ref self);
                 }
 
                 if (attachmentReference.IsStringEx() == false || attachmentReference.AsString.StartsWith(Transformation.AttachmentMarker) == false)
@@ -183,8 +187,8 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
                     ThrowInvalidScriptMethodCall(message);
                 }
 
-                _currentRun.AddAttachment(self, name, attachmentReference);
-                return jsRes.Set(self);
+                _currentRun.AddAttachment(ref self, name, ref attachmentReference);
+                return jsRes.Set(ref self);
             }
             catch (Exception e) 
             {
@@ -192,7 +196,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
             }
         }
 
-        private InternalHandle AddCounter(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private InternalHandle AddCounter(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 if (args.Length != 1)
@@ -202,7 +206,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
                 var counterReference = args[0];
 
                 if (counterReference.IsNull)
-                    return jsRes.Set(self);
+                    return jsRes.Set(ref self);
 
                 if (counterReference.IsStringEx() == false || counterReference.AsString.StartsWith(Transformation.CountersTransformation.Marker) == false)
                 {
@@ -215,9 +219,9 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
                     ThrowInvalidScriptMethodCall(message);
                 }
 
-                _currentRun.AddCounter(self, counterReference);
+                _currentRun.AddCounter(ref self, ref counterReference);
 
-                return jsRes.Set(self);
+                return jsRes.Set(ref self);
             }
             catch (Exception e) 
             {
@@ -225,7 +229,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
             }
         }
         
-        private InternalHandle AddTimeSeries(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private InternalHandle AddTimeSeries(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 if (args.Length != Transformation.TimeSeriesTransformation.AddTimeSeries.ParamsCount)
@@ -239,7 +243,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
                 var timeSeriesReference = args[0];
 
                 if (timeSeriesReference.IsNull)
-                    return jsRes.Set(self);
+                    return jsRes.Set(ref self);
 
                 if (timeSeriesReference.IsStringEx() == false || timeSeriesReference.AsString.StartsWith(Transformation.TimeSeriesTransformation.Marker) == false)
                 {
@@ -253,9 +257,9 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
                     ThrowInvalidScriptMethodCall(message);
                 }
 
-                _currentRun.AddTimeSeries(self, timeSeriesReference);
+                _currentRun.AddTimeSeries(ref self, ref timeSeriesReference);
 
-                return jsRes.Set(self);
+                return jsRes.Set(ref self);
             }
             catch (Exception e) 
             {
@@ -779,19 +783,19 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
             return Database.DocumentsStorage.CountersStorage.GetCounterValuesForDocument(Context, item.DocumentId);
         }
 
-        protected override void AddLoadedAttachment(InternalHandle reference, string name, Attachment attachment)
+        protected override void AddLoadedAttachment(ref InternalHandle reference, string name, Attachment attachment)
         {
-            _currentRun.LoadAttachment(reference, attachment);
+            _currentRun.LoadAttachment(ref reference, attachment);
         }
 
-        protected override void AddLoadedCounter(InternalHandle reference, string name, long value)
+        protected override void AddLoadedCounter(ref InternalHandle reference, string name, long value)
         {
-            _currentRun.LoadCounter(reference, name, value);
+            _currentRun.LoadCounter(ref reference, name, value);
         }
         
-        protected override void AddLoadedTimeSeries(InternalHandle reference, string name, IEnumerable<SingleResult> entries)
+        protected override void AddLoadedTimeSeries(ref InternalHandle reference, string name, IEnumerable<SingleResult> entries)
         {
-            _currentRun.LoadTimeSeries(reference, name, entries);
+            _currentRun.LoadTimeSeries(ref reference, name, entries);
         }
 
          private List<Attachment> GetAttachmentsFor(RavenEtlItem item)

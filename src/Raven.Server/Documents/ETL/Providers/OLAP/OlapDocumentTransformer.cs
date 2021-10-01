@@ -62,7 +62,7 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
             foreach (var table in LoadToDestinations)
             {
                 var name = Transformation.LoadTo + table;
-                engine.SetGlobalCLRCallBack(name, (engine, isConstructCall, self, args) => LoadToFunctionTranslator(engine, table, args));
+                engine.SetGlobalCLRCallBack(name, (V8Engine engine, bool isConstructCall, ref InternalHandle self, InternalHandle[] args) => LoadToFunctionTranslator(engine, table, args));
             }
 
             engine.SetGlobalCLRCallBack("partitionBy", PartitionBy);
@@ -111,17 +111,17 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
             _stats.IncrementBatchSize(result.Size);
         }
 
-        protected override void AddLoadedAttachment(InternalHandle reference, string name, Attachment attachment)
+        protected override void AddLoadedAttachment(ref InternalHandle reference, string name, Attachment attachment)
         {
             throw new NotSupportedException("Attachments aren't supported by OLAP ETL");
         }
 
-        protected override void AddLoadedCounter(InternalHandle reference, string name, long value)
+        protected override void AddLoadedCounter(ref InternalHandle reference, string name, long value)
         {
             throw new NotSupportedException("Counters aren't supported by OLAP ETL");
         }
 
-        protected override void AddLoadedTimeSeries(InternalHandle reference, string name, IEnumerable<SingleResult> entries)
+        protected override void AddLoadedTimeSeries(ref InternalHandle reference, string name, IEnumerable<SingleResult> entries)
         {
             throw new NotSupportedException("Time series aren't supported by OLAP ETL");
         }
@@ -142,7 +142,7 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
             return table;
         }
 
-        private InternalHandle LoadToFunctionTranslator(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+        private InternalHandle LoadToFunctionTranslator(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args)
         {
             try {
                 var methodSignature = "loadTo(name, key, obj)";
@@ -159,7 +159,7 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
                 if (args[2].IsObject == false)
                     ThrowInvalidScriptMethodCall($"{methodSignature} third argument must be an object");
 
-                return LoadToFunctionTranslatorInternal(engine, args[0].AsString, args[1], args[2], methodSignature);
+                return LoadToFunctionTranslatorInternal(engine, args[0].AsString, ref args[1], ref args[2], methodSignature);
             }
             catch (Exception e) 
             {
@@ -180,10 +180,10 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
             if (args[0].IsObject == false)
                 ThrowInvalidScriptMethodCall($"{methodSignature} argument 'key' must be an object");
 
-            return LoadToFunctionTranslatorInternal(engine, name, args[0], args[1], methodSignature);
+            return LoadToFunctionTranslatorInternal(engine, name, ref args[0], ref args[1], methodSignature);
         }
 
-        private InternalHandle LoadToFunctionTranslatorInternal(V8Engine engine, string name, InternalHandle key, InternalHandle obj, string methodSignature)
+        private InternalHandle LoadToFunctionTranslatorInternal(V8Engine engine, string name, ref InternalHandle key, ref InternalHandle obj, string methodSignature)
         {
             if (key.HasOwnProperty(PartitionKeys) == false)
                 ThrowInvalidScriptMethodCall(
@@ -191,7 +191,7 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
 
             using (var partitionBy = key.GetOwnProperty(PartitionKeys))
             {
-                var result = new ScriptRunnerResult(DocumentScript, obj);
+                var result = new ScriptRunnerResult(DocumentScript, ref obj);
 
                 if (partitionBy.IsNull)
                 {
@@ -237,7 +237,7 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
             }
         }
 
-        private static InternalHandle PartitionBy(V8Engine engine, bool isConstructCall, InternalHandle self, InternalHandle[] args)
+        private static InternalHandle PartitionBy(V8Engine engine, bool isConstructCall, ref InternalHandle self, InternalHandle[] args)
         {
             try {            
                 if (args.Length == 0)
@@ -263,7 +263,7 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
                 using (jsArr)
                 {  
                     o = engine.CreateObject();
-                    o.FastAddProperty(PartitionKeys, jsArr, false, true, false);
+                    o.FastAddProperty(PartitionKeys, ref jsArr, false, true, false);
                 }
 
                 return o;
@@ -274,12 +274,12 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
             }
         }
 
-        private static InternalHandle NoPartition(OlapDocumentTransformer owner, V8Engine engine, bool isConstructCall, InternalHandle self, InternalHandle[] args)
+        private static InternalHandle NoPartition(OlapDocumentTransformer owner, V8Engine engine, bool isConstructCall, ref InternalHandle self, InternalHandle[] args)
         {
-            return owner.NoPartition(engine, isConstructCall, self, args);
+            return owner.NoPartition(engine, isConstructCall, ref self, args);
         }
 
-        private InternalHandle NoPartition(V8Engine engine, bool isConstructCall, InternalHandle self, InternalHandle[] args)
+        private InternalHandle NoPartition(V8Engine engine, bool isConstructCall, ref InternalHandle self, InternalHandle[] args)
         {
             try {
                 if (args.Length != 0)
@@ -288,7 +288,8 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
                 if (_noPartition == null)
                 {
                     _noPartition = engine.CreateObject();
-                    _noPartition.FastAddProperty(PartitionKeys, engine.CreateNullValue(), false, true, false);
+                    var jsNullValue = engine.CreateNullValue();
+                    _noPartition.FastAddProperty(PartitionKeys, ref jsNullValue, false, true, false);
                 }
 
                 return _noPartition;

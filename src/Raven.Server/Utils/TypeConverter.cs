@@ -299,11 +299,11 @@ namespace Raven.Server.Utils
                                     case LazyNumberValue lnv:
                                         return lnv; //should be already blittable supported type.
                                 }
-                                //ThrowInvalidObject(jsValue);
+                                //ThrowInvalidObject(ref jsValue);
                             }
-                            return JsBlittableBridge.Translate(context, engine, jsValue, isRoot: isRoot);
+                            return JsBlittableBridge.Translate(context, engine, ref jsValue, isRoot: isRoot);
                         }
-                        ThrowInvalidObject(jsValue);
+                        ThrowInvalidObject(ref jsValue);
                         return null;
                     }
                 }
@@ -406,7 +406,7 @@ namespace Raven.Server.Utils
             return kvpKeyAsString;
         }
 
-        private static void ThrowInvalidObject(InternalHandle jsValue)
+        private static void ThrowInvalidObject(ref InternalHandle jsValue)
         {
             throw new InvalidOperationException("Invalid type " + jsValue.ValueType);
         }

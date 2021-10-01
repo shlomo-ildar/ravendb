@@ -142,40 +142,43 @@ namespace Raven.Server.Documents.Patch
             }
         }
 
-        public static unsafe DateTime GetDateArg(InternalHandle arg, string signature, string argName)
+        public static unsafe DateTime GetDateArg(ref InternalHandle arg, string signature, string argName)
         {
             if (arg.IsDate)
                 return arg.AsDate;
 
             if (arg.IsStringEx() == false)
-                ThrowInvalidDateArgument();
+                ThrowInvalidDateArgument(ref arg);
 
             var s = arg.AsString;
             fixed (char* pValue = s)
             {
                 var result = LazyStringParser.TryParseDateTime(pValue, s.Length, out DateTime dt, out _);
                 if (result != LazyStringParser.Result.DateTime)
-                    ThrowInvalidDateArgument();
+                    ThrowInvalidDateArgument(ref arg);
 
                 return dt;
             }
 
-            void ThrowInvalidDateArgument() =>
-                throw new ArgumentException($"{signature} : {argName} must be of type 'DateInstance' or a DateTime string. {GetTypes(arg)}");
+            void ThrowInvalidDateArgument(ref InternalHandle arg) =>
+                throw new ArgumentException($"{signature} : {argName} must be of type 'DateInstance' or a DateTime string. {GetTypes(ref arg)}");
         }
 
-        private static DateTime GetTimeSeriesDateArg(InternalHandle arg, string signature, string argName)
+        private static DateTime GetTimeSeriesDateArg(ref InternalHandle arg, string signature, string argName)
         {
             if (arg.IsDate)
                 return arg.AsDate;
 
             if (arg.IsStringEx() == false)
-                throw new ArgumentException($"{signature} : {argName} must be of type 'DateInstance' or a DateTime string. {GetTypes(arg)}");
+                throw new ArgumentException($"{signature} : {argName} must be of type 'DateInstance' or a DateTime string. {GetTypes(ref arg)}");
 
             return TimeSeriesRetriever.ParseDateTime(arg.AsString);
         }
         
-        private static string GetTypes(InternalHandle value) => $"JintType({value.ValueType}) .NETType({value.GetType().Name})";
+        private static string GetTypes(ref InternalHandle value)
+        {
+            return $"JintType({value.ValueType}) .NETType({value.GetType().Name})";
+        }
         
         public class SingleRun
         {
@@ -237,7 +240,8 @@ namespace Raven.Server.Documents.Patch
                 using (var consoleObject = ScriptEngine.CreateObject())
                 {
                     using (var jsFuncLog = ScriptEngine.CreateCLRCallBack(OutputDebug, true)) {
-                        consoleObject.FastAddProperty("log", jsFuncLog, false, false, false);
+                        var jsFuncLogAux = jsFuncLog;
+                        consoleObject.FastAddProperty("log", ref jsFuncLogAux, false, false, false);
                     }
                     ScriptEngine.GlobalObject.SetProperty("console", consoleObject);
                 }
@@ -247,8 +251,9 @@ namespace Raven.Server.Documents.Patch
                 {
                     ScriptEngine.GlobalObject.SetProperty("spatial", spatialObject);
                     using (var jsFuncSpatial = ScriptEngine.CreateCLRCallBack(Spatial_Distance, true)) {
-                        spatialObject.FastAddProperty("distance", jsFuncSpatial, false, false, false);
-                        //ScriptEngine.GlobalObject.SetProperty("spatial.distance", jsFuncSpatial);
+                        var jsFuncSpatialAux = jsFuncSpatial;
+                        spatialObject.FastAddProperty("distance", ref jsFuncSpatialAux, false, false, false);
+                        //ScriptEngine.GlobalObject.SetProperty("spatial.distance", ref jsFuncSpatial);
                     }
                 }
 
@@ -257,15 +262,18 @@ namespace Raven.Server.Documents.Patch
                 {
                     ScriptEngine.GlobalObject.SetProperty("includes", includesObject);
                     using (var jsFuncIncludeDocument = ScriptEngine.CreateCLRCallBack(IncludeDoc, true)) {
-                        includesObject.FastAddProperty("document", jsFuncIncludeDocument, false, false, false);
+                        var jsFuncIncludeDocumentAux = jsFuncIncludeDocument;
+                        includesObject.FastAddProperty("document", ref jsFuncIncludeDocumentAux, false, false, false);
                         // includes - backward compatibility
-                        ScriptEngine.GlobalObject.SetProperty("include", jsFuncIncludeDocument);
+                        ScriptEngine.GlobalObject.SetProperty("include", ref jsFuncIncludeDocumentAux);
                     }
                     using (var jsFuncIncludeCompareExchangeValue = ScriptEngine.CreateCLRCallBack(IncludeCompareExchangeValue, true)) {                    
-                        includesObject.FastAddProperty("cmpxchg", jsFuncIncludeCompareExchangeValue, false, false, false);
+                        var jsFuncIncludeCompareExchangeValueAux = jsFuncIncludeCompareExchangeValue;
+                        includesObject.FastAddProperty("cmpxchg", ref jsFuncIncludeCompareExchangeValueAux, false, false, false);
                     }
                     using (var jsFuncIncludeRevisions = ScriptEngine.CreateCLRCallBack(IncludeRevisions, true)) {                    
-                        includesObject.FastAddProperty("revisions", jsFuncIncludeRevisions, false, false, false);
+                        var jsFuncIncludeRevisionsAux = jsFuncIncludeRevisions;
+                        includesObject.FastAddProperty("revisions", ref jsFuncIncludeRevisionsAux, false, false, false);
                     }
                 }
 
@@ -320,7 +328,7 @@ namespace Raven.Server.Documents.Patch
 
                 foreach (var ts in runner.TimeSeriesDeclaration)
                 {
-                    ScriptEngine.SetGlobalCLRCallBack(ts.Key, (engine, isConstructCall, self, args) => InvokeTimeSeriesFunction(ts.Key, args));
+                    ScriptEngine.SetGlobalCLRCallBack(ts.Key, (V8Engine engine, bool isConstructCall, ref InternalHandle self, InternalHandle[] args) => InvokeTimeSeriesFunction(ts.Key, args));
                 }
             }
 
@@ -329,7 +337,7 @@ namespace Raven.Server.Documents.Patch
                 DisposeArgs();
             }
 
-            private (string Id, BlittableJsonReaderObject Doc) GetIdAndDocFromArg(InternalHandle docArg, string signature)
+            private (string Id, BlittableJsonReaderObject Doc) GetIdAndDocFromArg(ref InternalHandle docArg, string signature)
             {
                 if (docArg.BoundObject is BlittableObjectInstance doc)
                     return (doc.DocumentId, doc.Blittable);
@@ -344,10 +352,10 @@ namespace Raven.Server.Documents.Patch
                     return (id, document.Data);
                 }
 
-                throw new InvalidOperationException($"{signature}: 'doc' must be a string argument (the document id) or the actual document instance itself. {GetTypes(docArg)}");
+                throw new InvalidOperationException($"{signature}: 'doc' must be a string argument (the document id) or the actual document instance itself. {GetTypes(ref docArg)}");
             }
 
-            private string GetIdFromArg(InternalHandle docArg, string signature)
+            private string GetIdFromArg(ref InternalHandle docArg, string signature)
             {
                 if (docArg.BoundObject is BlittableObjectInstance doc)
                     return doc.DocumentId;
@@ -358,17 +366,17 @@ namespace Raven.Server.Documents.Patch
                     return id;
                 }
 
-                throw new InvalidOperationException($"{signature}: 'doc' must be a string argument (the document id) or the actual document instance itself. {GetTypes(docArg)}");
+                throw new InvalidOperationException($"{signature}: 'doc' must be a string argument (the document id) or the actual document instance itself. {GetTypes(ref docArg)}");
             }
 
-            private static string GetStringArg(InternalHandle jsArg, string signature, string argName)
+            private static string GetStringArg(ref InternalHandle jsArg, string signature, string argName)
             {
                 if (jsArg.IsStringEx() == false)
-                    throw new ArgumentException($"{signature}: The '{argName}' argument should be a string, but got {GetTypes(jsArg)}");
+                    throw new ArgumentException($"{signature}: The '{argName}' argument should be a string, but got {GetTypes(ref jsArg)}");
                 return jsArg.AsString;
             }
 
-            private void FillDoubleArrayFromJsArray(double[] array, InternalHandle jsArray, string signature)
+            private void FillDoubleArrayFromJsArray(double[] array, ref InternalHandle jsArray, string signature)
             {
                 int arrayLength = jsArray.ArrayLength;
                 for (int i = 0; i < arrayLength; ++i)
@@ -382,7 +390,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle TimeSeries(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle TimeSeries(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     AssertValidDatabaseContext(_timeSeriesSignature);
@@ -392,19 +400,23 @@ namespace Raven.Server.Documents.Patch
 
                     var obj = ScriptEngine.CreateObject();
                     using (var jsFuncAppend = ScriptEngine.CreateCLRCallBack(AppendTimeSeries, true)) {
-                        obj.SetProperty("append", jsFuncAppend);
+                        var jsFuncAppendAux = jsFuncAppend;
+                        obj.SetProperty("append", ref jsFuncAppendAux);
                     }
                     using (var jsFuncDelete = ScriptEngine.CreateCLRCallBack(DeleteRangeTimeSeries, true)) {
-                        obj.SetProperty("delete", jsFuncDelete);
+                        var jsFuncDeleteAux = jsFuncDelete;
+                        obj.SetProperty("delete", ref jsFuncDeleteAux);
                     }
                     using (var jsFuncGetRange = ScriptEngine.CreateCLRCallBack(GetRangeTimeSeries, true)) {
-                        obj.SetProperty("get", jsFuncGetRange);
+                        var jsFuncGetRangeAux = jsFuncGetRange;
+                        obj.SetProperty("get", ref jsFuncGetRangeAux);
                     }
                     using (var jsFuncGetStats = ScriptEngine.CreateCLRCallBack(GetStatsTimeSeries, true)) {
-                        obj.SetProperty("getStats", jsFuncGetStats);
+                        var jsFuncGetStatsAux = jsFuncGetStats;
+                        obj.SetProperty("getStats", ref jsFuncGetStatsAux);
                     }
-                    obj.SetProperty("doc", args[0]);
-                    obj.SetProperty("name", args[1]);
+                    obj.SetProperty("doc", ref args[0]);
+                    obj.SetProperty("name", ref args[1]);
 
                     return obj;
                 }
@@ -414,21 +426,29 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle GetStatsTimeSeries(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+            private InternalHandle GetStatsTimeSeries(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args)
             {
                 try {
                     using (var document = self.GetProperty("doc"))
                     using (var name = self.GetProperty("name"))
                     {
-                        var (id, doc) = GetIdAndDocFromArg(document, _timeSeriesSignature);
+                        var documentAux = document;
+                        var (id, doc) = GetIdAndDocFromArg(ref documentAux, _timeSeriesSignature);
 
-                        string timeSeries = GetStringArg(name, _timeSeriesSignature, "name");
+                        var nameAux = name;
+                        string timeSeries = GetStringArg(ref nameAux, _timeSeriesSignature, "name");
                         var stats = _database.DocumentsStorage.TimeSeriesStorage.Stats.GetStats(_docsCtx, id, timeSeries);
 
                         var tsStats = ScriptEngine.CreateObject();
-                        tsStats.SetProperty(nameof(stats.Start), engine.CreateValue(stats.Start));
-                        tsStats.SetProperty(nameof(stats.End), engine.CreateValue(stats.End));
-                        tsStats.SetProperty(nameof(stats.Count), engine.CreateValue(stats.Count));
+
+                        var jsStart = engine.CreateValue(stats.Start);
+                        tsStats.SetProperty(nameof(stats.Start), ref jsStart);
+
+                        var jsEnd = engine.CreateValue(stats.End);
+                        tsStats.SetProperty(nameof(stats.End), ref jsEnd);
+
+                        var jsCount = engine.CreateValue(stats.Count);
+                        tsStats.SetProperty(nameof(stats.Count), ref jsCount);
                         return tsStats;
                     }
                 }
@@ -438,7 +458,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle AppendTimeSeries(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+            private InternalHandle AppendTimeSeries(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args)
             {
                 try {
                     using (var document = self.GetProperty("doc"))
@@ -461,7 +481,7 @@ namespace Raven.Server.Documents.Patch
                                 var tagArgument = args.Last();
                                 if (tagArgument != null && tagArgument.IsNull == false && tagArgument.IsUndefined == false)
                                 {
-                                    var tag = GetStringArg(tagArgument, signature, "tag");
+                                    var tag = GetStringArg(ref tagArgument, signature, "tag");
                                     lsTag = _jsonCtx.GetLazyString(tag);
                                 }
                                 break;
@@ -469,10 +489,12 @@ namespace Raven.Server.Documents.Patch
                                 throw new ArgumentException($"There is no overload with {args.Length} arguments for this method should be {signature2Args} or {signature3Args}");
                         }
 
-                        var (id, doc) = GetIdAndDocFromArg(document, _timeSeriesSignature);
+                        var documentAux = document;
+                        var (id, doc) = GetIdAndDocFromArg(ref documentAux, _timeSeriesSignature);
 
-                        string timeSeries = GetStringArg(name, _timeSeriesSignature, "name");
-                        var timestamp = GetTimeSeriesDateArg(args[0], signature, "timestamp");
+                        var nameAux = name;
+                        string timeSeries = GetStringArg(ref nameAux, _timeSeriesSignature, "name");
+                        var timestamp = GetTimeSeriesDateArg(ref args[0], signature, "timestamp");
 
                         double[] valuesBuffer = null;
                         try
@@ -482,7 +504,7 @@ namespace Raven.Server.Documents.Patch
                             if (jsValues.IsArray)
                             {
                                 valuesBuffer = ArrayPool<double>.Shared.Rent((int)jsValues.ArrayLength);
-                                FillDoubleArrayFromJsArray(valuesBuffer, jsValues, signature);
+                                FillDoubleArrayFromJsArray(valuesBuffer, ref jsValues, signature);
                                 values = new Memory<double>(valuesBuffer, 0, (int)jsValues.ArrayLength);
                             }
                             else if (jsValues.IsNumberOrIntEx())
@@ -493,7 +515,7 @@ namespace Raven.Server.Documents.Patch
                             }
                             else
                             {
-                                throw new ArgumentException($"{signature}: The values should be an array but got {GetTypes(jsValues)}");
+                                throw new ArgumentException($"{signature}: The values should be an array but got {GetTypes(ref jsValues)}");
                             }
 
                             var tss = _database.DocumentsStorage.TimeSeriesStorage;
@@ -547,7 +569,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle DeleteRangeTimeSeries(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+            private InternalHandle DeleteRangeTimeSeries(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args)
             {
                 try {
                     using (var document = self.GetProperty("doc"))
@@ -566,16 +588,18 @@ namespace Raven.Server.Documents.Patch
                                 to = DateTime.MaxValue;
                                 break;
                             case 2:
-                                from = GetTimeSeriesDateArg(args[0], deleteSignature, "from");
-                                to = GetTimeSeriesDateArg(args[1], deleteSignature, "to");
+                                from = GetTimeSeriesDateArg(ref args[0], deleteSignature, "from");
+                                to = GetTimeSeriesDateArg(ref args[1], deleteSignature, "to");
                                 break;
                             default:
                                 throw new ArgumentException($"'delete' method has only the overloads: '{deleteSignature}' or '{deleteAll}', but was called with {args.Length} arguments.");
                         }
 
-                        var (id, doc) = GetIdAndDocFromArg(document, _timeSeriesSignature);
+                        var documentAux = document;
+                        var (id, doc) = GetIdAndDocFromArg(ref documentAux, _timeSeriesSignature);
 
-                        string timeSeries = GetStringArg(name, _timeSeriesSignature, "name");
+                        var nameAux = name;
+                        string timeSeries = GetStringArg(ref nameAux, _timeSeriesSignature, "name");
 
                         var count = _database.DocumentsStorage.TimeSeriesStorage.Stats.GetStats(_docsCtx, id, timeSeries).Count;
                         if (count == 0)
@@ -616,7 +640,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle GetRangeTimeSeries(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+            private InternalHandle GetRangeTimeSeries(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args)
             {
                 try {
                     using (var document = self.GetProperty("doc"))
@@ -627,8 +651,11 @@ namespace Raven.Server.Documents.Patch
                         const string getRangeSignature = "get(from, to)";
                         const string getAllSignature = "get()";
 
-                        var id = GetIdFromArg(document, _timeSeriesSignature);
-                        var timeSeries = GetStringArg(name, _timeSeriesSignature, "name");
+                        var documentAux = document;
+                        var id = GetIdFromArg(ref documentAux, _timeSeriesSignature);
+
+                        var nameAux = name;
+                        var timeSeries = GetStringArg(ref nameAux, _timeSeriesSignature, "name");
 
                         DateTime from, to;
                         switch (args.Length)
@@ -638,8 +665,8 @@ namespace Raven.Server.Documents.Patch
                                 to = DateTime.MaxValue;
                                 break;
                             case 2:
-                                from = GetTimeSeriesDateArg(args[0], getRangeSignature, "from");
-                                to = GetTimeSeriesDateArg(args[1], getRangeSignature, "to");
+                                from = GetTimeSeriesDateArg(ref args[0], getRangeSignature, "from");
+                                to = GetTimeSeriesDateArg(ref args[1], getRangeSignature, "to");
                                 break;
                             default:
                                 throw new ArgumentException($"'get' method has only the overloads: '{getRangeSignature}' or '{getAllSignature}', but was called with {args.Length} arguments.");
@@ -660,8 +687,8 @@ namespace Raven.Server.Documents.Patch
                             using (var jsValues = ScriptEngine.CreateArray(Array.Empty<InternalHandle>()))
                             {
                                 //jsValues.FastAddProperty("length", ScriptEngine.CreateValue(0), true, false, false);
-                                
-                                using (var jsResPush = jsValues.Call("push", InternalHandle.Empty, jsSpanItems)) // KeepAlive to each item has been done earlier (upper)
+                                var jsEmpty = InternalHandle.Empty;
+                                using (var jsResPush = jsValues.Call("push", ref jsEmpty, jsSpanItems)) // KeepAlive to each item has been done earlier (upper)
                                     jsResPush.ThrowOnError(); // TODO check if is needed here
                                 
                                 if (noEntries)
@@ -669,12 +696,19 @@ namespace Raven.Server.Documents.Patch
 
                                 using (var entry = ScriptEngine.CreateObject())
                                 {
-                                    entry.SetProperty(nameof(TimeSeriesEntry.Timestamp), engine.CreateValue(singleResult.Timestamp.GetDefaultRavenFormat(isUtc: true)));
-                                    entry.SetProperty(nameof(TimeSeriesEntry.Tag), engine.CreateValue(singleResult.Tag?.ToString()));
-                                    entry.SetProperty(nameof(TimeSeriesEntry.Values), jsValues);
-                                    entry.SetProperty(nameof(TimeSeriesEntry.IsRollup), engine.CreateValue(singleResult.Type == SingleResultType.RolledUp));
+                                    var jsTimestamp = engine.CreateValue(singleResult.Timestamp.GetDefaultRavenFormat(isUtc: true));
+                                    entry.SetProperty(nameof(TimeSeriesEntry.Timestamp), ref jsTimestamp);
+
+                                    var jsTag = engine.CreateValue(singleResult.Tag?.ToString());
+                                    entry.SetProperty(nameof(TimeSeriesEntry.Tag), ref jsTag);
+
+                                    var jsValuesAux = jsValues;
+                                    entry.SetProperty(nameof(TimeSeriesEntry.Values), ref jsValuesAux);
+
+                                    var jsIsRollUp = engine.CreateValue(singleResult.Type == SingleResultType.RolledUp);
+                                    entry.SetProperty(nameof(TimeSeriesEntry.IsRollup), ref jsIsRollUp);
                                     
-                                    using (var jsResPush = jsValues.Call("push", InternalHandle.Empty, entry))
+                                    using (var jsResPush = jsValues.Call("push", ref jsEmpty, entry))
                                         jsResPush.ThrowOnError(); // TODO check if is needed here
                                 }
                             }
@@ -736,8 +770,8 @@ namespace Raven.Server.Documents.Patch
                         break;
                     case JSValueType.Bool:
                     case JSValueType.Number:
-                        var a = V8EngineEx.ToNumber(args[0]);
-                        var b = V8EngineEx.ToNumber(args[1]);
+                        var a = V8EngineEx.ToNumber(ref args[0]);
+                        var b = V8EngineEx.ToNumber(ref args[1]);
                         if (a > b)
                             Swap();
                         break;
@@ -754,7 +788,7 @@ namespace Raven.Server.Documents.Patch
                                 // if the string value is a number that is smaller than
                                 // the numeric value, because Math.min(true, "-2") works :-(
                                 if (double.TryParse(args[0].AsString, out double d) == false ||
-                                    d > V8EngineEx.ToNumber(args[1]))
+                                    d > V8EngineEx.ToNumber(ref args[1]))
                                 {
                                     Swap();
                                 }
@@ -770,7 +804,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle Raven_Max(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle Raven_Max(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     GenericSortTwoElementArray(args);
@@ -782,7 +816,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle Raven_Min(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle Raven_Min(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     GenericSortTwoElementArray(args);
@@ -794,7 +828,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle IncludeDoc(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle IncludeDoc(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     if (args.Length != 1)
@@ -811,9 +845,10 @@ namespace Raven.Server.Documents.Patch
                         {
                             using (var jsItem = jsArray.GetProperty(i))
                             {
-                                args[0].Set(jsItem);
+                                var jsItemAux = jsItem;
+                                args[0].Set(ref jsItemAux);
                                 if (args[0].IsStringEx())
-                                    IncludeDoc(engine, isConstructCall, self, args);
+                                    IncludeDoc(engine, isConstructCall, ref self, args);
                             }
                         }
                         return self;
@@ -829,7 +864,7 @@ namespace Raven.Server.Documents.Patch
                     Includes.Add(id);
 
                     InternalHandle jsRes = InternalHandle.Empty;
-                    return jsRes.Set(self);
+                    return jsRes.Set(ref self);
                 }
                 catch (Exception e) 
                 {
@@ -837,7 +872,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle IncludeCompareExchangeValue(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle IncludeCompareExchangeValue(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     if (args.Length != 1)
@@ -846,7 +881,7 @@ namespace Raven.Server.Documents.Patch
                     InternalHandle jsRes = InternalHandle.Empty;
 
                     if (args[0].IsNull || args[0].IsUndefined)
-                        return jsRes.Set(self);
+                        return jsRes.Set(ref self);
 
                     if (args[0].IsArray)// recursive call ourselves
                     {
@@ -857,11 +892,11 @@ namespace Raven.Server.Documents.Patch
                             using (args[0] = jsArray.GetProperty(i))
                             {
                                 if (args[0].IsStringEx())
-                                    IncludeCompareExchangeValue(engine, isConstructCall, self, args);
+                                    IncludeCompareExchangeValue(engine, isConstructCall, ref self, args);
                             }
                         }
                         args[0] = jsArray;
-                        return jsRes.Set(self);
+                        return jsRes.Set(ref self);
                     }
 
                     if (args[0].IsStringEx() == false)
@@ -874,7 +909,7 @@ namespace Raven.Server.Documents.Patch
 
                     CompareExchangeValueIncludes.Add(key);
 
-                    return jsRes.Set(self);
+                    return jsRes.Set(ref self);
                 }
                 catch (Exception e) 
                 {
@@ -887,7 +922,7 @@ namespace Raven.Server.Documents.Patch
                 return string.Join(Environment.NewLine, _runner.ScriptsSource);
             }
 
-            private InternalHandle GetLastModified(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle GetLastModified(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     if (args.Length != 1)
@@ -918,7 +953,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle Spatial_Distance(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle Spatial_Distance(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     if (args.Length < 4 && args.Length > 5)
@@ -957,17 +992,17 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle OutputDebug(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle OutputDebug(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     InternalHandle jsRes = InternalHandle.Empty;
                     if (DebugMode == false)
-                        return jsRes.Set(self);
+                        return jsRes.Set(ref self);
 
                     InternalHandle obj = args[0];
 
-                    DebugOutput.Add(GetDebugValue(obj, false));
-                    return jsRes.Set(self);
+                    DebugOutput.Add(GetDebugValue(ref obj, false));
+                    return jsRes.Set(ref self);
                 }
                 catch (Exception e) 
                 {
@@ -975,7 +1010,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private string GetDebugValue(InternalHandle obj, bool recursive)
+            private string GetDebugValue(ref InternalHandle obj, bool recursive)
             {
                 if (obj.IsStringEx())
                 {
@@ -990,15 +1025,17 @@ namespace Raven.Server.Documents.Patch
                     {
                         if (i != 0)
                             sb.Append(",");
-                        using (var jsValue = obj.GetProperty(i))
-                            sb.Append(GetDebugValue(jsValue, true));
+                        using (var jsValue = obj.GetProperty(i)) {
+                            var jsValueAux = jsValue;
+                            sb.Append(GetDebugValue(ref jsValueAux, true));
+                        }
                     }
                     sb.Append("]");
                     return sb.ToString();
                 }
                 if (obj.IsObject)
                 {
-                    var result = new ScriptRunnerResult(this, obj);
+                    var result = new ScriptRunnerResult(this, ref obj);
                     using (var jsonObj = result.TranslateToObject(_jsonCtx))
                         return jsonObj.ToString();
                 }
@@ -1015,7 +1052,7 @@ namespace Raven.Server.Documents.Patch
                 return obj.ToString();
             }
 
-            public InternalHandle PutDocument(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            public InternalHandle PutDocument(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     string changeVector = null;
@@ -1045,7 +1082,7 @@ namespace Raven.Server.Documents.Patch
                     BlittableJsonReaderObject reader = null;
                     try
                     {
-                        reader = JsBlittableBridge.Translate(_jsonCtx, ScriptEngine, args[1].Object, usageMode: BlittableJsonDocumentBuilder.UsageMode.ToDisk);
+                        reader = JsBlittableBridge.Translate(_jsonCtx, ScriptEngine, ref args[1], usageMode: BlittableJsonDocumentBuilder.UsageMode.ToDisk);
 
                         var put = _database.DocumentsStorage.Put(
                             _docsCtx,
@@ -1087,7 +1124,7 @@ namespace Raven.Server.Documents.Patch
                 throw new InvalidOperationException("The first parameter to put(id, doc, changeVector) must be a string");
             }
 
-            public InternalHandle DeleteDocument(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            public InternalHandle DeleteDocument(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     if (args.Length != 1 && args.Length != 2)
@@ -1136,7 +1173,7 @@ namespace Raven.Server.Documents.Patch
                     throw new InvalidOperationException($"Unable to use `{functionName}` when this instance is not attached to a database operation");
             }
 
-            private InternalHandle IncludeRevisions(V8Engine engine, bool isConstructCall, InternalHandle self, InternalHandle[] args)
+            private InternalHandle IncludeRevisions(V8Engine engine, bool isConstructCall, ref InternalHandle self, InternalHandle[] args)
             {
                 if (args == null)
                     return ScriptEngine.CreateNullValue();
@@ -1174,7 +1211,7 @@ namespace Raven.Server.Documents.Patch
                 return ScriptEngine.CreateNullValue();
             }
             
-            private InternalHandle LoadDocumentByPath(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle LoadDocumentByPath(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     using (_loadScope = _loadScope?.Start() ?? _scope?.For(nameof(QueryTimingsScope.Names.Load)))
@@ -1214,7 +1251,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle CompareExchange(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle CompareExchange(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     AssertValidDatabaseContext("cmpxchg");
@@ -1230,7 +1267,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle LoadDocument(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle LoadDocument(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     using (_loadScope = _loadScope?.Start() ?? _scope?.For(nameof(QueryTimingsScope.Names.Load)))
@@ -1254,9 +1291,11 @@ namespace Raven.Server.Documents.Patch
                                 {
                                     if (jsItem.IsStringEx() == false)
                                         throw new InvalidOperationException("load(ids) must be called with a array of strings, but got " + jsItem.ValueType + " - " + jsItem.ToString());
-                                    using (var result = LoadDocumentInternal(jsItem.AsString))
-                                    using (var jsResPush = results.Call("push", InternalHandle.Empty, result))
-                                        jsResPush.ThrowOnError(); // TODO check if is needed here
+                                    using (var result = LoadDocumentInternal(jsItem.AsString)) {
+                                        var jsEmpty = InternalHandle.Empty;
+                                        using (var jsResPush = results.Call("push", ref jsEmpty, result))
+                                            jsResPush.ThrowOnError(); // TODO check if is needed here
+                                    }
                                 }
                             }
                             return results;
@@ -1274,7 +1313,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle GetCounter(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle GetCounter(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     return GetCounterInternal(args);
@@ -1285,7 +1324,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle GetCounterRaw(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle GetCounterRaw(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     return GetCounterInternal(args, true);
@@ -1349,14 +1388,16 @@ namespace Raven.Server.Documents.Patch
                 var rawValues = ScriptEngine.CreateObject();
                 foreach (var partialValue in _database.DocumentsStorage.CountersStorage.GetCounterPartialValues(_docsCtx, id, name))
                 {
-                    using (var jsPartialValue = ScriptEngine.CreateValue(partialValue.PartialValue))
-                        rawValues.FastAddProperty(partialValue.ChangeVector, jsPartialValue, true, false, false);
+                    using (var jsPartialValue = ScriptEngine.CreateValue(partialValue.PartialValue)) {
+                        var jsPartialValueAux = jsPartialValue;
+                        rawValues.FastAddProperty(partialValue.ChangeVector, ref jsPartialValueAux, true, false, false);
+                    }
                 }
 
                 return rawValues;
             }
 
-            private InternalHandle IncrementCounter(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle IncrementCounter(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     AssertValidDatabaseContext("incrementCounter");
@@ -1446,7 +1487,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle DeleteCounter(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle DeleteCounter(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     AssertValidDatabaseContext("deleteCounter");
@@ -1559,7 +1600,7 @@ namespace Raven.Server.Documents.Patch
                     }
                     else
                     {
-                        tsFunctionArgs[index] = Translate(args[index], _jsonCtx);
+                        tsFunctionArgs[index] = Translate(ref args[index], _jsonCtx);
                     }
                 }
 
@@ -1625,7 +1666,7 @@ namespace Raven.Server.Documents.Patch
                 throw new InvalidOperationException("deleteCounter(doc, name) must be called with exactly 2 arguments");
             }
 
-            private static InternalHandle ThrowOnLoadDocument(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private static InternalHandle ThrowOnLoadDocument(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     throw new MissingMethodException("The method LoadDocument was renamed to 'load'");
@@ -1636,7 +1677,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private static InternalHandle ThrowOnPutDocument(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private static InternalHandle ThrowOnPutDocument(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     throw new MissingMethodException("The method PutDocument was renamed to 'put'");
@@ -1647,7 +1688,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private static InternalHandle ThrowOnDeleteDocument(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private static InternalHandle ThrowOnDeleteDocument(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     throw new MissingMethodException("The method DeleteDocument was renamed to 'del'");
@@ -1658,7 +1699,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle ConvertJsTimeToTimeSpanString(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle ConvertJsTimeToTimeSpanString(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     if (args.Length != 1 || args[0].IsNumberOrIntEx() == false)
@@ -1676,7 +1717,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle ConvertToTimeSpanString(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle ConvertToTimeSpanString(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     if (args.Length == 1)
@@ -1743,7 +1784,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private static InternalHandle CompareDates(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private static InternalHandle CompareDates(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     if (args.Length < 1 || args.Length > 3)
@@ -1774,8 +1815,8 @@ namespace Raven.Server.Documents.Patch
                     else
                     {
                         const string signature = "compareDates(date1, date2, binaryOp)";
-                        date1 = GetDateArg(args[0], signature, "date1");
-                        date2 = GetDateArg(args[1], signature, "date2");
+                        date1 = GetDateArg(ref args[0], signature, "date1");
+                        date2 = GetDateArg(ref args[1], signature, "date2");
                     }
 
                     switch (binaryOperationType)
@@ -1804,7 +1845,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private unsafe InternalHandle ToStringWithFormat(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private unsafe InternalHandle ToStringWithFormat(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     if (args.Length < 1 || args.Length > 3)
@@ -1881,7 +1922,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle StartsWith(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle StartsWith(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     if (args.Length != 2 || args[0].IsStringEx() == false || args[1].IsStringEx() == false)
@@ -1895,7 +1936,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle EndsWith(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle EndsWith(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     if (args.Length != 2 || args[0].IsStringEx() == false || args[1].IsStringEx() == false)
@@ -1909,7 +1950,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle Regex(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+            private InternalHandle Regex(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
             {
                 try {
                     if (args.Length != 2 || args[0].IsStringEx() == false || args[1].IsStringEx() == false)
@@ -1925,7 +1966,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            /*private InternalHandle ScalarToRawString(InternalHandle self2, params InternalHandle[] args)
+            /*private InternalHandle ScalarToRawString(ref InternalHandle self2, params InternalHandle[] args)
             {
                 if (args.Length != 2)
                     throw new InvalidOperationException("scalarToRawString(document, lambdaToField) may be called on with two parameters only");
@@ -2053,7 +2094,8 @@ namespace Raven.Server.Documents.Patch
                             using (var jsRes = jsMethod.StaticCall(_args))
                             {
                                 jsRes.ThrowOnError(); // TODO check if is needed here
-                                return new ScriptRunnerResult(this, jsRes);
+                                var jsResAux = jsRes;
+                                return new ScriptRunnerResult(this, ref jsResAux);
                             }
                         //}
                     }
@@ -2155,10 +2197,11 @@ namespace Raven.Server.Documents.Patch
 
             public object Translate(ScriptRunnerResult result, JsonOperationContext context, JsBlittableBridge.IResultModifier modifier = null, BlittableJsonDocumentBuilder.UsageMode usageMode = BlittableJsonDocumentBuilder.UsageMode.None)
             {
-                return Translate(result.RawJsValue, context, modifier, usageMode);
+                var jsValue = result.RawJsValue;
+                return Translate(ref jsValue, context, modifier, usageMode);
             }
 
-            internal object Translate(InternalHandle jsValue, JsonOperationContext context, JsBlittableBridge.IResultModifier modifier = null, BlittableJsonDocumentBuilder.UsageMode usageMode = BlittableJsonDocumentBuilder.UsageMode.None)
+            internal object Translate(ref InternalHandle jsValue, JsonOperationContext context, JsBlittableBridge.IResultModifier modifier = null, BlittableJsonDocumentBuilder.UsageMode usageMode = BlittableJsonDocumentBuilder.UsageMode.None)
             {
                 if (jsValue.IsStringEx())
                     return jsValue.AsString;
@@ -2168,7 +2211,7 @@ namespace Raven.Server.Documents.Patch
                 {
                     if (jsValue.IsNull)
                         return null;
-                    return JsBlittableBridge.Translate(context, ScriptEngine, jsValue, modifier, usageMode);
+                    return JsBlittableBridge.Translate(context, ScriptEngine, ref jsValue, modifier, usageMode);
                 }
                 if (jsValue.IsNumberOrIntEx())
                     return jsValue.AsDouble;

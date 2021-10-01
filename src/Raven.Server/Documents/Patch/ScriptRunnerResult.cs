@@ -9,7 +9,7 @@ namespace Raven.Server.Documents.Patch
     {
         private readonly ScriptRunner.SingleRun _parent;
 
-        public ScriptRunnerResult(ScriptRunner.SingleRun parent, InternalHandle instance)
+        public ScriptRunnerResult(ScriptRunner.SingleRun parent, ref InternalHandle instance)
         {
             _parent = parent;
             Instance = new InternalHandle(ref instance, true);
@@ -47,7 +47,7 @@ namespace Raven.Server.Documents.Patch
             if (IsNull)
                 return null;
 
-            return JsBlittableBridge.Translate(context, _parent.ScriptEngine, Instance, modifier, usageMode);
+            return JsBlittableBridge.Translate(context, _parent.ScriptEngine, ref Instance, modifier, usageMode);
         }
 
         public void Dispose()

@@ -77,7 +77,7 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript
             return InternalHandle.Empty;
         }
 
-        private static InternalHandle GetContentAsString(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private static InternalHandle GetContentAsString(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 var attachment = (AttachmentObjectInstance)(self.BoundObject);

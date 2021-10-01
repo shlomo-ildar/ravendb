@@ -351,7 +351,7 @@ namespace Raven.Server.Documents.TcpHandlers
             {
             }
 
-            public void Modify(InternalHandle json)
+            public void Modify(ref InternalHandle json)
             {
                 var engine = json.Engine;
 
@@ -359,9 +359,12 @@ namespace Raven.Server.Documents.TcpHandlers
                 {
                     if (!jsMetadata.IsObject)
                     {
-                        using (var jsMetadataNew = engine.CreateObject())
-                            jsMetadata.Set(jsMetadataNew);
-                        json.SetProperty(Constants.Documents.Metadata.Key, jsMetadata);
+                        using (var jsMetadataNew = engine.CreateObject()) {
+                            var jsMetadataNewAux = jsMetadata;
+                            jsMetadata.Set(ref jsMetadataNewAux);
+                        }
+                        var jsMetadataAux = jsMetadata;
+                        json.SetProperty(Constants.Documents.Metadata.Key, ref jsMetadataAux);
                     }
 
                     jsMetadata.SetProperty(Constants.Documents.Metadata.Projection, engine.CreateValue(true));

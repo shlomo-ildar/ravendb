@@ -147,7 +147,8 @@ function map() {{
                                     if (func.IsFunction == false)
                                         ThrowIndexCreationException($"map function #{i} {MethodProperty} property isn't a 'FunctionInstance'");
 
-                                    var operation = new JavaScriptMapOperation(JavaScriptIndexUtils, funcInstanceJint, func, Definition.Name, mapList[i]);
+                                    var funcAux = func;
+                                    var operation = new JavaScriptMapOperation(JavaScriptIndexUtils, funcInstanceJint, ref funcAux, Definition.Name, mapList[i]);
                                     if (mapJint.HasOwnProperty(MoreArgsProperty))
                                     {
                                         var moreArgsObjJint = mapJint.Get(MoreArgsProperty);

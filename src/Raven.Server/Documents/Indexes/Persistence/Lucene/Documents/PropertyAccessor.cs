@@ -179,8 +179,8 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
                     //using (var jsStrRes = jsPropertyValue.Engine.JsonStringify.StaticCall(jsPropertyValue)) var strRes = jsStrRes.AsString;
                     CompiledIndexField field = null;
                     var isGroupByField = _groupByFields?.TryGetValue(propertyName, out field) ?? false;
-
-                    yield return (propertyName, GetValue(jsPropertyValue), field, isGroupByField);
+                    var jsPropertyValueAux = jsPropertyValue;
+                    yield return (propertyName, GetValue(ref jsPropertyValueAux), field, isGroupByField);
                 }
             }
         }
@@ -193,11 +193,12 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
                 throw new MissingFieldException($"The target for 'JsPropertyAccessor.GetValue' doesn't contain the property {name}.");
             using (var jsValue = oi.GetProperty(name))
             {
-                return GetValue(jsValue);
+                var jsValueAux = jsValue;
+                return GetValue(ref jsValueAux);
             }
         }
 
-        private static object GetValue(InternalHandle jsValue)
+        private static object GetValue(ref InternalHandle jsValue)
         {
             //using (var jsStrRes = jsValue.Engine.JsonStringify.StaticCall(jsValue)) var strRes = jsStrRes.AsString;
             if (jsValue.IsNull) {
@@ -220,8 +221,10 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
                 var array = new object[arrayLength];
                 for (int i = 0; i < arrayLength; i++)
                 {
-                    using (var jsItem = jsValue.GetProperty(i))
-                        array[i] = GetValue(jsItem);
+                    using (var jsItem = jsValue.GetProperty(i)) {
+                        var jsItemAux = jsItem;
+                        array[i] = GetValue(ref jsItemAux);
+                    }
                 }
                 return array;
             }
@@ -242,7 +245,7 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
                         case LazyNumberValue lnv:
                             return lnv; //should be already blittable supported type.
                     }
-                    //ThrowInvalidObject(jsValue);
+                    //ThrowInvalidObject(ref jsValue);
                 }
                 return new InternalHandle(ref jsValue, true);
             }
@@ -252,11 +255,11 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
                 return null;
             }
 
-            ThrowInvalidObject(jsValue);
+            ThrowInvalidObject(ref jsValue);
             return null;
         }
 
-        private static void ThrowInvalidObject(InternalHandle jsValue)
+        private static void ThrowInvalidObject(ref InternalHandle jsValue)
         {
             throw new NotSupportedException($"Was requested to extract the value out of a InternalHandle object but could not figure its type, value={jsValue}");
         }

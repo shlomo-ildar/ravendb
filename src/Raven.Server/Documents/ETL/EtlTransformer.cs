@@ -92,7 +92,7 @@ namespace Raven.Server.Documents.ETL
             Engine.SetGlobalCLRCallBack(getTimeSeries, GetTimeSeries);
         }
 
-        private InternalHandle LoadToFunctionTranslator(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private InternalHandle LoadToFunctionTranslator(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 if (args.Length != 2)
@@ -105,7 +105,7 @@ namespace Raven.Server.Documents.ETL
                 // explicitly not disposing here, this will clear the context from the JavaScriptUtils, but this is 
                 // called _midway_ through the script, so that is not something that we want to do. The caller will
                 // already be calling that.
-                var result = new ScriptRunnerResult(DocumentScript, args[1]);
+                var result = new ScriptRunnerResult(DocumentScript, ref args[1]);
                 LoadToFunction(args[0].AsString, result);
                 return new InternalHandle(ref result.Instance, true);
             }
@@ -115,7 +115,7 @@ namespace Raven.Server.Documents.ETL
             }
         }
 
-        private InternalHandle LoadToFunctionTranslator(string name, InternalHandle self, params InternalHandle[] args)
+        private InternalHandle LoadToFunctionTranslator(string name, ref InternalHandle self, params InternalHandle[] args)
         {
             if (args.Length != 1)
                 ThrowInvalidScriptMethodCall($"loadTo{name}(obj) must be called with exactly 1 parameter");
@@ -126,18 +126,18 @@ namespace Raven.Server.Documents.ETL
             // explicitly not disposing here, this will clear the context from the JavaScriptUtils, but this is 
             // called _midway_ through the script, so that is not something that we want to do. The caller will
             // already be calling that.
-            var result = new ScriptRunnerResult(DocumentScript, args[0]);
+            var result = new ScriptRunnerResult(DocumentScript, ref args[0]);
             LoadToFunction(name, result);
             return new InternalHandle(ref result.Instance, true);
         }
 
-        protected abstract void AddLoadedAttachment(InternalHandle reference, string name, Attachment attachment);
+        protected abstract void AddLoadedAttachment(ref InternalHandle reference, string name, Attachment attachment);
 
-        protected abstract void AddLoadedCounter(InternalHandle reference, string name, long value);
+        protected abstract void AddLoadedCounter(ref InternalHandle reference, string name, long value);
         
-        protected abstract void AddLoadedTimeSeries(InternalHandle reference, string name, IEnumerable<SingleResult> entries);
+        protected abstract void AddLoadedTimeSeries(ref InternalHandle reference, string name, IEnumerable<SingleResult> entries);
 
-        private InternalHandle LoadAttachment(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+        private InternalHandle LoadAttachment(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args)
         {
             try {
                 if (args.Length != 1 || args[0].IsStringEx() == false)
@@ -155,7 +155,7 @@ namespace Raven.Server.Documents.ETL
                         return engine.CreateNullValue();
                     }
 
-                    AddLoadedAttachment(loadAttachmentReference, attachmentName, attachment);
+                    AddLoadedAttachment(ref loadAttachmentReference, attachmentName, attachment);
                 }
                 else
                 {
@@ -176,7 +176,7 @@ namespace Raven.Server.Documents.ETL
             return engine.CreateValue($"{Transformation.AttachmentMarker}{attachmentName}{Guid.NewGuid():N}");
         }
 
-        private InternalHandle LoadCounter(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+        private InternalHandle LoadCounter(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args)
         {
             try {
                 if (args.Length != 1 || args[0].IsStringEx() == false)
@@ -194,7 +194,7 @@ namespace Raven.Server.Documents.ETL
                         return engine.CreateNullValue();
                     }
 
-                    AddLoadedCounter(loadCounterReference, counterName, value.Value.Value);
+                    AddLoadedCounter(ref loadCounterReference, counterName, value.Value.Value);
                 }
                 else
                 {
@@ -215,7 +215,7 @@ namespace Raven.Server.Documents.ETL
             return engine.CreateValue(Transformation.CountersTransformation.Marker + counterName);
         }
 
-        private InternalHandle LoadTimeSeries(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+        private InternalHandle LoadTimeSeries(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args)
         {
             try {
                 if ((Current.Document.Flags & DocumentFlags.HasTimeSeries) == DocumentFlags.HasTimeSeries == false)
@@ -232,8 +232,8 @@ namespace Raven.Server.Documents.ETL
                     ThrowInvalidScriptMethodCall($"{signature}. The argument timeSeriesName must be a string");
                 var timeSeriesName = args[0].AsString;
 
-                var from = args.Length < 2 ? DateTime.MinValue : ScriptRunner.GetDateArg(args[1], signature, "from"); 
-                var to = args.Length < 3 ? DateTime.MaxValue : ScriptRunner.GetDateArg(args[2], signature, "to"); 
+                var from = args.Length < 2 ? DateTime.MinValue : ScriptRunner.GetDateArg(ref args[1], signature, "from"); 
+                var to = args.Length < 3 ? DateTime.MaxValue : ScriptRunner.GetDateArg(ref args[2], signature, "to"); 
                     
                 var loadTimeSeriesReference = CreateLoadTimeSeriesReference(engine, timeSeriesName, @from, to);
 
@@ -243,7 +243,7 @@ namespace Raven.Server.Documents.ETL
                     return engine.CreateNullValue();
                 }
 
-                AddLoadedTimeSeries(loadTimeSeriesReference, timeSeriesName, reader.AllValues());
+                AddLoadedTimeSeries(ref loadTimeSeriesReference, timeSeriesName, reader.AllValues());
 
                 return loadTimeSeriesReference;
             }
@@ -258,7 +258,7 @@ namespace Raven.Server.Documents.ETL
             return engine.CreateValue(Transformation.TimeSeriesTransformation.Marker + timeSeriesName + from.Ticks + ':' + to.Ticks);
         }
 
-        private InternalHandle GetAttachments(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+        private InternalHandle GetAttachments(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args)
         {
             try {
                 if (args.Length != 0)
@@ -285,7 +285,7 @@ namespace Raven.Server.Documents.ETL
             }
         }
 
-        private InternalHandle HasAttachment(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+        private InternalHandle HasAttachment(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args)
         {
             try {
                 if (args.Length != 1 || args[0].IsStringEx() == false)
@@ -320,7 +320,7 @@ namespace Raven.Server.Documents.ETL
             }
         }
 
-        private InternalHandle GetCounters(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+        private InternalHandle GetCounters(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args)
         {
             try {
                 if (args.Length != 0)
@@ -347,7 +347,7 @@ namespace Raven.Server.Documents.ETL
             }
         }
 
-        private InternalHandle HasCounter(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+        private InternalHandle HasCounter(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args)
         {
             try {
                 if (args.Length != 1 || args[0].IsStringEx() == false)
@@ -380,7 +380,7 @@ namespace Raven.Server.Documents.ETL
             }
         }
 
-        private InternalHandle GetTimeSeries(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+        private InternalHandle GetTimeSeries(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args)
         {
             try {
                 const int paramsCount = Transformation.TimeSeriesTransformation.GetTimeSeries.ParamsCount;
@@ -411,7 +411,7 @@ namespace Raven.Server.Documents.ETL
             }
         }
 
-        private InternalHandle HasTimeSeries(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+        private InternalHandle HasTimeSeries(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args)
         {
             try {
                 const int paramsCount = Transformation.TimeSeriesTransformation.HasTimeSeries.ParamsCount;

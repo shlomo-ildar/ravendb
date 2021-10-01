@@ -71,7 +71,7 @@ var process = {
             Engine = engine;
         }
 
-        internal InternalHandle GetMetadata(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        internal InternalHandle GetMetadata(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 if (args.Length != 1 || !(args[0].BoundObject is BlittableObjectInstance boi))
@@ -85,7 +85,7 @@ var process = {
             }
         }
 
-        internal InternalHandle AttachmentsFor(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        internal InternalHandle AttachmentsFor(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 var engineEx = (V8EngineEx)engine;
@@ -118,7 +118,7 @@ var process = {
             }
         }
 
-        internal static InternalHandle LoadAttachment(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        internal static InternalHandle LoadAttachment(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 var engineEx = (V8EngineEx)engine;
@@ -168,7 +168,7 @@ var process = {
             }
         }
 
-        internal static InternalHandle LoadAttachments(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        internal static InternalHandle LoadAttachments(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 if (args.Length != 1)
@@ -232,10 +232,10 @@ var process = {
             }
         }
 
-        internal static InternalHandle GetTimeSeriesNamesFor(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        internal static InternalHandle GetTimeSeriesNamesFor(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
-                return GetNamesFor(engine, isConstructCall, self, args, Constants.Documents.Metadata.TimeSeries, "timeSeriesNamesFor");
+                return GetNamesFor(engine, isConstructCall, ref self, args, Constants.Documents.Metadata.TimeSeries, "timeSeriesNamesFor");
             }
             catch (Exception e) 
             {
@@ -243,10 +243,10 @@ var process = {
             }
         }
 
-        internal static InternalHandle GetCounterNamesFor(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        internal static InternalHandle GetCounterNamesFor(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
-                return GetNamesFor(engine, isConstructCall, self, args, Constants.Documents.Metadata.Counters, "counterNamesFor");
+                return GetNamesFor(engine, isConstructCall, ref self, args, Constants.Documents.Metadata.Counters, "counterNamesFor");
             }
             catch (Exception e) 
             {
@@ -254,7 +254,7 @@ var process = {
             }
         }
 
-        private static InternalHandle GetNamesFor(V8Engine engine, bool isConstructCall, InternalHandle self, InternalHandle[] args, string metadataKey, string methodName)
+        private static InternalHandle GetNamesFor(V8Engine engine, bool isConstructCall, ref InternalHandle self, InternalHandle[] args, string metadataKey, string methodName)
         {
             if (args.Length != 1 || !(args[0].BoundObject is BlittableObjectInstance boi))
                 throw new InvalidOperationException($"{methodName}(doc) must be called with a single entity argument");
@@ -273,7 +273,7 @@ var process = {
             return engineEx.CreateArrayWithDisposal(jsItems);
         }
 
-        internal static InternalHandle GetDocumentId(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        internal static InternalHandle GetDocumentId(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 if (args.Length != 1 && args.Length != 2) //length == 2 takes into account Query Arguments that can be added to args
@@ -479,7 +479,7 @@ var process = {
         public void SetGlobalCLRCallBack(string propertyName, JSFunction func)
         {
             var jsFunc = CreateCLRCallBack(func, true);
-            if (!GlobalObject.SetProperty(propertyName, jsFunc))
+            if (!GlobalObject.SetProperty(propertyName, ref jsFunc))
             {
                 throw new InvalidOperationException($"Failed to set CLR callback global property {propertyName}");
             }
@@ -796,7 +796,7 @@ Array.prototype.reverse = function(...args) {
         }
 
 
-        public static double ToNumber(InternalHandle o)
+        public static double ToNumber(ref InternalHandle o)
         {
             return o.AsDouble;
         }

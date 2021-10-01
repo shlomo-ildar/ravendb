@@ -60,10 +60,10 @@ namespace Raven.Server.Documents.ETL.Providers.SQL
             base.Initialize(debugMode);
             
             DocumentScript.ScriptEngine.SetGlobalCLRCallBack("varchar",
-                (engine, isConstructCall, self, args) => ToVarcharTranslator(VarcharFunctionCall.AnsiStringType, args));
+                (V8Engine engine, bool isConstructCall, ref InternalHandle self, InternalHandle[] args) => ToVarcharTranslator(VarcharFunctionCall.AnsiStringType, args));
 
             DocumentScript.ScriptEngine.SetGlobalCLRCallBack("nvarchar",
-                (engine, isConstructCall, self, args) => ToVarcharTranslator(VarcharFunctionCall.StringType, args));
+                (V8Engine engine, bool isConstructCall, ref InternalHandle self, InternalHandle[] args) => ToVarcharTranslator(VarcharFunctionCall.StringType, args));
         }
 
         protected override string[] LoadToDestinations { get; }
@@ -131,7 +131,7 @@ namespace Raven.Server.Documents.ETL.Providers.SQL
             return true;
         }
 
-        protected override void AddLoadedAttachment(InternalHandle reference, string name, Attachment attachment)
+        protected override void AddLoadedAttachment(ref InternalHandle reference, string name, Attachment attachment)
         {
             var strReference = reference.ToString();
             if (_loadedAttachments.TryGetValue(strReference, out var loadedAttachments) == false)
@@ -143,12 +143,12 @@ namespace Raven.Server.Documents.ETL.Providers.SQL
             loadedAttachments.Enqueue(attachment);
         }
 
-        protected override void AddLoadedCounter(InternalHandle reference, string name, long value)
+        protected override void AddLoadedCounter(ref InternalHandle reference, string name, long value)
         {
             throw new NotSupportedException("Counters aren't supported by SQL ETL");
         }
 
-        protected override void AddLoadedTimeSeries(InternalHandle reference, string name, IEnumerable<SingleResult> entries)
+        protected override void AddLoadedTimeSeries(ref InternalHandle reference, string name, IEnumerable<SingleResult> entries)
         {
             throw new NotSupportedException("Time series aren't supported by SQL ETL");
         }

@@ -27,7 +27,7 @@ namespace Raven.Server.Documents.Indexes.Static
     public class JavaScriptReduceOperation
     {
         public JavaScriptReduceOperation(ScriptFunctionInstance keyJint, Engine engineJint,
-            InternalHandle reduceFunc, InternalHandle key, JavaScriptIndexUtils javaScriptIndexUtils)
+            ref InternalHandle reduceFunc, ref InternalHandle key, JavaScriptIndexUtils javaScriptIndexUtils)
         {
             KeyJint = keyJint ?? throw new ArgumentNullException(nameof(keyJint));
             EngineJint = engineJint;
@@ -294,7 +294,7 @@ namespace Raven.Server.Documents.Indexes.Static
                             _ =>  Engine.FromObject(value)
                         };
 
-                        jsRes.SetProperty(propertyName, jsValue);
+                        jsRes.SetProperty(propertyName, ref jsValue);
                     }
                 }
 

@@ -128,7 +128,8 @@ function map(name, lambda) {
                                 if (func.IsFunction == false)
                                     ThrowIndexCreationException($"map function #{i} {MethodProperty} property isn't a function");
 
-                                JavaScriptMapOperation operation = new JavaScriptMapOperation(JavaScriptIndexUtils, funcInstanceJint, func, Definition.Name, mapList[i]);
+                                var funcAux = func;
+                                JavaScriptMapOperation operation = new JavaScriptMapOperation(JavaScriptIndexUtils, funcInstanceJint, ref funcAux, Definition.Name, mapList[i]);
                                 if (mapJint != null && mapJint.HasOwnProperty(MoreArgsProperty))
                                 {
                                     var moreArgsObjJint = mapJint.Get(MoreArgsProperty);
@@ -162,13 +163,13 @@ function map(name, lambda) {
             }
         }
 
-        private InternalHandle GetDocumentId(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private InternalHandle GetDocumentId(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 var scope = CurrentIndexingScope.Current;
                 scope.RegisterJavaScriptUtils(JavaScriptUtils);
 
-                return JavaScriptUtils.GetDocumentId(engine, isConstructCall, self, args);
+                return JavaScriptUtils.GetDocumentId(engine, isConstructCall, ref self, args);
             }
             catch (Exception e) 
             {
@@ -176,13 +177,13 @@ function map(name, lambda) {
             }
         }
 
-        private InternalHandle AttachmentsFor(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private InternalHandle AttachmentsFor(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 var scope = CurrentIndexingScope.Current;
                 scope.RegisterJavaScriptUtils(JavaScriptUtils);
 
-                return JavaScriptUtils.AttachmentsFor(engine, isConstructCall, self, args);
+                return JavaScriptUtils.AttachmentsFor(engine, isConstructCall, ref self, args);
             }
             catch (Exception e) 
             {
@@ -190,13 +191,13 @@ function map(name, lambda) {
             }
         }
 
-        private InternalHandle MetadataFor(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private InternalHandle MetadataFor(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 var scope = CurrentIndexingScope.Current;
                 scope.RegisterJavaScriptUtils(JavaScriptUtils);
 
-                return JavaScriptUtils.GetMetadata(engine, isConstructCall, self, args).KeepAlive();
+                return JavaScriptUtils.GetMetadata(engine, isConstructCall, ref self, args).KeepAlive();
             }
             catch (Exception e) 
             {
@@ -204,13 +205,13 @@ function map(name, lambda) {
             }
         }
 
-        private InternalHandle TimeSeriesNamesFor(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private InternalHandle TimeSeriesNamesFor(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 var scope = CurrentIndexingScope.Current;
                 scope.RegisterJavaScriptUtils(JavaScriptUtils);
 
-                return JavaScriptUtils.GetTimeSeriesNamesFor(engine, isConstructCall, self, args);
+                return JavaScriptUtils.GetTimeSeriesNamesFor(engine, isConstructCall, ref self, args);
             }
             catch (Exception e) 
             {
@@ -218,13 +219,13 @@ function map(name, lambda) {
             }
         }
 
-        private InternalHandle CounterNamesFor(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private InternalHandle CounterNamesFor(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 var scope = CurrentIndexingScope.Current;
                 scope.RegisterJavaScriptUtils(JavaScriptUtils);
 
-                return JavaScriptUtils.GetCounterNamesFor(engine, isConstructCall, self, args);
+                return JavaScriptUtils.GetCounterNamesFor(engine, isConstructCall, ref self, args);
             }
             catch (Exception e) 
             {
@@ -232,13 +233,13 @@ function map(name, lambda) {
             }
         }
 
-        private InternalHandle LoadAttachment(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private InternalHandle LoadAttachment(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 var scope = CurrentIndexingScope.Current;
                 scope.RegisterJavaScriptUtils(JavaScriptUtils);
 
-                return JavaScriptUtils.LoadAttachment(engine, isConstructCall, self, args);
+                return JavaScriptUtils.LoadAttachment(engine, isConstructCall, ref self, args);
             }
             catch (Exception e) 
             {
@@ -246,13 +247,13 @@ function map(name, lambda) {
             }
         }
 
-        private InternalHandle LoadAttachments(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private InternalHandle LoadAttachments(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 var scope = CurrentIndexingScope.Current;
                 scope.RegisterJavaScriptUtils(JavaScriptUtils);
 
-                return JavaScriptUtils.LoadAttachments(engine, isConstructCall, self, args);
+                return JavaScriptUtils.LoadAttachments(engine, isConstructCall, ref self, args);
             }
             catch (Exception e) 
             {
@@ -423,8 +424,11 @@ function map(name, lambda) {
                         }
 
                         using (var groupByKey = reduceObj.GetProperty(KeyProperty))
-                        using (var reduce = reduceObj.GetProperty(AggregateByProperty))
-                            ReduceOperation = new JavaScriptReduceOperation(groupByKeyJint, _engineJint, reduce, groupByKey, JavaScriptIndexUtils) { ReduceString = Definition.Reduce };
+                        using (var reduce = reduceObj.GetProperty(AggregateByProperty)) {
+                            var groupByKeyAux = groupByKey;
+                            var reduceAux = reduce;
+                            ReduceOperation = new JavaScriptReduceOperation(groupByKeyJint, _engineJint, ref reduceAux, ref groupByKeyAux, JavaScriptIndexUtils) { ReduceString = Definition.Reduce };
+                        }
                         GroupByFields = ReduceOperation.GetReduceFieldsNames();
                         Reduce = ReduceOperation.IndexingFunction;
                     }
@@ -488,7 +492,7 @@ function map(name, lambda) {
             return mapReferencedCollections;
         }
 
-        private InternalHandle Recurse(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private InternalHandle Recurse(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 if (args.Length != 2)
@@ -502,7 +506,7 @@ function map(name, lambda) {
                 if (!func.IsFunction)
                     throw new ArgumentException("The second argument in recurse(item, func) must be an arrow function.");
 
-                using (var rf = new RecursiveJsFunction(_engine, item, func))
+                using (var rf = new RecursiveJsFunction(_engine, ref item, ref func))
                     return rf.Execute();
             }
             catch (Exception e) 
@@ -514,7 +518,7 @@ function map(name, lambda) {
 
         //public InternalHandle jsTest;
 
-        private InternalHandle TryConvertToNumber(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private InternalHandle TryConvertToNumber(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 if (args.Length != 1)
@@ -539,7 +543,7 @@ function map(name, lambda) {
                     return _engine.ImplicitNull.CreateHandle();
 
                 if (value.IsNumberOrIntEx())
-                    return jsRes.Set(value);
+                    return jsRes.Set(ref value);
 
                 if (value.IsStringEx())
                 {
@@ -556,7 +560,7 @@ function map(name, lambda) {
             }
         }
 
-        private InternalHandle LoadDocument(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private InternalHandle LoadDocument(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 if (args.Length != 2)
@@ -569,8 +573,8 @@ function map(name, lambda) {
                     return _engine.ImplicitNull.CreateHandle();
 
                 var argsMsgPrefix = "The load(id, collection) method expects the ";
-                CheckIsString(args[0], args[1], $"{argsMsgPrefix}first");
-                CheckIsString(args[1], args[0], $"{argsMsgPrefix}second");
+                CheckIsString(ref args[0], ref args[1], $"{argsMsgPrefix}first");
+                CheckIsString(ref args[1], ref args[0], $"{argsMsgPrefix}second");
 
                 object doc = CurrentIndexingScope.Current.LoadDocument(null, args[0].AsString, args[1].AsString);
                 if (JavaScriptIndexUtils.GetValue(doc, out InternalHandle jsItem, keepAlive: true))
@@ -584,7 +588,7 @@ function map(name, lambda) {
             }
         }
 
-        private void CheckIsString(InternalHandle jsValue, InternalHandle jsValueNext, string prefix)
+        private void CheckIsString(ref InternalHandle jsValue, ref InternalHandle jsValueNext, string prefix)
         {
             if (!jsValue.IsStringEx())
             {
@@ -594,7 +598,7 @@ function map(name, lambda) {
             }
         }
 
-        private InternalHandle LoadCompareExchangeValue(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private InternalHandle LoadCompareExchangeValue(V8Engine engine, bool isConstructCall, ref InternalHandle self, params InternalHandle[] args) // callback
         {
             try {
                 if (args.Length != 1)
@@ -621,8 +625,10 @@ function map(name, lambda) {
                     {
                         using (var key = keyArgument.GetProperty(i)) 
                         {
-                            if (key.IsStringEx() == false)
-                                ThrowInvalidType(key, JSValueType.String);
+                            if (key.IsStringEx() == false) {
+                                var keyAux = key;
+                                ThrowInvalidType(ref keyAux, JSValueType.String);
+                            }
 
                             object value = CurrentIndexingScope.Current.LoadCompareExchangeValue(null, key.AsString);
                             jsItems[i] = ConvertToJsValue(value);
@@ -664,7 +670,7 @@ function map(name, lambda) {
                 }
             }
 
-            static void ThrowInvalidType(InternalHandle jsValue, JSValueType expectedType)
+            static void ThrowInvalidType(ref InternalHandle jsValue, JSValueType expectedType)
             {
                 throw new InvalidOperationException($"Argument '{jsValue}' was of type '{jsValue.ValueType}', but '{expectedType}' was expected.");
             }

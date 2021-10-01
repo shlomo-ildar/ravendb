@@ -38,7 +38,7 @@ namespace Raven.Server.Documents.Jint.Patch
             if (task.IsFaulted)
                 value += Environment.NewLine + "Exception: " + task.Exception;
             var jsValue = value;
-            var descriptor = new PropertyDescriptor(jsValue, false, false, false);
+            var descriptor = new PropertyDescriptor(ref jsValue, false, false, false);
             return descriptor;
         }
     }*/

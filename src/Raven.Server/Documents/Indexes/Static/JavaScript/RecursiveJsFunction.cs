@@ -15,7 +15,7 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript
         private readonly HashSet<InternalHandle> _results = new HashSet<InternalHandle>();
         private readonly Queue<object> _queue = new Queue<object>();
 
-        public RecursiveJsFunction(V8Engine engine, InternalHandle item, InternalHandle func)
+        public RecursiveJsFunction(V8Engine engine, ref InternalHandle item, ref InternalHandle func)
         {
             _engine = engine ?? throw new ArgumentNullException(nameof(engine));
             _item = item;
@@ -55,15 +55,17 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript
 
         public InternalHandle Execute()
         {
-            _result.Set(_engine.CreateArray(Array.Empty<InternalHandle>()));
+            var jsArrEmpty = _engine.CreateArray(Array.Empty<InternalHandle>());
+            _result.Set(ref jsArrEmpty);
 
             if (_item.IsUndefined)
                 return _result;
 
-            using (var jsRes = _func.Call(InternalHandle.Empty, _item))
+            using (var jsRes = _func.StaticCall(_item))
             {
                 jsRes.ThrowOnError(); // TODO check if is needed here
-                var current = NullIfEmptyEnumerable(jsRes);
+                var jsResAux = jsRes;
+                var current = NullIfEmptyEnumerable(ref jsResAux);
                 if (current == null)
                 {
                     using (var jsResPush = _result.StaticCall("push", _item))
@@ -79,18 +81,20 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript
                     var list = current as IEnumerable<InternalHandle>;
                     if (list != null)
                     {
-                        foreach (InternalHandle o in list)
-                            AddItem(o);
+                        foreach (InternalHandle jsItem in list) {
+                            var jsItemAux = jsItem;
+                            AddItem(ref jsItemAux);
+                        }
                     }
                     else if (current is InternalHandle currentJs)
-                        AddItem(currentJs);
+                        AddItem(ref currentJs);
                 }
             }
 
             return _result;
         }
 
-        private void AddItem(InternalHandle current)
+        private void AddItem(ref InternalHandle current)
         {
             if (_results.Add(current) == false)
                 return;
@@ -101,13 +105,14 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript
             using (var jsRes = _func.StaticCall(current))
             {
                 jsRes.ThrowOnError(); // TODO check if is needed here
-                var result = NullIfEmptyEnumerable(jsRes);
+                var jsResAux = jsRes;
+                var result = NullIfEmptyEnumerable(ref jsResAux);
                 if (result != null)
                     _queue.Enqueue(result);
             }
         }
 
-        private static object NullIfEmptyEnumerable(InternalHandle item)
+        private static object NullIfEmptyEnumerable(ref InternalHandle item)
         {
             if (item.IsArray == false) {
                 return /*new InternalHandle(ref */item; //, true);

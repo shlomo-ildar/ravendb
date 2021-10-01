@@ -97,7 +97,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
             }
         }
 
-        public void Put(string id, InternalHandle instance, BlittableJsonReaderObject doc)
+        public void Put(string id, ref InternalHandle instance, BlittableJsonReaderObject doc)
         {
             Debug.Assert(instance != null);
 
@@ -107,25 +107,25 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
             _stats.IncrementBatchSize(doc.Size);
         }
 
-        public void LoadAttachment(InternalHandle attachmentReference, Attachment attachment)
+        public void LoadAttachment(ref InternalHandle attachmentReference, Attachment attachment)
         {
             _loadedAttachments ??= new DictionaryDisposeKeyIHV8<Attachment>();
             _loadedAttachments.Add(attachmentReference, attachment);
         }
 
-        public void LoadCounter(InternalHandle counterReference, string name, long value)
+        public void LoadCounter(ref InternalHandle counterReference, string name, long value)
         {
             _loadedCountersByJsReference ??= new DictionaryDisposeKeyIHV8<(string, long)>();
             _loadedCountersByJsReference.TryAdd(counterReference, (name, value));
         }
         
-        public void LoadTimeSeries(InternalHandle reference, string name, IEnumerable<SingleResult> value)
+        public void LoadTimeSeries(ref InternalHandle reference, string name, IEnumerable<SingleResult> value)
         {
             (_loadedTimeSeriesByJsReference ??= new DictionaryDisposeKeyIHV8<(string, IEnumerable<SingleResult>)>())
                 .TryAdd(reference, (name, value));
         }
 
-        public void AddAttachment(InternalHandle instance, string name, InternalHandle attachmentReference)
+        public void AddAttachment(ref InternalHandle instance, string name, ref InternalHandle attachmentReference)
         {
             var attachment = _loadedAttachments[attachmentReference];
 
@@ -146,7 +146,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
             _deletes.Add(new DeleteAttachmentCommandData(documentId, name, null));
         }
 
-        public void AddCounter(InternalHandle instance, InternalHandle counterReference)
+        public void AddCounter(ref InternalHandle instance, ref InternalHandle counterReference)
         {
             var counter = _loadedCountersByJsReference[counterReference];
 
@@ -204,7 +204,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
             });
         }
 
-        public void AddTimeSeries(InternalHandle instance, InternalHandle timeSeriesReference)
+        public void AddTimeSeries(ref InternalHandle instance, ref InternalHandle timeSeriesReference)
         {
             var engine = instance.Engine;
 

@@ -1059,7 +1059,8 @@ namespace Raven.Server.Documents.Handlers
                         writer.WriteStartArray();
                         foreach (var mapResult in mapRes)
                         {
-                            using (var jsStr = compiledIndex.JavaScriptIndexUtils.StringifyObject(mapResult)) 
+                            var mapResultAux = mapResult;
+                            using (var jsStr = compiledIndex.JavaScriptIndexUtils.StringifyObject(ref mapResultAux)) 
                             {
                                 if (jsStr.IsStringEx())
                                 {
@@ -1083,22 +1084,24 @@ namespace Raven.Server.Documents.Handlers
                                 writer.WritePropertyName("ReduceResults");
                                 writer.WriteStartArray();
 
-                                var reduceResults = compiledIndex.Reduce(mapRes.Select(mr => new DynamicBlittableJson(JsBlittableBridge.Translate(context, mr.Engine, mr))));
+                                var reduceResults = compiledIndex.Reduce(mapRes.Select(mr => new DynamicBlittableJson(JsBlittableBridge.Translate(context, mr.Engine, ref mr))));
 
                                 foreach (InternalHandle reduceResult in reduceResults)
                                 {
-                                    using (reduceResult)
-                                    using (var jsStr = compiledIndex.JavaScriptIndexUtils.StringifyObject(reduceResult)) 
-                                    {
-                                        if (jsStr.IsStringEx())
+                                    using (reduceResult) {
+                                        var reduceResultAux = reduceResult;
+                                        using (var jsStr = compiledIndex.JavaScriptIndexUtils.StringifyObject(ref reduceResultAux)) 
                                         {
-                                            if (first == false)
+                                            if (jsStr.IsStringEx())
                                             {
-                                                writer.WriteComma();
-                                            }
+                                                if (first == false)
+                                                {
+                                                    writer.WriteComma();
+                                                }
 
-                                            writer.WriteString(jsStr.AsString);
-                                            first = false;
+                                                writer.WriteString(jsStr.AsString);
+                                                first = false;
+                                            }
                                         }
                                     }
                                 }

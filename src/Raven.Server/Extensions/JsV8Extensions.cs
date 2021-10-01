@@ -108,9 +108,9 @@ namespace Raven.Server.Extensions
             return true;
         }
 
-        public static void FastAddProperty(this InternalHandle obj, string name, InternalHandle jsValue, bool writable, bool enumerable, bool configurable)
+        public static void FastAddProperty(this InternalHandle obj, string name, ref InternalHandle jsValue, bool writable, bool enumerable, bool configurable)
         {
-            if (obj.SetProperty(name, jsValue) == false)
+            if (obj.SetProperty(name, ref jsValue) == false)
             {
                 throw new InvalidOperationException($"Failed to fast add property {name}");
             }
@@ -159,9 +159,9 @@ namespace Raven.Server.Extensions
             {}
         }
 
-        public static void ExecuteWithReset(this V8Engine engine, InternalHandle script, string sourceName = "V8.NET", bool throwExceptionOnError = true, int timeout = 0)
+        public static void ExecuteWithReset(this V8Engine engine, ref InternalHandle script, string sourceName = "V8.NET", bool throwExceptionOnError = true, int timeout = 0)
         {
-            using (engine.ExecuteExprWithReset(script, sourceName, throwExceptionOnError, timeout))
+            using (engine.ExecuteExprWithReset(ref script, sourceName, throwExceptionOnError, timeout))
             {}
         }
 
@@ -169,15 +169,16 @@ namespace Raven.Server.Extensions
         {
             using (var script = engine.Compile(source, sourceName, throwExceptionOnError))
             {
-                return ExecuteExprWithReset(engine, script, sourceName, throwExceptionOnError, timeout);
+                var scriptAux = script;
+                return ExecuteExprWithReset(engine, ref scriptAux, sourceName, throwExceptionOnError, timeout);
             }
         }
 
-        public static InternalHandle ExecuteExprWithReset(this V8Engine engine, InternalHandle script, string sourceName = "V8.NET", bool throwExceptionOnError = true, int timeout = 0)
+        public static InternalHandle ExecuteExprWithReset(this V8Engine engine, ref InternalHandle script, string sourceName = "V8.NET", bool throwExceptionOnError = true, int timeout = 0)
         {
             try
             {
-                return engine.Execute(script, sourceName, throwExceptionOnError, timeout);
+                return engine.Execute(ref script, throwExceptionOnError, timeout);
             }
             finally
             {
