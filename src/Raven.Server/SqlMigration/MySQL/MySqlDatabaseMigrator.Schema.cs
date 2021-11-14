@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using Raven.Server.SqlMigration.Schema;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.SqlMigration.MySQL
 {
@@ -26,7 +27,7 @@ namespace Raven.Server.SqlMigration.MySQL
                                                                       " WHERE TABLE_SCHEMA = @schema AND CONSTRAINT_NAME <> 'PRIMARY' " +
                                                                       " ORDER BY ORDINAL_POSITION";
         
-        public override DatabaseSchema FindSchema()
+        public override DatabaseSchema FindSchema(IJavaScriptOptions jsOptions)
         {
             using (var connection = OpenConnection())
             {
@@ -35,15 +36,15 @@ namespace Raven.Server.SqlMigration.MySQL
                     CatalogName = connection.Database
                 };
 
-                FindTableNames(connection, schema);
+                FindTableNames(jsOptions, connection, schema);
                 FindPrimaryKeys(connection, schema);
-                FindForeignKeys(connection, schema);
+                FindForeignKeys(jsOptions, connection, schema);
 
                 return schema;
             }
         }
 
-        private void FindTableNames(DbConnection connection, DatabaseSchema dbSchema)
+        private void FindTableNames(IJavaScriptOptions jsOptions, DbConnection connection, DatabaseSchema dbSchema)
         {
             using (var cmd = connection.CreateCommand())
             {
@@ -62,7 +63,7 @@ namespace Raven.Server.SqlMigration.MySQL
                         
                         if (tableSchema == null)
                         {
-                            tableSchema = new SqlTableSchema(schemaAndTableName.Schema, schemaAndTableName.TableName,
+                            tableSchema = new SqlTableSchema(jsOptions, schemaAndTableName.Schema, schemaAndTableName.TableName,
                                 GetSelectAllQueryForTable(schemaAndTableName.Schema, schemaAndTableName.TableName));
                             dbSchema.Tables.Add(tableSchema);
                         }
@@ -99,7 +100,7 @@ namespace Raven.Server.SqlMigration.MySQL
             }
         }
 
-        private void FindForeignKeys(DbConnection connection, DatabaseSchema dbSchema)
+        private void FindForeignKeys(IJavaScriptOptions jsOptions, DbConnection connection, DatabaseSchema dbSchema)
         {
             var keyColumnUsageCache = GetKeyColumnUsageCache(connection);
             
@@ -135,7 +136,7 @@ namespace Raven.Server.SqlMigration.MySQL
                             var tableSchema = reader["CONSTRAINT_SCHEMA"].ToString();
                             var tableName = reader["TABLE_NAME"].ToString();
                             
-                            pkTable.References.Add(new TableReference(tableSchema, tableName)
+                            pkTable.References.Add(new TableReference(jsOptions, tableSchema, tableName)
                             {
                                 Columns = keyUsage.ColumnNames
                             });

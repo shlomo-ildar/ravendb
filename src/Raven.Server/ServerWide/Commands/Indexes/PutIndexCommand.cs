@@ -10,6 +10,7 @@ using Raven.Server.Utils;
 using Sparrow;
 using Sparrow.Json.Parsing;
 using Index = Raven.Server.Documents.Indexes.Index;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.ServerWide.Commands.Indexes
 {

@@ -4,11 +4,13 @@ using Raven.Client.Extensions;
 using Raven.Server.SqlMigration.Model;
 using Raven.Server.Utils;
 using Sparrow.Json.Parsing;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.SqlMigration.Schema
 {
     public class SqlTableSchema : IDynamicJson
     {
+        private IJavaScriptOptions _jsOptions;
         public string Schema { get; set; }
         
         public string TableName { get; set; }
@@ -21,8 +23,9 @@ namespace Raven.Server.SqlMigration.Schema
         
         public List<TableReference> References { get; set; } = new List<TableReference>();
 
-        public SqlTableSchema(string schema, string tableName, string defaultQuery)
+        public SqlTableSchema(IJavaScriptOptions jsOptions, string schema, string tableName, string defaultQuery)
         {
+            _jsOptions = jsOptions;
             Schema = schema;
             TableName = tableName;
             DefaultQuery = defaultQuery;

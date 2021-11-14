@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
@@ -14,6 +15,7 @@ using Raven.Server.ServerWide;
 using Sparrow;
 using Sparrow.LowMemory;
 using Sparrow.Platform;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Config.Categories
 {
@@ -202,11 +204,21 @@ namespace Raven.Server.Config.Categories
         [ConfigurationEntry("Indexing.MapTimeoutAfterEtagReachedInMin", ConfigurationEntryScope.ServerWideOrPerDatabaseOrPerIndex)]
         public TimeSetting MapTimeoutAfterEtagReached { get; protected set; }
 
-        [Description("Max number of steps in the script execution of a JavaScript index")]
-        [DefaultValue(10_000)]
-        [IndexUpdateType(IndexUpdateType.Reset)]
-        [ConfigurationEntry("Indexing.MaxStepsForScript", ConfigurationEntryScope.ServerWideOrPerDatabaseOrPerIndex)]
-        public int MaxStepsForScript { get; set; }
+        [Description("EXPERT: the type of JavaScript engine that will be used by RavenDB: 'Jint'  or 'V8'")]
+        [ConfigurationEntry("Indexing.EngineForScript", ConfigurationEntryScope.ServerWideOrPerDatabase)]
+        public JavaScriptEngineType? JsEngineType { get; set; }
+
+        [Description("EXPERT: Enables Strict Mode in JavaScript engine. Default: true")]
+        [ConfigurationEntry("Indexing.StrictModeForScript", ConfigurationEntryScope.ServerWideOrPerDatabase)]
+        public bool? JsStrictMode { get; set; }
+
+        [Description("EXPERT: Maximum number of steps in the JS script execution (Jint)")]
+        [ConfigurationEntry("Indexing.MaxStepsForScript", ConfigurationEntryScope.ServerWideOrPerDatabase)]
+        public int? JsMaxSteps { get; set; }
+
+        [Description("EXPERT: Maximum duration in milliseconds of the JS script execution (V8)")]  // TODO [shlomo] To expose in Jint TimeConstraint2 class (as it was made to MaxStatements)
+        [ConfigurationEntry("Indexing.MaxDurationInMsForScript", ConfigurationEntryScope.ServerWideOrPerDatabase)]
+        public int? JsMaxDurationInMs { get; set; }
 
         [Description("Time (in minutes) between index cleanup")]
         [DefaultValue(10)]

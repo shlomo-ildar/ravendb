@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Raven.Server.ServerWide;
 using Raven.Server.Utils.Stats;
 using Sparrow.Json;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents.Queries
 {

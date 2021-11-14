@@ -69,7 +69,7 @@ namespace Raven.Server.Documents.Includes
                     _includedIds.Add(document.Id);
                     continue;
                 }
-                IncludeUtil.GetDocIdFromInclude(document.Data, new StringSegment(include), _includedIds, _storage.DocumentDatabase.IdentityPartsSeparator);
+                IncludeUtil.GetDocIdFromInclude(null, document.Data, new StringSegment(include), _includedIds, _storage.DocumentDatabase.IdentityPartsSeparator);
             }
         }
 
@@ -120,7 +120,7 @@ namespace Raven.Server.Documents.Includes
 
                         using (json)
                         {
-                            IncludeUtil.GetDocIdFromInclude(json, new StringSegment(path), _includedIds, _context.DocumentDatabase.IdentityPartsSeparator);
+                            IncludeUtil.GetDocIdFromInclude(null, json, new StringSegment(path), _includedIds, _context.DocumentDatabase.IdentityPartsSeparator);
                         }
                     }
                 }

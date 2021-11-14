@@ -17,12 +17,14 @@ using Raven.Server.ServerWide;
 using Raven.Server.ServerWide.Commands;
 using Raven.Server.ServerWide.Context;
 using Raven.Server.Utils;
+using Raven.Server.Config;
 using Sparrow.Json;
 using Sparrow.Server;
 using Sparrow.Server.Utils;
 using Sparrow.Threading;
 using Voron.Exceptions;
 using Voron.Impl.Extensions;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Rachis
 {
@@ -1146,6 +1148,7 @@ namespace Raven.Server.Rachis
             if (result is BlittableJsonReaderObject || result is BlittableJsonReaderArray)
                 throw new RachisApplyException("You cannot return a blittable here, it is bound to the context of the state machine, and cannot leak outside");
 
+            IJavaScriptOptions jsOptions = _engine.Configuration.JavaScript;
             if (TypeConverter.IsSupportedType(result) == false)
             {
                 throw new RachisApplyException("We don't support type " + result.GetType().FullName + ".");

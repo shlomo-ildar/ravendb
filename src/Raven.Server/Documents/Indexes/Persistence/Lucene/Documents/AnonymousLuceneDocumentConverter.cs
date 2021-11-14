@@ -5,6 +5,7 @@ using Raven.Client.Documents.Indexes;
 using Raven.Server.Utils;
 using Sparrow.Json;
 using Sparrow.Json.Parsing;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
 {
@@ -63,7 +64,9 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
             if (_isMultiMap == false)
                 accessor = _propertyAccessor ?? (_propertyAccessor = PropertyAccessor.Create(documentToProcess.GetType(), documentToProcess));
             else
+            {
                 accessor = TypeConverter.GetPropertyAccessor(documentToProcess);
+            }
 
             var storedValue = _storeValue ? new DynamicJsonValue() : null;
 

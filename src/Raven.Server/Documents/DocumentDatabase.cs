@@ -6,6 +6,8 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Mvc;
 using Raven.Client.Documents.Operations.Backups;
 using Raven.Client.Documents.Operations.Configuration;
 using Raven.Client.Documents.Smuggler;
@@ -13,6 +15,7 @@ using Raven.Client.Exceptions.Commercial;
 using Raven.Client.Exceptions.Database;
 using Raven.Client.Extensions;
 using Raven.Client.ServerWide;
+using Raven.Client.ServerWide.JavaScript;
 using Raven.Client.ServerWide.Operations;
 using Raven.Client.Util;
 using Raven.Server.Commercial;
@@ -29,6 +32,7 @@ using Raven.Server.Documents.Replication;
 using Raven.Server.Documents.Subscriptions;
 using Raven.Server.Documents.TcpHandlers;
 using Raven.Server.Documents.TimeSeries;
+using IndexesStatic = Raven.Server.Documents.Indexes.Static;
 using Raven.Server.Json;
 using Raven.Server.NotificationCenter.Notifications;
 using Raven.Server.NotificationCenter.Notifications.Details;
@@ -60,7 +64,7 @@ using Constants = Raven.Client.Constants;
 using DatabaseInfo = Raven.Client.ServerWide.Operations.DatabaseInfo;
 using DatabaseSmuggler = Raven.Server.Smuggler.Documents.DatabaseSmuggler;
 using Size = Raven.Client.Util.Size;
-
+    
 namespace Raven.Server.Documents
 {
     public class DocumentDatabase : IDisposable
@@ -206,6 +210,25 @@ namespace Raven.Server.Documents
         public string DbBase64Id => DocumentsStorage.Environment?.Base64Id ?? "";
 
         public RavenConfiguration Configuration { get; }
+
+        public IJavaScriptOptions JsOptions
+        {
+            get
+            {
+                return GetJsOptions(Configuration);
+            }
+        }
+
+        public static IJavaScriptOptions GetJsOptions(RavenConfiguration configuration)
+        {
+            var jsOptions = new IndexesStatic.JavaScriptOptions(configuration.JavaScript);
+
+            // for backward compatibility overloading with Patching values in case they are set by the user
+            jsOptions.StrictMode = configuration.Patching.StrictMode ?? jsOptions.StrictMode; 
+            jsOptions.MaxSteps = configuration.Patching.MaxStepsForScript ?? jsOptions.MaxSteps; 
+
+            return jsOptions;
+        }
 
         public QueryRunner QueryRunner { get; }
 

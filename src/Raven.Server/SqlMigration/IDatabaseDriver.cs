@@ -7,12 +7,13 @@ using Raven.Server.ServerWide.Context;
 using Raven.Server.SqlMigration.Model;
 using Raven.Server.SqlMigration.Schema;
 using Sparrow.Json;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.SqlMigration
 {
     public interface IDatabaseDriver
     {
-        DatabaseSchema FindSchema();
+        DatabaseSchema FindSchema(IJavaScriptOptions jsOptions);
         
         (BlittableJsonReaderObject Document, string Id) Test(MigrationTestSettings settings, DatabaseSchema dbSchema, DocumentsOperationContext context);
         

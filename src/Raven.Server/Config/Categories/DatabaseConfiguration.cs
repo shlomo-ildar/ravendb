@@ -1,9 +1,11 @@
+#nullable enable
 using System.ComponentModel;
 using Raven.Server.Config.Attributes;
 using Raven.Server.Config.Settings;
 using Sparrow;
 using Sparrow.LowMemory;
 using Sparrow.Platform;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Config.Categories
 {

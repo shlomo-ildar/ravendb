@@ -26,6 +26,7 @@ using Raven.Client.Exceptions.Security;
 using Raven.Client.Http;
 using Raven.Client.ServerWide;
 using Raven.Client.ServerWide.Commands;
+using Raven.Client.ServerWide.JavaScript;
 using Raven.Client.ServerWide.Operations.Certificates;
 using Raven.Client.ServerWide.Operations.Configuration;
 using Raven.Client.ServerWide.Operations.OngoingTasks;
@@ -3684,7 +3685,6 @@ namespace Raven.Server.ServerWide
                             {
                                 [nameof(DatabaseRecord.Settings)] = TypeConverter.ToBlittableSupportedType(settings)
                             };
-
                             break;
 
                         case ToggleDatabasesStateCommand.Parameters.ToggleType.DynamicDatabaseDistribution:

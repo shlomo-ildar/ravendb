@@ -5,6 +5,7 @@ using Raven.Server.Documents.Indexes.Persistence.Lucene.Documents;
 using Raven.Server.Utils;
 using Sparrow.Json;
 using Sparrow.Server.Platform.Posix;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents.Indexes
 {
@@ -78,8 +79,8 @@ namespace Raven.Server.Documents.Indexes
     {
         public readonly string PropertyName;
 
-        public JsNestedField(string propertyName, string name, string[] path)
-            : base(name, path)
+        public JsNestedField(JavaScriptEngineType jsEngineType, string propertyName, string name, string[] path)
+            : base(jsEngineType, name, path)
         {
             PropertyName = propertyName;
         }
@@ -115,6 +116,8 @@ namespace Raven.Server.Documents.Indexes
 
     public class NestedField : CompiledIndexField
     {
+        protected readonly JavaScriptEngineType _jsEngineType;
+        
         private Type _accessorType;
 
         private IPropertyAccessor _accessor;
@@ -123,9 +126,10 @@ namespace Raven.Server.Documents.Indexes
 
         protected readonly CompiledIndexField _field;
 
-        public NestedField(string name, string[] path)
+        public NestedField(JavaScriptEngineType jsEngineType, string name, string[] path)
             : base(name)
         {
+            _jsEngineType = jsEngineType;
             if (path == null)
                 throw new ArgumentNullException(nameof(path));
             if (path.Length == 0)
@@ -136,7 +140,7 @@ namespace Raven.Server.Documents.Indexes
             if (path.Length == 1)
                 _field = new SimpleField(path[0]);
             else
-                _field = new NestedField(path[0], path.Skip(1).ToArray());
+                _field = new NestedField(_jsEngineType, path[0], path.Skip(1).ToArray());
         }
 
         protected override bool Equals(CompiledIndexField other)
