@@ -19,6 +19,7 @@ using Sparrow.Json;
 using Sparrow.Json.Parsing;
 using Sparrow.Platform;
 using LuceneDocument = Lucene.Net.Documents.Document;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
 {
@@ -31,6 +32,8 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
 
     public abstract class LuceneDocumentConverterBase : IDisposable
     {
+        protected IJavaScriptOptions _jsOptions;
+        
         public struct DefaultDocumentLuceneWrapper : ILuceneDocumentWrapper
         {
             private readonly LuceneDocument _doc;
@@ -137,6 +140,7 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
              bool storeValue = false,
              string storeValueFieldName = Constants.Documents.Indexing.Fields.ReduceKeyValueFieldName)
         {
+            _jsOptions = index.JsOptions;
             _index = index ?? throw new ArgumentNullException(nameof(index));
             var dictionary = new Dictionary<string, IndexField>(fields.Count, default(OrdinalStringStructComparer));
             foreach (var field in fields)

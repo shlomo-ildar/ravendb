@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Esprima.Ast;
-using Jint;
 using Jint.Native;
 using Raven.Client;
 using Raven.Server.Documents.Indexes.Static.Counters;
@@ -10,10 +9,22 @@ using Raven.Server.Documents.Indexes.Static.TimeSeries;
 using Raven.Server.Documents.Patch;
 using Sparrow.Json;
 
-namespace Raven.Server.Documents.Indexes.Static
+namespace Raven.Server.Documents.Indexes.Static.Utils
 {
-    public static class JavaScriptIndexUtils
+    public class JavaScriptIndexUtils
     {
+        public readonly IJavaScriptUtils JsUtils;
+        public readonly IJsEngineHandle EngineHandle;
+
+        public readonly IJavaScriptEngineStatic EngineStatic;
+
+        public JavaScriptIndexUtils(IJavaScriptUtils jsUtils, IJavaScriptEngineStatic engineStatic)
+        {
+            JsUtils = jsUtils;
+            EngineHandle = JsUtils.EngineHandle;
+            EngineStatic = engineStatic;
+        }
+
         public static IEnumerable<ReturnStatement> GetReturnStatements(IFunction function)
         {
             if (function is ArrowFunctionExpression arrowFunction && arrowFunction.Body is ObjectExpression objectExpression)
@@ -99,15 +110,16 @@ namespace Raven.Server.Documents.Indexes.Static
             }
         }
 
-        public static bool GetValue(Engine engine, object item, out JsValue jsItem, bool isMapReduce = false)
+        public bool GetValue(object item, out JsHandle jsItem, bool isMapReduce = false, bool keepAlive = false)
         {
-            jsItem = null;
+            jsItem = JsHandle.Empty(EngineHandle.EngineType);
             string changeVector = null;
             DateTime? lastModified = null;
 
             switch (item)
             {
                 case DynamicBlittableJson dbj:
+                {
                     var id = dbj.GetId();
                     if (isMapReduce == false && id == DynamicNullObject.Null)
                         return false;
@@ -116,7 +128,8 @@ namespace Raven.Server.Documents.Indexes.Static
 
                     if (dbj.TryGetDocument(out var doc))
                     {
-                        jsItem = new BlittableObjectInstance(engine, null, dbj.BlittableJson, doc);
+                        IBlittableObjectInstance boi = JsUtils.CreateBlittableObjectInstanceFromDoc(JsUtils, null, dbj.BlittableJson, doc);
+                        jsItem = boi.CreateJsHandle(keepAlive);
                     }
                     else
                     {
@@ -126,28 +139,43 @@ namespace Raven.Server.Documents.Indexes.Static
                         if (dbj[Constants.Documents.Metadata.ChangeVector] is string cv)
                             changeVector = cv;
 
-                        jsItem = new BlittableObjectInstance(engine, null, dbj.BlittableJson, id, lastModified, changeVector);
+                        IBlittableObjectInstance boi = JsUtils.CreateBlittableObjectInstanceFromScratch(JsUtils, null, dbj.BlittableJson, id, lastModified, changeVector);
+                        jsItem = boi.CreateJsHandle(keepAlive);
                     }
 
                     return true;
-
+                }
                 case DynamicTimeSeriesSegment dtss:
-                    jsItem = new TimeSeriesSegmentObjectInstance(engine, dtss);
+                {
+                    var bo = JsUtils.CreateTimeSeriesSegmentObjectInstance(JsUtils.EngineHandle, dtss);
+                    jsItem = bo.CreateJsHandle(keepAlive: keepAlive);
                     return true;
-
+                }
                 case DynamicCounterEntry dce:
-                    jsItem = new CounterEntryObjectInstance(engine, dce);
+                {
+                    var bo = JsUtils.CreateCounterEntryObjectInstance(JsUtils.EngineHandle, dce);
+                    jsItem = bo.CreateJsHandle(keepAlive: keepAlive);
                     return true;
-
+                }
                 case BlittableJsonReaderObject bjro:
+                {
                     //This is the case for map-reduce
-                    jsItem = new BlittableObjectInstance(engine, null, bjro, null, null, null);
+                    IBlittableObjectInstance bo = JsUtils.CreateBlittableObjectInstanceFromScratch(JsUtils, null, bjro, null, null, null);
+                    jsItem = bo.CreateJsHandle(keepAlive);
                     return true;
+                }
             }
 
+            jsItem.Dispose(); // is not necessary as should be empty
             return false;
         }
 
+        public JsHandle StringifyObject(JsHandle jsValue)
+        {
+            // json string of the object
+            return EngineHandle.JsonStringify.StaticCall(jsValue);
+        }
+        
         [ThreadStatic]
         private static JsValue[] _oneItemArray;
 

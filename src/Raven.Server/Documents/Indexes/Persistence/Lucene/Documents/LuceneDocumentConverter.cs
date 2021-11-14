@@ -6,6 +6,7 @@ using Raven.Client.Documents.Indexes.Spatial;
 using Raven.Server.Documents.Indexes.Static;
 using Raven.Server.Json;
 using Sparrow.Json;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
 {
@@ -16,13 +17,13 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
         public LuceneDocumentConverter(Index index, bool indexEmptyEntries = true, string keyFieldName = null, bool storeValue = false, string storeValueFieldName = Constants.Documents.Indexing.Fields.ReduceKeyValueFieldName)
             : base(index, indexEmptyEntries, numberOfBaseFields: 1, keyFieldName, storeValue, storeValueFieldName)
         {
-            _blittableTraverser = storeValue ? BlittableJsonTraverser.FlatMapReduceResults : BlittableJsonTraverser.Default;
+            _blittableTraverser = storeValue ? BlittableJsonTraverser.FlatMapReduceResults(_jsOptions.EngineType) : BlittableJsonTraverser.Default(_jsOptions.EngineType);
         }
 
         public LuceneDocumentConverter(Index index, ICollection<IndexField> fields, bool indexImplicitNull = false, bool indexEmptyEntries = true, string keyFieldName = null, bool storeValue = false, string storeValueFieldName = Constants.Documents.Indexing.Fields.ReduceKeyValueFieldName)
             : base(index, fields, indexImplicitNull, indexEmptyEntries, numberOfBaseFields: 1, keyFieldName, storeValue, storeValueFieldName)
         {
-            _blittableTraverser = storeValue ? BlittableJsonTraverser.FlatMapReduceResults : BlittableJsonTraverser.Default;
+            _blittableTraverser = storeValue ? BlittableJsonTraverser.FlatMapReduceResults(_jsOptions.EngineType) : BlittableJsonTraverser.Default(_jsOptions.EngineType);
         }
 
         protected override int GetFields<T>(T instance, LazyStringValue key, LazyStringValue sourceDocumentId, object doc, JsonOperationContext indexContext, IWriteOperationBuffer writeBuffer)

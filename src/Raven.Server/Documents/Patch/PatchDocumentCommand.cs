@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Jint.Native;
 using Raven.Client;
 using Raven.Client.Documents.Commands.Batches;
 using Raven.Client.Documents.Operations;
 using Raven.Client.Exceptions;
+using Raven.Client.ServerWide.JavaScript;
 using Raven.Server.Documents.Handlers;
-using Raven.Server.Documents.TimeSeries;
 using Raven.Server.ServerWide.Context;
 using Sparrow.Json;
 using Sparrow.Json.Parsing;
@@ -16,6 +15,7 @@ namespace Raven.Server.Documents.Patch
 {
     public abstract class PatchDocumentCommandBase : TransactionOperationsMerger.MergedTransactionCommand
     {
+        protected readonly IJavaScriptOptions _jsOptions;
         private readonly bool _skipPatchIfChangeVectorMismatch;
 
         private readonly JsonOperationContext _externalContext;
@@ -56,6 +56,8 @@ namespace Raven.Server.Documents.Patch
             _isTest = isTest;
             _debugMode = debugMode;
             _returnDocument = returnDocument;
+            
+            _jsOptions = database.JsOptions;
         }
 
         protected PatchResult ExecuteOnDocument(DocumentsOperationContext context, string id, LazyStringValue expectedChangeVector, ScriptRunner.SingleRun run, ScriptRunner.SingleRun runIfMissing)
@@ -128,7 +130,10 @@ namespace Raven.Server.Documents.Patch
                     id = originalDocument.Id; // we want to use the original Id casing
                     if (originalDocument.Data != null)
                     {
-                        documentInstance = (BlittableObjectInstance)((JsValue)run.Translate(context, originalDocument)).AsObject();
+                        using (var jsDoc = run.TranslateToJs(context, originalDocument, false))
+                        {
+                            documentInstance = jsDoc.BoundObject;
+                        }
                     }
                 }
 
@@ -385,8 +390,8 @@ namespace Raven.Server.Documents.Patch
                 return 0;
 
             ScriptRunner.SingleRun runIfMissing = null;
-            using (_database.Scripts.GetScriptRunner(_patch.Run, readOnly: false, out var run))
-            using (_patchIfMissing.Run != null ? _database.Scripts.GetScriptRunner(_patchIfMissing.Run, readOnly: false, out runIfMissing) : (IDisposable)null)
+            using (_database.Scripts.GetScriptRunner(_jsOptions, _patch.Run, readOnly: false, out var run))
+            using (_patchIfMissing.Run != null ? _database.Scripts.GetScriptRunner(_jsOptions, _patchIfMissing.Run, readOnly: false, out runIfMissing) : (IDisposable)null)
             {
                 foreach (var item in _ids)
                 {
@@ -459,8 +464,8 @@ namespace Raven.Server.Documents.Patch
         {
             ScriptRunner.SingleRun runIfMissing = null;
 
-            using (_database.Scripts.GetScriptRunner(_patch.Run, readOnly: false, out var run))
-            using (_patchIfMissing.Run != null ? _database.Scripts.GetScriptRunner(_patchIfMissing.Run, readOnly: false, out runIfMissing) : (IDisposable)null)
+            using (_database.Scripts.GetScriptRunner(_jsOptions, _patch.Run, readOnly: false, out var run))
+            using (_patchIfMissing.Run != null ? _database.Scripts.GetScriptRunner(_jsOptions, _patchIfMissing.Run, readOnly: false, out runIfMissing) : (IDisposable)null)
             {
                 PatchResult = ExecuteOnDocument(context, _id, _expectedChangeVector, run, runIfMissing);
                 return 1;

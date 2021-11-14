@@ -13,11 +13,13 @@ using Sparrow.Server;
 using Voron;
 using Voron.Data.BTrees;
 using Voron.Impl;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents.Indexes.MapReduce.OutputToCollection
 {
     public class OutputReduceToCollectionActions
     {
+        protected readonly IJavaScriptOptions _jsOptions;
         private readonly MapReduceIndex _index;
         private const string PrefixesOfReduceOutputDocumentsToDeleteTree = "PrefixesOfReduceOutputDocumentsToDeleteTree";
 
@@ -54,6 +56,7 @@ namespace Raven.Server.Documents.Indexes.MapReduce.OutputToCollection
 
         public OutputReduceToCollectionActions(MapReduceIndex index)
         {
+            _jsOptions = index.JsOptions;
             _index = index;
 
             Debug.Assert(string.IsNullOrEmpty(index.Definition.OutputReduceToCollection) == false);
@@ -122,7 +125,7 @@ namespace Raven.Server.Documents.Indexes.MapReduce.OutputToCollection
 
         public OutputReduceToCollectionCommandBatcher CreateCommandBatcher(JsonOperationContext indexContext, TransactionHolder writeTxHolder)
         {
-            return new OutputReduceToCollectionCommandBatcher(_index.DocumentDatabase, _collectionOfReduceOutputs, _reduceOutputVersion, _patternForOutputReduceToCollectionReferences, _index, indexContext, writeTxHolder);
+            return new OutputReduceToCollectionCommandBatcher(_jsOptions, _index.DocumentDatabase, _collectionOfReduceOutputs, _reduceOutputVersion, _patternForOutputReduceToCollectionReferences, _index, indexContext, writeTxHolder);
         }
 
         public void AddPrefixesOfDocumentsToDelete(Dictionary<string, string> prefixes)

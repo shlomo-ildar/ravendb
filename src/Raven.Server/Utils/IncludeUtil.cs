@@ -5,6 +5,7 @@ using System.Globalization;
 using Raven.Server.Json;
 using Sparrow;
 using Sparrow.Json;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Utils
 {
@@ -35,13 +36,23 @@ namespace Raven.Server.Utils
             }
         }
 
-        public static void GetDocIdFromInclude(BlittableJsonReaderObject docReader, StringSegment includePath, HashSet<string> includedIds, char identityPartsSeparator)
+        public static void GetDocIdFromInclude(
+            JavaScriptEngineType? jsEngineType,
+            BlittableJsonReaderObject docReader, 
+            StringSegment includePath, 
+            HashSet<string> includedIds, 
+            char identityPartsSeparator)
         {
             var op = new HashSetIncludeOp(includedIds);
-            GetDocIdFromInclude(docReader, includePath, identityPartsSeparator, op);
+            GetDocIdFromInclude(jsEngineType, docReader, includePath, identityPartsSeparator, op);
         }
 
-        public static void GetDocIdFromInclude<TIncludeOp>(BlittableJsonReaderObject docReader, StringSegment includePath, char identityPartsSeparator, TIncludeOp op)
+        public static void GetDocIdFromInclude<TIncludeOp>(
+            JavaScriptEngineType? jsEngineType,
+            BlittableJsonReaderObject docReader, 
+            StringSegment includePath, 
+            char identityPartsSeparator, 
+            TIncludeOp op)
             where TIncludeOp : struct, IIncludeOp
         {
             Func<object, StringSegment, char, string> valueHandler = null;
@@ -74,7 +85,7 @@ namespace Raven.Server.Utils
                 pathSegment = includePath;
             }
 
-            if (BlittableJsonTraverser.Default.TryRead(docReader, pathSegment, out object value, out StringSegment leftPath) == false)
+            if (BlittableJsonTraverser.Default(jsEngineType).TryRead(docReader, pathSegment, out object value, out StringSegment leftPath) == false)
             {
                 var json = value as BlittableJsonReaderObject;
                 if (json != null)
@@ -101,7 +112,7 @@ namespace Raven.Server.Utils
                     foreach (var item in array)
                     {
                         if (item is BlittableJsonReaderObject inner)
-                            GetDocIdFromInclude(inner, leftPath, identityPartsSeparator, op);
+                            GetDocIdFromInclude(jsEngineType, inner, leftPath, identityPartsSeparator, op);
                     }
                 }
 

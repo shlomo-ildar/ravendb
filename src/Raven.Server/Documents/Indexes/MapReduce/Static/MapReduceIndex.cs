@@ -23,6 +23,8 @@ using Raven.Server.Utils;
 using Sparrow.Json;
 using Sparrow.Json.Parsing;
 using Voron;
+using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Documents.Patch.V8;
 
 namespace Raven.Server.Documents.Indexes.MapReduce.Static
 {
@@ -465,6 +467,7 @@ namespace Raven.Server.Documents.Indexes.MapReduce.Static
 
         public class AnonymousObjectToBlittableMapResultsEnumerableWrapper : IEnumerable<MapResult>
         {
+            private readonly IJavaScriptOptions _jsOptions;
             private IEnumerable _items;
             private TransactionOperationContext _indexContext;
             private IndexingStatsScope _stats;
@@ -477,6 +480,7 @@ namespace Raven.Server.Documents.Indexes.MapReduce.Static
 
             public AnonymousObjectToBlittableMapResultsEnumerableWrapper(MapReduceIndex index, TransactionOperationContext indexContext)
             {
+                _jsOptions = index.JsOptions;
                 _indexContext = indexContext;
                 _groupByFields = index.Definition.GroupByFields;
                 _isMultiMap = index.IsMultiMap;
@@ -508,11 +512,12 @@ namespace Raven.Server.Documents.Indexes.MapReduce.Static
 
             private Enumerator GetEnumerator()
             {
-                return new Enumerator(_items.GetEnumerator(), this, _createBlittableResultStats);
+                return new Enumerator(_jsOptions, _items.GetEnumerator(), this, _createBlittableResultStats);
             }
 
             private class Enumerator : IEnumerator<MapResult>
             {
+                private readonly IJavaScriptOptions _jsOptions;
                 private readonly IEnumerator _enumerator;
                 private readonly AnonymousObjectToBlittableMapResultsEnumerableWrapper _parent;
                 private readonly IndexingStatsScope _createBlittableResult;
@@ -521,8 +526,9 @@ namespace Raven.Server.Documents.Indexes.MapReduce.Static
                 private readonly Queue<(string PropertyName, object PropertyValue)> _propertyQueue = new Queue<(string PropertyName, object PropertyValue)>();
                 private readonly CurrentIndexingScope.MetadataFieldCache _metadataFields;
 
-                public Enumerator(IEnumerator enumerator, AnonymousObjectToBlittableMapResultsEnumerableWrapper parent, IndexingStatsScope createBlittableResult)
+                public Enumerator(IJavaScriptOptions jsOptions, IEnumerator enumerator, AnonymousObjectToBlittableMapResultsEnumerableWrapper parent, IndexingStatsScope createBlittableResult)
                 {
+                    _jsOptions = jsOptions;
                     _enumerator = enumerator;
                     _parent = parent;
                     _createBlittableResult = createBlittableResult;
@@ -556,7 +562,8 @@ namespace Raven.Server.Documents.Indexes.MapReduce.Static
                         foreach (var property in accessor.GetPropertiesInOrder(output))
                         {
                             var value = property.Value;
-                            var blittableValue = TypeConverter.ToBlittableSupportedType(value, context: _parent._indexContext);
+                            var blittableValue = TypeConverter.ToBlittableSupportedType(value, context: _parent._indexContext, isRoot: false);
+                            V8EngineEx.DisposeJsObjectsIfNeeded(value);
 
                             _propertyQueue.Enqueue((property.Key, blittableValue));
 
@@ -743,5 +750,6 @@ namespace Raven.Server.Documents.Indexes.MapReduce.Static
                 }
             }
         }
+        
     }
 }

@@ -5,6 +5,7 @@ using Raven.Client.Documents.Indexes;
 using Raven.Server.Config.Categories;
 using Raven.Server.ServerWide.Context;
 using Voron;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents.Indexes.Auto
 {

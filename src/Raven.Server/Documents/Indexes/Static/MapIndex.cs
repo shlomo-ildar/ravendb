@@ -11,6 +11,7 @@ using Raven.Server.Documents.Indexes.Workers;
 using Raven.Server.Documents.Queries;
 using Raven.Server.ServerWide.Context;
 using Voron;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents.Indexes.Static
 {

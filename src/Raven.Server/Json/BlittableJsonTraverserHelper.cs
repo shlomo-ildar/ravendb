@@ -5,7 +5,8 @@ using Raven.Client;
 using Raven.Server.Documents;
 using Sparrow;
 using Sparrow.Json;
-using TypeConverter = Raven.Server.Utils.TypeConverter;
+using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Utils;
 
 namespace Raven.Server.Json
 {
@@ -47,6 +48,7 @@ namespace Raven.Server.Json
             if (blittableJsonTraverser.TryRead(document, path, out value, out StringSegment leftPath) &&
                 leftPath.Length == 0)
             {
+                
                 value = TypeConverter.ConvertForIndexing(value);
                 return true;
             }
@@ -57,9 +59,12 @@ namespace Raven.Server.Json
             return TryReadComputedProperties(blittableJsonTraverser, leftPath, ref value);
         }
 
-
-        public static bool TryReadComputedProperties(BlittableJsonTraverser blittableJsonTraverser, StringSegment leftPath, ref object value)
+        public static bool TryReadComputedProperties(
+            BlittableJsonTraverser blittableJsonTraverser, 
+            StringSegment leftPath, 
+            ref object value)
         {
+            var jsEngineType = blittableJsonTraverser.JsEngineType;
             value = TypeConverter.ConvertForIndexing(value);
 
             if (leftPath == "Length" || leftPath == "length" ||
@@ -164,7 +169,10 @@ namespace Raven.Server.Json
             return false;
         }
 
-        private static IEnumerable<object> ReadNestedComputed(BlittableJsonTraverser blittableJsonTraverser, IEnumerable items, StringSegment leftPath)
+        private static IEnumerable<object> ReadNestedComputed(
+            BlittableJsonTraverser blittableJsonTraverser, 
+            IEnumerable items, 
+            StringSegment leftPath)
         {
             foreach (var item in items)
             {

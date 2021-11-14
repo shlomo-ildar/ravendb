@@ -8,11 +8,14 @@ using Raven.Server.Utils;
 using Raven.Server.Utils.Stats;
 using Sparrow.Json;
 using Sparrow.Json.Parsing;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents.Replication
 {
     public class LiveReplicationPerformanceCollector : DatabaseAwareLivePerformanceCollector<LiveReplicationPerformanceCollector.IReplicationPerformanceStats>
     {
+        protected readonly IJavaScriptOptions _jsOptions;
+        
         private readonly ConcurrentDictionary<string, ReplicationHandlerAndPerformanceStatsList<IncomingReplicationHandler, IncomingReplicationStatsAggregator>> _incoming =
             new ConcurrentDictionary<string, ReplicationHandlerAndPerformanceStatsList<IncomingReplicationHandler, IncomingReplicationStatsAggregator>>(StringComparer.OrdinalIgnoreCase);
 
@@ -24,6 +27,8 @@ namespace Raven.Server.Documents.Replication
 
         public LiveReplicationPerformanceCollector(DocumentDatabase database) : base(database)
         {
+            _jsOptions = Database.JsOptions;
+            
             var recentStats = PrepareInitialPerformanceStats().ToList();
             if (recentStats.Count > 0)
             {
@@ -86,8 +91,8 @@ namespace Raven.Server.Documents.Replication
                 var stats = handler.GetReplicationPerformance();
                 if (stats.Length > 0)
                     yield return handler.PullReplication
-                        ? IncomingPerformanceStats.ForPullReplication(handler.ConnectionInfo.SourceDatabaseId, handler.SourceFormatted, stats)
-                        : IncomingPerformanceStats.ForPushReplication(handler.ConnectionInfo.SourceDatabaseId, handler.SourceFormatted, stats);
+                        ? IncomingPerformanceStats.ForPullReplication(_jsOptions, handler.ConnectionInfo.SourceDatabaseId, handler.SourceFormatted, stats)
+                        : IncomingPerformanceStats.ForPushReplication(_jsOptions, handler.ConnectionInfo.SourceDatabaseId, handler.SourceFormatted, stats);
             }
 
             foreach (var handler in Database.ReplicationLoader.OutgoingHandlers)
@@ -95,8 +100,8 @@ namespace Raven.Server.Documents.Replication
                 var stats = handler.GetReplicationPerformance();
                 if (stats.Length > 0)
                     yield return handler.IsPullReplicationAsHub
-                        ? OutgoingPerformanceStats.ForPullReplication(handler.DestinationDbId, handler.DestinationFormatted, stats)
-                        : OutgoingPerformanceStats.ForPushReplication(handler.DestinationDbId, handler.DestinationFormatted, stats);
+                        ? OutgoingPerformanceStats.ForPullReplication(_jsOptions, handler.DestinationDbId, handler.DestinationFormatted, stats)
+                        : OutgoingPerformanceStats.ForPushReplication(_jsOptions, handler.DestinationDbId, handler.DestinationFormatted, stats);
             }
         }
 
@@ -127,8 +132,8 @@ namespace Raven.Server.Documents.Replication
                 {
                     var stats = itemsToSend.Select(item => item.ToReplicationPerformanceLiveStatsWithDetails()).ToArray();
                     results.Add(handler.PullReplication
-                        ? IncomingPerformanceStats.ForPullReplication(handler.ConnectionInfo.SourceDatabaseId, handler.SourceFormatted, stats)
-                        : IncomingPerformanceStats.ForPushReplication(handler.ConnectionInfo.SourceDatabaseId, handler.SourceFormatted, stats));
+                        ? IncomingPerformanceStats.ForPullReplication(_jsOptions, handler.ConnectionInfo.SourceDatabaseId, handler.SourceFormatted, stats)
+                        : IncomingPerformanceStats.ForPushReplication(_jsOptions, handler.ConnectionInfo.SourceDatabaseId, handler.SourceFormatted, stats));
                 }
             }
 
@@ -155,20 +160,20 @@ namespace Raven.Server.Documents.Replication
                 {
                     var stats = itemsToSend.Select(item => item.ToReplicationPerformanceLiveStatsWithDetails()).ToArray();
                     results.Add(handler.IsPullReplicationAsHub
-                        ? OutgoingPerformanceStats.ForPullReplication(handler.DestinationDbId, handler.DestinationFormatted, stats)
-                        : OutgoingPerformanceStats.ForPushReplication(handler.DestinationDbId, handler.DestinationFormatted, stats));
+                        ? OutgoingPerformanceStats.ForPullReplication(_jsOptions, handler.DestinationDbId, handler.DestinationFormatted, stats)
+                        : OutgoingPerformanceStats.ForPushReplication(_jsOptions, handler.DestinationDbId, handler.DestinationFormatted, stats));
                 }
             }
 
             foreach (var outgoingError in _outgoingErrors)
             {
-                results.Add(OutgoingPerformanceStats.ForPushReplication(outgoingError.Key.Database, outgoingError.Value.DestinationFormatted, outgoingError.Value.GetReplicationPerformance()));
+                results.Add(OutgoingPerformanceStats.ForPushReplication(_jsOptions, outgoingError.Key.Database, outgoingError.Value.DestinationFormatted, outgoingError.Value.GetReplicationPerformance()));
                 _outgoingErrors.TryRemove(outgoingError.Key, out _);
             }
 
             foreach (var incomingError in _incomingErrors)
             {
-                results.Add(IncomingPerformanceStats.ForPullReplication(incomingError.Key.Database, incomingError.Value.DestinationFormatted, incomingError.Value.GetReplicationPerformance()));
+                results.Add(IncomingPerformanceStats.ForPullReplication(_jsOptions, incomingError.Key.Database, incomingError.Value.DestinationFormatted, incomingError.Value.GetReplicationPerformance()));
                 _incomingErrors.TryRemove(incomingError.Key, out _);
             }
 
@@ -251,45 +256,48 @@ namespace Raven.Server.Documents.Replication
 
         public class OutgoingPerformanceStats : ReplicationPerformanceStatsBase<OutgoingReplicationPerformanceStats>
         {
-            private OutgoingPerformanceStats(string id, string description, ReplicationPerformanceType type, OutgoingReplicationPerformanceStats[] performance)
-                : base(id, description, type, performance)
+            private OutgoingPerformanceStats(IJavaScriptOptions jsOptions, string id, string description, ReplicationPerformanceType type, OutgoingReplicationPerformanceStats[] performance)
+                : base(jsOptions, id, description, type, performance)
             {
             }
 
-            public static OutgoingPerformanceStats ForPullReplication(string id, string description, OutgoingReplicationPerformanceStats[] performance)
+            public static OutgoingPerformanceStats ForPullReplication(IJavaScriptOptions jsOptions, string id, string description, OutgoingReplicationPerformanceStats[] performance)
             {
-                return new OutgoingPerformanceStats(id, description, ReplicationPerformanceType.OutgoingPull, performance);
+                return new OutgoingPerformanceStats(jsOptions, id, description, ReplicationPerformanceType.OutgoingPull, performance);
             }
 
-            public static OutgoingPerformanceStats ForPushReplication(string id, string description, OutgoingReplicationPerformanceStats[] performance)
+            public static OutgoingPerformanceStats ForPushReplication(IJavaScriptOptions jsOptions, string id, string description, OutgoingReplicationPerformanceStats[] performance)
             {
-                return new OutgoingPerformanceStats(id, description, ReplicationPerformanceType.OutgoingPush, performance);
+                return new OutgoingPerformanceStats(jsOptions, id, description, ReplicationPerformanceType.OutgoingPush, performance);
             }
         }
 
         public class IncomingPerformanceStats : ReplicationPerformanceStatsBase<IncomingReplicationPerformanceStats>
         {
-            private IncomingPerformanceStats(string id, string description, ReplicationPerformanceType type, IncomingReplicationPerformanceStats[] performance)
-                : base(id, description, type, performance)
+            private IncomingPerformanceStats(IJavaScriptOptions jsOptions, string id, string description, ReplicationPerformanceType type, IncomingReplicationPerformanceStats[] performance)
+                : base(jsOptions, id, description, type, performance)
             {
             }
 
-            public static IncomingPerformanceStats ForPullReplication(string id, string description, IncomingReplicationPerformanceStats[] performance)
+            public static IncomingPerformanceStats ForPullReplication(IJavaScriptOptions jsOptions, string id, string description, IncomingReplicationPerformanceStats[] performance)
             {
-                return new IncomingPerformanceStats(id, description, ReplicationPerformanceType.IncomingPull, performance);
+                return new IncomingPerformanceStats(jsOptions, id, description, ReplicationPerformanceType.IncomingPull, performance);
             }
 
-            public static IncomingPerformanceStats ForPushReplication(string id, string description, IncomingReplicationPerformanceStats[] performance)
+            public static IncomingPerformanceStats ForPushReplication(IJavaScriptOptions jsOptions, string id, string description, IncomingReplicationPerformanceStats[] performance)
             {
-                return new IncomingPerformanceStats(id, description, ReplicationPerformanceType.IncomingPush, performance);
+                return new IncomingPerformanceStats(jsOptions, id, description, ReplicationPerformanceType.IncomingPush, performance);
             }
         }
 
         public abstract class ReplicationPerformanceStatsBase<TPerformance> : IReplicationPerformanceStats
             where TPerformance : ReplicationPerformanceBase
         {
-            protected ReplicationPerformanceStatsBase(string id, string description, ReplicationPerformanceType type, TPerformance[] performance)
+            protected readonly IJavaScriptOptions _jsOptions;
+            
+            protected ReplicationPerformanceStatsBase(IJavaScriptOptions jsOptions, string id, string description, ReplicationPerformanceType type, TPerformance[] performance)
             {
+                _jsOptions = jsOptions;
                 Id = id;
                 Description = description;
                 Type = type;

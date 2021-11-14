@@ -42,6 +42,7 @@ using Sparrow.LowMemory;
 using Sparrow.Threading;
 using Sparrow.Utils;
 using Size = Sparrow.Size;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents.ETL
 {
@@ -110,6 +111,7 @@ namespace Raven.Server.Documents.ETL
         where TStatsScope : AbstractEtlStatsScope<TStatsScope, TEtlPerformanceOperation>
         where TEtlPerformanceOperation : EtlPerformanceOperation
     {
+        protected readonly IJavaScriptOptions _jsOptions;
         private static readonly Size DefaultMaximumMemoryAllocation = new Size(32, SizeUnit.Megabytes);
         internal const int MinBatchSize = 64;
 
@@ -140,6 +142,7 @@ namespace Raven.Server.Documents.ETL
 
         protected EtlProcess(Transformation transformation, TConfiguration configuration, DocumentDatabase database, ServerStore serverStore, string tag)
         {
+            _jsOptions = database.JsOptions;
             Transformation = transformation;
             Configuration = configuration;
             _cts = CancellationTokenSource.CreateLinkedTokenSource(database.DatabaseShutdown);
@@ -1278,6 +1281,8 @@ namespace Raven.Server.Documents.ETL
 
         public override void Dispose()
         {
+            GC.SuppressFinalize(this);
+            
             if (CancellationToken.IsCancellationRequested)
                 return;
 

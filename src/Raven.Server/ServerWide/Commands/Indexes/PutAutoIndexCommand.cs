@@ -13,6 +13,7 @@ using Raven.Server.Documents.Indexes.MapReduce.Auto;
 using Raven.Server.Rachis;
 using Raven.Server.Utils;
 using Sparrow.Json.Parsing;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.ServerWide.Commands.Indexes
 {

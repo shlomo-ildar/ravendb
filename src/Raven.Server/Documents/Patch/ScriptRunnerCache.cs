@@ -8,6 +8,9 @@ using Raven.Client.Extensions;
 using Raven.Server.Config;
 using Sparrow.Json.Parsing;
 using Sparrow.LowMemory;
+using Raven.Client.ServerWide.JavaScript;
+using PatchJint = Raven.Server.Documents.Patch.Jint;
+using PatchV8 = Raven.Server.Documents.Patch.V8;
 
 namespace Raven.Server.Documents.Patch
 {
@@ -70,33 +73,33 @@ namespace Raven.Server.Documents.Patch
         }
 
 
-        public ScriptRunner.ReturnRun GetScriptRunner(Key key, bool readOnly, out ScriptRunner.SingleRun patchRun)
+        public ScriptRunner.ReturnRun GetScriptRunner(IJavaScriptOptions jsOptions, Key key, bool readOnly, out ScriptRunner.SingleRun patchRun)
         {
             if (key == null)
             {
                 patchRun = null;
                 return new ScriptRunner.ReturnRun();
             }
-            var scriptRunner = GetScriptRunner(key);
+            var scriptRunner = GetScriptRunner(jsOptions, key);
             var returnRun = scriptRunner.GetRunner(out patchRun);
             patchRun.ReadOnly = readOnly;
             return returnRun;
         }
 
 
-        private ScriptRunner GetScriptRunner(Key script)
+        private ScriptRunner GetScriptRunner(IJavaScriptOptions jsOptions, Key script)
         {
             if (_cache.TryGetValue(script, out var lazy))                
                 return lazy.Value;
 
-            return GetScriptRunnerUnlikely(script);
+            return GetScriptRunnerUnlikely(jsOptions, script);
         }
 
-        private ScriptRunner GetScriptRunnerUnlikely(Key script)
+        private ScriptRunner GetScriptRunnerUnlikely(IJavaScriptOptions jsOptions, Key script)
         {
             var value = new Lazy<ScriptRunner>(() =>
             {
-                var runner = new ScriptRunner(_database, _configuration, EnableClr);
+                ScriptRunner runner = new ScriptRunner(_database, _configuration, EnableClr);
                 script.GenerateScript(runner);
                 runner.ScriptType = script.GetType().Name;
                 return runner;

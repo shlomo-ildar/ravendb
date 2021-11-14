@@ -17,11 +17,13 @@ using Raven.Server.Documents.Indexes.MapReduce.Auto;
 using Raven.Server.Smuggler.Documents.Data;
 using Raven.Server.Smuggler.Documents.Processors;
 using Sparrow.Json;
+using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Smuggler.Documents
 {
     public class DatabaseSmuggler
     {
+        protected readonly IJavaScriptOptions _jsOptions;
         private readonly DocumentDatabase _database;
         private readonly ISmugglerSource _source;
         private readonly ISmugglerDestination _destination;
@@ -59,6 +61,7 @@ namespace Raven.Server.Smuggler.Documents
             _options = options ?? new DatabaseSmugglerOptionsServerSide();
             _result = result;
             _token = token;
+            _jsOptions = _options.OptionsForTransformScript;
 
             if (string.IsNullOrWhiteSpace(_options.TransformScript) == false)
                 _patcher = new SmugglerPatcher(_options, database);
