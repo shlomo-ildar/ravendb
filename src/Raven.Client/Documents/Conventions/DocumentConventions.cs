@@ -62,7 +62,7 @@ namespace Raven.Client.Documents.Conventions
         public readonly BulkInsertConventions BulkInsert;
 
         public readonly AggressiveCacheConventions AggressiveCache;
-
+        
         public ISerializationConventions Serialization
         {
             get { return _serialization; }
