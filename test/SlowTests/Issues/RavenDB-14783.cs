@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using FastTests;
 using Raven.Client.Documents.Operations;
 using Raven.Client.Documents.Smuggler;
+using Raven.Server.Documents.Indexes.Static;
 using Sparrow.Json;
 using Sparrow.Json.Parsing;
 using Xunit;
@@ -36,7 +37,7 @@ namespace SlowTests.Issues
                     var operation = await store.Smuggler.ImportAsync(new DatabaseSmugglerImportOptions
                     {
                         OperateOnTypes = DatabaseItemType.Documents | DatabaseItemType.Identities | DatabaseItemType.CompareExchange,
-                        MaxStepsForTransformScript = int.MaxValue,
+                        OptionsForTransformScript = new JavaScriptOptionsSmuggler {MaxSteps = int.MaxValue},
                         TransformScript = @"
                     function sleep(milliseconds) {
                       var date = Date.now();

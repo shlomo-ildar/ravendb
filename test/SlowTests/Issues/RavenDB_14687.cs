@@ -22,7 +22,7 @@ namespace SlowTests.Issues
         {
             var initialMaxStepsForScript = 10;
 
-            using (var store = GetDocumentStore(new Options { ModifyDatabaseRecord = record => record.Settings[RavenConfiguration.GetKey(x => x.Indexing.MaxStepsForScript)] = initialMaxStepsForScript.ToString() }))
+            using (var store = GetDocumentStore(new Options { ModifyDatabaseRecord = record => record.Settings[RavenConfiguration.GetKey(x => x.Indexing.JsMaxSteps)] = initialMaxStepsForScript.ToString() }))
             {
                 var index = new MyJSIndex(maxStepsForScript: null);
                 index.Execute(store);
@@ -32,7 +32,7 @@ namespace SlowTests.Issues
                 var indexInstance1 = (MapIndex)database.IndexStore.GetIndex(index.IndexName);
                 var compiled1 = (JavaScriptIndex)indexInstance1._compiled;
 
-                Assert.Equal(initialMaxStepsForScript, compiled1._engine.FindConstraint<MaxStatements>().Max);
+                Assert.Equal(initialMaxStepsForScript, compiled1.EngineJint.FindConstraint<MaxStatements>().Max);
 
                 const int maxStepsForScript = 1000;
                 index = new MyJSIndex(maxStepsForScript);
@@ -46,7 +46,7 @@ namespace SlowTests.Issues
                 Assert.NotEqual(indexInstance1, indexInstance2);
                 Assert.NotEqual(compiled1, compiled2);
 
-                Assert.Equal(maxStepsForScript, compiled2._engine.FindConstraint<MaxStatements>().Max);
+                Assert.Equal(maxStepsForScript, compiled2.EngineJint.FindConstraint<MaxStatements>().Max);
 
                 using (var session = store.OpenSession())
                 {
@@ -87,7 +87,7 @@ map('Companies', (company) => {
                 {
                     Configuration = new IndexConfiguration
                     {
-                        { RavenConfiguration.GetKey(x => x.Indexing.MaxStepsForScript), maxStepsForScript.ToString() }
+                        { RavenConfiguration.GetKey(x => x.Indexing.JsMaxSteps), maxStepsForScript.ToString() }
                     };
                 }
             }
