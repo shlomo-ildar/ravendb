@@ -181,8 +181,9 @@ namespace Raven.Server.Config.Categories
         public int? JsMaxSteps { get; set; }
 
         [Description("EXPERT: Maximum duration in milliseconds of the JS script execution (V8)")]  // TODO [shlomo] To expose in Jint TimeConstraint2 class (as it was made to MaxStatements)
-        [ConfigurationEntry("Indexing.MaxDurationInMsForScript", ConfigurationEntryScope.ServerWideOrPerDatabase)]
-        public int? JsMaxDurationInMs { get; set; }
+        [TimeUnit(TimeUnit.Milliseconds)]
+        [ConfigurationEntry("Indexing.MaxDurationForScript", ConfigurationEntryScope.ServerWideOrPerDatabase)]
+        public TimeSetting? JsMaxDuration { get; set; }
 
         [Description("Time (in minutes) between index cleanup")]
         [DefaultValue(10)]

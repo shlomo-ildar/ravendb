@@ -30,8 +30,8 @@ namespace Raven.Server.Smuggler.Documents.Data
                             result.StrictMode = bool.Parse(item.Value[0]);
                         else if (string.Equals(key, nameof(MaxSteps), StringComparison.OrdinalIgnoreCase))
                             result.MaxSteps = int.Parse(item.Value[0]);
-                        else if (string.Equals(key, nameof(MaxDurationInMs), StringComparison.OrdinalIgnoreCase))
-                            result.MaxDurationInMs = int.Parse(item.Value[0]);
+                        else if (string.Equals(key, nameof(MaxDuration), StringComparison.OrdinalIgnoreCase))
+                            result.MaxDuration = int.Parse(item.Value[0]);
                     }
                     catch (Exception e)
                     {

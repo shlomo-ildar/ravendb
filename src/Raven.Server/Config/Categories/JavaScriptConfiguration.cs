@@ -13,7 +13,7 @@ namespace Raven.Server.Config.Categories
         JavaScriptEngineType EngineType { get; set; }
         bool StrictMode { get; set; }
         int MaxSteps { get; set; }
-        int MaxDurationInMs { get; set; }
+        TimeSetting MaxDuration { get; set; }
     }
     
     [ConfigurationCategory(ConfigurationCategoryType.JavaScript)]
@@ -36,7 +36,8 @@ namespace Raven.Server.Config.Categories
 
         [Description("EXPERT: Maximum duration in milliseconds of the JS script execution (V8)")]  // TODO In Jint TimeConstraint2 is the internal class so the approach applied to MaxStatements doesn't work here
         [DefaultValue(100)]
-        [ConfigurationEntry("JsConfiguration.MaxDurationInMs", ConfigurationEntryScope.ServerWideOrPerDatabase)]
-        public int MaxDurationInMs { get; set; }
+        [TimeUnit(TimeUnit.Milliseconds)]
+        [ConfigurationEntry("JsConfiguration.MaxDuration", ConfigurationEntryScope.ServerWideOrPerDatabase)]
+        public TimeSetting MaxDuration { get; set; }
     }
 }

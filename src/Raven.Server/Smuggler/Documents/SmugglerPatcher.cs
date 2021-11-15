@@ -42,7 +42,7 @@ namespace Raven.Server.Smuggler.Documents
             using (document)
             {
                 using (_run.ScriptEngineHandle.ChangeMaxStatements(_options.OptionsForTransformScript.MaxSteps))
-                using (_run.ScriptEngineHandle.ChangeMaxDuration(_options.OptionsForTransformScript.MaxDurationInMs))
+                using (_run.ScriptEngineHandle.ChangeMaxDuration(_options.OptionsForTransformScript.MaxDuration))
                 {
                     try
                     {
