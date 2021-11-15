@@ -1,7 +1,7 @@
 ﻿using Raven.Client.ServerWide.JavaScript;
 namespace Raven.Client.Documents.Smuggler
 {
-    public class JavaScriptOptions : IJavaScriptOptions
+    public class JavaScriptOptionsSmuggler : IJavaScriptOptions
 
     {
 
@@ -58,7 +58,7 @@ namespace Raven.Client.Documents.Smuggler
         {
             OperateOnTypes = DefaultOperateOnTypes;
             OperateOnDatabaseRecordTypes = DefaultOperateOnDatabaseRecordTypes;
-            OptionsForTransformScript = new JavaScriptOptions();
+            OptionsForTransformScript = new JavaScriptOptionsSmuggler();
             IncludeExpired = true;
             IncludeArtificial = false;
         }
