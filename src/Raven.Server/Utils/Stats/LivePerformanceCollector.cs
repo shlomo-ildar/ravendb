@@ -9,7 +9,6 @@ using Sparrow.Json;
 using Sparrow.Logging;
 using Sparrow.Server.Collections;
 using Sparrow.Utils;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Utils.Stats
 {

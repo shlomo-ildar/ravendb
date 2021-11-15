@@ -1,3 +1,4 @@
+using Raven.Client.Documents.Smuggler;
 using Raven.Client.ServerWide.JavaScript;
 using Raven.Server.Config;
 using Raven.Server.Config.Categories;
@@ -36,6 +37,14 @@ namespace Raven.Server.Documents.Indexes.Static
             StrictMode = indexConfiguration.StrictMode;
             MaxSteps = indexConfiguration.MaxSteps;
             MaxDurationInMs = indexConfiguration.MaxDurationInMs;
+        }
+
+        public JavaScriptOptions(JavaScriptOptionsForSmuggler jsOptionsForSmuggler)
+        {
+            EngineType = jsOptionsForSmuggler.EngineType;
+            StrictMode = jsOptionsForSmuggler.StrictMode;
+            MaxSteps = jsOptionsForSmuggler.MaxSteps;
+            MaxDurationInMs = jsOptionsForSmuggler.MaxDurationInMs;
         }
     }
 }

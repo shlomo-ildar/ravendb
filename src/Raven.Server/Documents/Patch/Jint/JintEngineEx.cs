@@ -6,6 +6,7 @@ using Jint.Native;
 using Raven.Server.Extensions.Jint;
 using Raven.Server.Documents.Indexes.Static.JavaScript.Jint;
 using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 using JSFunction = V8.Net.JSFunction;
 using JSValueType = V8.Net.JSValueType;
 using Raven.Client.Exceptions.Documents.Patching;

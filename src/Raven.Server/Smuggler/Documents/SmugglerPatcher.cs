@@ -2,7 +2,8 @@
 using Raven.Client.Documents.Smuggler;
 using Raven.Server.Documents;
 using Raven.Server.Documents.Patch;
-using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
+using Raven.Server.Documents.Indexes.Static;
 using Sparrow.Json;
 //using Raven.Server.Extensions.Jint;
 using JavaScriptException = Raven.Client.Exceptions.Documents.Patching.JavaScriptException;
@@ -21,7 +22,7 @@ namespace Raven.Server.Smuggler.Documents
         
         public SmugglerPatcher(DatabaseSmugglerOptions options, DocumentDatabase database)
         {
-            _jsOptions = options.OptionsForTransformScript;
+            _jsOptions = new JavaScriptOptions(options.OptionsForTransformScript);
             if (string.IsNullOrWhiteSpace(options.TransformScript))
                 throw new InvalidOperationException("Cannot create a patcher with empty transform script.");
             _options = options;

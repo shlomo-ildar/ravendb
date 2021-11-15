@@ -14,7 +14,7 @@ using Raven.Server.Json;
 using Raven.Server.ServerWide.Context;
 using Raven.Server.Utils.Stats;
 using Sparrow.Json;
-using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 
 namespace Raven.Server.Documents.Subscriptions
 {

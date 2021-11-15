@@ -6,7 +6,6 @@ using Raven.Client.Documents.Indexes.Spatial;
 using Raven.Server.Documents.Indexes.Static;
 using Raven.Server.Json;
 using Sparrow.Json;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
 {

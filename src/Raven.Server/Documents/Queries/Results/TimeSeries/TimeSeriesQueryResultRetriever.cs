@@ -2,7 +2,6 @@
 using Raven.Server.Documents.Includes;
 using Raven.Server.Documents.Queries.Timings;
 using Sparrow.Json;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents.Queries.Results.TimeSeries
 {

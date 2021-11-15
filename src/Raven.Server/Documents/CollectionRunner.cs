@@ -15,7 +15,6 @@ using Raven.Server.ServerWide.Context;
 using Raven.Server.Utils;
 using Sparrow.Json;
 using PatchRequest = Raven.Server.Documents.Patch.PatchRequest;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents
 {

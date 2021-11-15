@@ -9,7 +9,7 @@ using Sparrow;
 using Sparrow.Json;
 using Sparrow.Json.Parsing;
 using static Raven.Server.Documents.Queries.GraphQueryRunner;
-using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 
 namespace Raven.Server.Documents.Queries.Graph
 {

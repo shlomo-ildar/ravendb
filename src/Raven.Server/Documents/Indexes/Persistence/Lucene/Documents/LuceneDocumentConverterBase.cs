@@ -19,7 +19,7 @@ using Sparrow.Json;
 using Sparrow.Json.Parsing;
 using Sparrow.Platform;
 using LuceneDocument = Lucene.Net.Documents.Document;
-using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 
 namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
 {

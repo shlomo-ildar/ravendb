@@ -17,14 +17,13 @@ using Raven.Server.ServerWide;
 using Raven.Server.ServerWide.Commands;
 using Raven.Server.ServerWide.Context;
 using Raven.Server.Utils;
-using Raven.Server.Config;
 using Sparrow.Json;
 using Sparrow.Server;
 using Sparrow.Server.Utils;
 using Sparrow.Threading;
 using Voron.Exceptions;
 using Voron.Impl.Extensions;
-using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 
 namespace Raven.Server.Rachis
 {

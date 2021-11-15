@@ -8,6 +8,14 @@ using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Config.Categories
 {
+    public interface IJavaScriptOptions
+    {
+        JavaScriptEngineType EngineType { get; set; }
+        bool StrictMode { get; set; }
+        int MaxSteps { get; set; }
+        int MaxDurationInMs { get; set; }
+    }
+    
     [ConfigurationCategory(ConfigurationCategoryType.JavaScript)]
     public class JavaScriptConfiguration : ConfigurationCategory, IJavaScriptOptions
     {

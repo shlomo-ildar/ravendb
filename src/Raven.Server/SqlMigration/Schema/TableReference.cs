@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using Raven.Server.Utils;
 using Sparrow.Json.Parsing;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.SqlMigration.Schema
 {

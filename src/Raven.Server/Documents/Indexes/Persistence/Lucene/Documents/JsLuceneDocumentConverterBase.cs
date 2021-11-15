@@ -1,19 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using Jint;
-using Jint.Native;
-using Jint.Native.Object;
-using Jint.Runtime.Descriptors;
-using Lucene.Net.Documents;
-using Raven.Client;
+﻿using Raven.Client;
 using Raven.Client.Documents.Indexes;
-using Raven.Client.ServerWide.JavaScript;
-using Raven.Server.Documents.Indexes.MapReduce.Static;
-using Raven.Server.Documents.Indexes.Static;
-using Raven.Server.Documents.Indexes.Static.Spatial;
-using Raven.Server.Documents.Patch.Jint;
-using Raven.Server.Utils;
-using Sparrow.Json;
 
 namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
 {

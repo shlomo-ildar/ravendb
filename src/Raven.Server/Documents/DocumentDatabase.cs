@@ -15,7 +15,7 @@ using Raven.Client.Exceptions.Commercial;
 using Raven.Client.Exceptions.Database;
 using Raven.Client.Extensions;
 using Raven.Client.ServerWide;
-using Raven.Client.ServerWide.JavaScript;
+using IJavaScriptOptions = Raven.Server.Config.Categories.IJavaScriptOptions;
 using Raven.Client.ServerWide.Operations;
 using Raven.Client.Util;
 using Raven.Server.Commercial;

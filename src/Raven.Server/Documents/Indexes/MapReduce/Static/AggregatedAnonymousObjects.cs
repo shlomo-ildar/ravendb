@@ -6,6 +6,7 @@ using Raven.Server.Documents.Indexes.Persistence.Lucene.Documents;
 using Sparrow.Json.Parsing;
 using Raven.Server.Utils;
 using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 using Raven.Server.Documents.Patch.V8;
 
 namespace Raven.Server.Documents.Indexes.MapReduce.Static

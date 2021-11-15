@@ -4,7 +4,7 @@ using System.Globalization;
 using Raven.Client.Properties;
 using Raven.Server.Utils;
 using Sparrow.Json.Parsing;
-using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 
 namespace Raven.Server.Commercial
 {

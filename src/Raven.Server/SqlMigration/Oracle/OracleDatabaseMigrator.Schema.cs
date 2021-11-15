@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using Raven.Server.SqlMigration.Schema;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.SqlMigration.Oracle
 {

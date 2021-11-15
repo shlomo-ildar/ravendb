@@ -5,7 +5,7 @@ using Raven.Client;
 using Raven.Server.Documents;
 using Sparrow;
 using Sparrow.Json;
-using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 using Raven.Server.Utils;
 
 namespace Raven.Server.Json

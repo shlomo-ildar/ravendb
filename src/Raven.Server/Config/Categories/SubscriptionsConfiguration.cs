@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using Raven.Server.Config.Attributes;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Config.Categories
 {

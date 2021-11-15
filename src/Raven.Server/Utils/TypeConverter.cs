@@ -29,6 +29,7 @@ using Sparrow.Json.Sync;
 using Sparrow.Json.Parsing;
 using Sparrow.Utils;
 using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 using Raven.Server.Extensions.Jint;
 using V8.Net;
 

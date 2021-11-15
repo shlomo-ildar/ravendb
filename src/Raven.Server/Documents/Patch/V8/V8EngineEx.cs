@@ -1,11 +1,12 @@
+#nullable enable
 using System;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Threading;
 using System.Threading.Tasks;
 using V8.Net;
 using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 using Raven.Server.Documents.Indexes.Static;
 using Raven.Server.Documents.Indexes.Static.JavaScript.V8;
 using Raven.Server.Documents.Indexes.Static.Counters.V8;
@@ -15,7 +16,6 @@ using Sparrow;
 using Sparrow.Json;
 using Raven.Client.Util;
 using Jint.Native;
-using Raven.Client.Documents.Conventions;
 using Raven.Client.Exceptions.Documents.Patching;
 
 namespace Raven.Server.Documents.Patch.V8
