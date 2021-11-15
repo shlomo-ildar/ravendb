@@ -63,7 +63,7 @@ namespace Raven.Server.Documents.Indexes.MapReduce.Static
 
             if (JsOptions.EngineType == JavaScriptEngineType.V8)
             {
-                string? memorySnapshotName;
+                string? memorySnapshotName = null;
 #if DEBUG
                 memorySnapshotName = "reduce";
 #endif
