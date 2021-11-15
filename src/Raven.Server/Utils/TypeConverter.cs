@@ -332,7 +332,7 @@ namespace Raven.Server.Utils
                         }
                         else if (js.IsObject())
                         {
-                            return JsBlittableBridgeJint.Translate(context, (Engine)engine, js.AsObject());
+                            return JsBlittableBridgeJint.Translate(context, (Engine)engine, js.AsObject(), isRoot: isRoot);
                         }
                         ThrowInvalidObject(new JsHandle(js));
                     }
@@ -379,7 +379,6 @@ namespace Raven.Server.Utils
                                     case LazyNumberValue lnv:
                                         return lnv; //should be already blittable supported type.
                                 }
-                                //ThrowInvalidObject(jsValue);
                             }
                             return JsBlittableBridgeV8.Translate(context, (V8Engine)engine, jsValue, isRoot: isRoot);
                         }
