@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using Raven.Client;
 using Sparrow.Json;
 using Sparrow.Utils;
-using Jint.Native.Object;
 using Raven.Client.ServerWide.JavaScript;
 using PatchJint = Raven.Server.Documents.Patch.Jint;
 using PatchV8 = Raven.Server.Documents.Patch.V8;

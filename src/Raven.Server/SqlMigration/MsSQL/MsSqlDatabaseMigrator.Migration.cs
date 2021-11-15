@@ -1,5 +1,4 @@
 ﻿using Raven.Server.SqlMigration.Schema;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.SqlMigration.MsSQL
 {

@@ -3,17 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Jint;
 using Jint.Native;
-using Jint.Runtime.Interop;
 using Raven.Client;
 using Raven.Client.Documents.Attachments;
 using Raven.Client.Documents.Operations.Attachments;
 using Raven.Client.Documents.Operations.ETL;
 using Raven.Client.ServerWide.JavaScript;
-using Raven.Server.Documents.ETL.Stats;
 using Raven.Server.Documents.Patch;
 using Raven.Server.Documents.Patch.Jint;
 using Raven.Server.Documents.TimeSeries;
-using Raven.Server.ServerWide.Context;
 using Sparrow.Json;
 
 namespace Raven.Server.Documents.ETL

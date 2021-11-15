@@ -37,7 +37,7 @@ namespace SlowTests.Issues
                     var operation = await store.Smuggler.ImportAsync(new DatabaseSmugglerImportOptions
                     {
                         OperateOnTypes = DatabaseItemType.Documents | DatabaseItemType.Identities | DatabaseItemType.CompareExchange,
-                        OptionsForTransformScript = new JavaScriptOptionsSmuggler {MaxSteps = int.MaxValue},
+                        OptionsForTransformScript = new JavaScriptOptionsForSmuggler {MaxSteps = int.MaxValue},
                         TransformScript = @"
                     function sleep(milliseconds) {
                       var date = Date.now();

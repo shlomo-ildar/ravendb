@@ -2,14 +2,12 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Raven.Client.Documents.Operations.ETL;
 using Raven.Server.Documents.ETL.Stats;
 using Raven.Server.Json;
 using Raven.Server.Utils.Stats;
 using Sparrow.Json;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents.ETL
 {

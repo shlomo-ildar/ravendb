@@ -26,7 +26,6 @@ using Voron;
 using Voron.Debugging;
 using Voron.Global;
 using Voron.Impl;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents
 {

@@ -3,7 +3,7 @@ using Raven.Server.Documents.Patch;
 using Raven.Server.ServerWide.Context;
 using Raven.Server.SqlMigration.Model;
 using Sparrow.Json;
-using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 
 namespace Raven.Server.SqlMigration
 {

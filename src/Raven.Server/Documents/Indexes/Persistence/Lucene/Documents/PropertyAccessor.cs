@@ -10,7 +10,7 @@ using Jint.Runtime.Interop;
 using Microsoft.CSharp.RuntimeBinder;
 using Raven.Server.Extensions;
 using Sparrow.Json;
-using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 using Raven.Server.Documents.Patch;
 using Raven.Server.Extensions.Jint;
 using V8.Net;

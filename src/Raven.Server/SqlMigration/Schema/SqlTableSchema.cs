@@ -4,7 +4,6 @@ using Raven.Client.Extensions;
 using Raven.Server.SqlMigration.Model;
 using Raven.Server.Utils;
 using Sparrow.Json.Parsing;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.SqlMigration.Schema
 {

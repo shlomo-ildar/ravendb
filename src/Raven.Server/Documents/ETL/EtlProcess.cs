@@ -42,7 +42,7 @@ using Sparrow.LowMemory;
 using Sparrow.Threading;
 using Sparrow.Utils;
 using Size = Sparrow.Size;
-using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 
 namespace Raven.Server.Documents.ETL
 {

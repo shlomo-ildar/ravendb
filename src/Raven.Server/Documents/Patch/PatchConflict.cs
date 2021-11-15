@@ -4,7 +4,7 @@ using Raven.Client;
 using Raven.Server.ServerWide.Context;
 using Sparrow.Json;
 using Sparrow.Logging;
-using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 using PatchJint = Raven.Server.Documents.Patch.Jint;
 using PatchV8 = Raven.Server.Documents.Patch.V8;
 

@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.InteropServices;  
-using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Jint.Native;

@@ -1,9 +1,8 @@
 using Raven.Client.Documents.Operations.Configuration;
-using Raven.Client.Documents.Operations.Revisions;
 using Raven.Client.ServerWide;
 using Raven.Server.Utils;
 using Sparrow.Json.Parsing;
-using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 
 namespace Raven.Server.ServerWide.Commands
 {

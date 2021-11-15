@@ -13,7 +13,6 @@ using Voron.Data;
 using Voron.Data.Fixed;
 using Voron.Debugging;
 using Voron.Impl;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents.Handlers.Debugging
 {

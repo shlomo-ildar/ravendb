@@ -17,7 +17,6 @@ using Sparrow.Json.Parsing;
 using DbProviderFactories = Raven.Server.Documents.ETL.Providers.SQL.RelationalWriters.DbProviderFactories;
 using JintException = Jint.Runtime.JavaScriptException;
 using V8.Net;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.SqlMigration
 {

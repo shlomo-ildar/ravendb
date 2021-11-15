@@ -32,7 +32,6 @@ using Raven.Server.Web.System;
 using Sparrow.Json;
 using Sparrow.Json.Parsing;
 using Voron.Util.Settings;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Web.Studio
 {

@@ -3,7 +3,6 @@ using System.Globalization;
 using Raven.Server.Json;
 using Sparrow;
 using Sparrow.Json;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents.Queries.AST
 {

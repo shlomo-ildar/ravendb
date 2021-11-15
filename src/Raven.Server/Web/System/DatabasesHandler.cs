@@ -25,7 +25,6 @@ using Sparrow.Json;
 using Sparrow.Json.Parsing;
 using Sparrow.Logging;
 using Constants = Raven.Client.Constants;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Web.System
 {

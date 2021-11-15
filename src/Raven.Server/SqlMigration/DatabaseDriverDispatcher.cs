@@ -3,7 +3,6 @@ using Raven.Server.SqlMigration.MsSQL;
 using Raven.Server.SqlMigration.MySQL;
 using Raven.Server.SqlMigration.NpgSQL;
 using Raven.Server.SqlMigration.Oracle;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.SqlMigration
 {

@@ -12,7 +12,7 @@ using Sparrow.Json;
 using Sparrow.Json.Parsing;
 using Sparrow.Platform;
 using Voron.Impl;
-using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 using Raven.Server.Documents.Patch.V8;
 
 namespace Raven.Server.Documents.Indexes.MapReduce.OutputToCollection

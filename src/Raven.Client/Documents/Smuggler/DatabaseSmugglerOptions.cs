@@ -1,7 +1,7 @@
 ﻿using Raven.Client.ServerWide.JavaScript;
 namespace Raven.Client.Documents.Smuggler
 {
-    public class JavaScriptOptionsSmuggler : IJavaScriptOptions
+    public class JavaScriptOptionsForSmuggler
 
     {
 
@@ -58,7 +58,7 @@ namespace Raven.Client.Documents.Smuggler
         {
             OperateOnTypes = DefaultOperateOnTypes;
             OperateOnDatabaseRecordTypes = DefaultOperateOnDatabaseRecordTypes;
-            OptionsForTransformScript = new JavaScriptOptionsSmuggler();
+            OptionsForTransformScript = new JavaScriptOptionsForSmuggler();
             IncludeExpired = true;
             IncludeArtificial = false;
         }
@@ -75,7 +75,7 @@ namespace Raven.Client.Documents.Smuggler
 
         public string TransformScript { get; set; }
         
-        public IJavaScriptOptions OptionsForTransformScript { get; set; }
+        public JavaScriptOptionsForSmuggler OptionsForTransformScript { get; set; }
 
         public string EncryptionKey { get; set; }
     }
@@ -88,6 +88,6 @@ namespace Raven.Client.Documents.Smuggler
         bool IncludeArtificial { get; set; }
         bool RemoveAnalyzers { get; set; }
         string TransformScript { get; set; }
-        IJavaScriptOptions OptionsForTransformScript { get; set; }
+        JavaScriptOptionsForSmuggler OptionsForTransformScript { get; set; }
     }
 }

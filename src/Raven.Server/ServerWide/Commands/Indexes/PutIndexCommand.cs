@@ -3,14 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Raven.Client.Documents.Indexes;
 using Raven.Client.ServerWide;
-using Raven.Server.Config;
-using Raven.Server.Documents.Indexes;
 using Raven.Server.Rachis;
 using Raven.Server.Utils;
 using Sparrow;
 using Sparrow.Json.Parsing;
-using Index = Raven.Server.Documents.Indexes.Index;
-using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 
 namespace Raven.Server.ServerWide.Commands.Indexes
 {

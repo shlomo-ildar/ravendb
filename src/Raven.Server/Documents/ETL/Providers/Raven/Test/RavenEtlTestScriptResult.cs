@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using Raven.Client.Documents.Commands.Batches;
 using Raven.Server.Documents.ETL.Test;
-using Raven.Client.ServerWide.JavaScript;
 
 namespace Raven.Server.Documents.ETL.Providers.Raven.Test
 {

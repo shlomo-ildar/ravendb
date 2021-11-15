@@ -6,12 +6,9 @@ using Raven.Client;
 using Raven.Client.Documents.Attachments;
 using Raven.Client.Documents.Operations.Attachments;
 using Raven.Client.Documents.Operations.ETL;
-using Raven.Server.Documents.ETL.Stats;
 using Raven.Server.Documents.Patch;
 using Raven.Server.Documents.Patch.V8;
 using Raven.Server.Documents.TimeSeries;
-using Raven.Server.ServerWide.Context;
-using Raven.Server.Extensions.V8;
 using Sparrow.Json;
 using Raven.Client.ServerWide.JavaScript;
 

@@ -33,6 +33,7 @@ using Sparrow.Json;
 using Sparrow.Json.Parsing;
 using Voron.Data.BTrees;
 using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Config.Categories;
 
 namespace Raven.Server.Json
 {

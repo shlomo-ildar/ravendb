@@ -4,10 +4,9 @@ using Raven.Client.Documents.Operations.ETL;
 using Raven.Server.Documents.ETL.Stats;
 using Raven.Server.Documents.Patch;
 using Raven.Server.ServerWide.Context;
+using Raven.Server.Config.Categories;
 using Raven.Client.ServerWide.JavaScript;
 using Jint.Native;
-using V8.Net;
-using Raven.Server.Documents.Patch.V8;
 
 namespace Raven.Server.Documents.ETL
 {
