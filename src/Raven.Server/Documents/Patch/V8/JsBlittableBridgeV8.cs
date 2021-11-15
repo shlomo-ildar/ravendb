@@ -463,13 +463,15 @@ namespace Raven.Server.Documents.Patch.V8
             }
         }
 
-        public static BlittableJsonReaderObject Translate(JsonOperationContext context, V8Engine engine, InternalHandle objectInstance, IResultModifier modifier = null, BlittableJsonDocumentBuilder.UsageMode usageMode = BlittableJsonDocumentBuilder.UsageMode.None, bool isRoot = true)
+        public static BlittableJsonReaderObject Translate(JsonOperationContext context, V8Engine engine, InternalHandle objectInstance, 
+            IResultModifier modifier = null, BlittableJsonDocumentBuilder.UsageMode usageMode = BlittableJsonDocumentBuilder.UsageMode.None, 
+            bool isRoot = true)
         {
             if (objectInstance.IsUndefined || objectInstance.IsNull)
                 return null;
 
             object boundObject = objectInstance.BoundObject;
-            if (boundObject != null && boundObject is BlittableObjectInstanceV8 boi && boi.Changed == false)
+            if (boundObject != null && boundObject is BlittableObjectInstanceV8 boi && boi.Changed == false && isRoot)
                 return boi.Blittable.Clone(context);
 
             using (var writer = new ManualBlittableJsonDocumentBuilder<UnmanagedWriteBuffer>(context))
