@@ -14,42 +14,30 @@ using Raven.Client.Documents.Operations.Attachments;
 using Raven.Client.Documents.Queries.TimeSeries;
 using Raven.Server.Documents.Indexes;
 using Raven.Server.Documents.Indexes.Static;
-using Raven.Server.Documents.Indexes.Static.JavaScript;
+using Raven.Server.Documents.Indexes.Static.JavaScript.Jint;
 using Raven.Server.Documents.Queries.Results;
 using Raven.Server.Documents.Queries.Results.TimeSeries;
 using Sparrow.Json;
 using Sparrow.Json.Parsing;
 
-namespace Raven.Server.Documents.Patch
+namespace Raven.Server.Documents.Patch.Jint
 {
-    public class JavaScriptUtils
+    public class JavaScriptUtilsJint : JavaScriptUtilsBase
     {
-        private JsonOperationContext Context
+        public readonly JintEngineEx EngineEx;
+        public readonly Engine Engine;
+
+        public JavaScriptUtilsJint(ScriptRunner runner, JintEngineEx engine)
+            : base(runner, engine)
         {
-            get
-            {
-                Debug.Assert(_context != null, "_context != null");
-                return _context;
-            }
+            EngineEx = engine;
+            Engine = engine;
         }
 
-        private JsonOperationContext _context;
-        private readonly ScriptRunner _runner;
-        private readonly List<IDisposable> _disposables = new List<IDisposable>();
-        private readonly Engine _scriptEngine;
-
-        public bool ReadOnly;
-
-        public JavaScriptUtils(ScriptRunner runner, Engine engine)
-        {
-            _runner = runner;
-            _scriptEngine = engine;
-        }
-
-        internal JsValue GetMetadata(JsValue self, JsValue[] args)
+        public JsValue GetMetadata(JsValue self, JsValue[] args)
         {
             if (args.Length != 1 && args.Length != 2 || //length == 2 takes into account Query Arguments that can be added to args
-                !(args[0].AsObject() is BlittableObjectInstance boi)) 
+                !(args[0].AsObject() is BlittableObjectInstanceJint boi))
                 throw new InvalidOperationException("metadataFor(doc) must be called with a single entity argument");
 
             if (!(boi.Blittable[Constants.Documents.Metadata.Key] is BlittableJsonReaderObject metadata))
@@ -71,7 +59,7 @@ namespace Raven.Server.Documents.Patch
             //using (var old = metadata)
             {
                 metadata = Context.ReadObject(metadata, boi.DocumentId);
-                JsValue metadataJs = TranslateToJs(_scriptEngine, Context, metadata);
+                JsValue metadataJs = TranslateToJs(Engine, Context, metadata);
                 boi.Set(new JsString(Constants.Documents.Metadata.Key), metadataJs);
 
                 return metadataJs;
@@ -80,20 +68,20 @@ namespace Raven.Server.Documents.Patch
 
         internal JsValue AttachmentsFor(JsValue self, JsValue[] args)
         {
-            if (args.Length != 1 || !(args[0].AsObject() is BlittableObjectInstance boi))
+            if (args.Length != 1 || !(args[0].AsObject() is BlittableObjectInstanceJint boi))
                 throw new InvalidOperationException($"{nameof(AttachmentsFor)} must be called with a single entity argument");
 
             if (!(boi.Blittable[Constants.Documents.Metadata.Key] is BlittableJsonReaderObject metadata))
-                return EmptyArray(_scriptEngine);
+                return EmptyArray(Engine);
 
             if (metadata.TryGet(Constants.Documents.Metadata.Attachments, out BlittableJsonReaderArray attachments) == false)
-                return EmptyArray(_scriptEngine);
+                return EmptyArray(Engine);
 
             JsValue[] attachmentsArray = new JsValue[attachments.Length];
             for (var i = 0; i < attachments.Length; i++)
-                attachmentsArray[i] = new AttachmentNameObjectInstance(_scriptEngine, (BlittableJsonReaderObject)attachments[i]);
+                attachmentsArray[i] = new AttachmentNameObjectInstanceJint(Engine, (BlittableJsonReaderObject)attachments[i]);
 
-            return _scriptEngine.Array.Construct(attachmentsArray);
+            return Engine.Array.Construct(attachmentsArray);
 
             static ArrayInstance EmptyArray(Engine engine)
             {
@@ -107,12 +95,12 @@ namespace Raven.Server.Documents.Patch
                 throw new InvalidOperationException($"{nameof(LoadAttachment)} may only be called with two arguments, but '{args.Length}' were passed.");
 
             if (args[0].IsNull())
-                return DynamicJsNull.ImplicitNull;
+                return DynamicJsNullJint.ImplicitNullJint;
 
             if (args[0].IsObject() == false)
                 ThrowInvalidFirstParameter();
 
-            var doc = args[0].AsObject() as BlittableObjectInstance;
+            var doc = args[0].AsObject() as BlittableObjectInstanceJint;
             if (doc == null)
                 ThrowInvalidFirstParameter();
 
@@ -126,9 +114,9 @@ namespace Raven.Server.Documents.Patch
 
             var attachment = CurrentIndexingScope.Current.LoadAttachment(doc.DocumentId, attachmentName);
             if (attachment is DynamicNullObject)
-                return DynamicJsNull.ImplicitNull;
+                return DynamicJsNullJint.ImplicitNullJint;
 
-            return new AttachmentObjectInstance(_scriptEngine, (DynamicAttachment)attachment);
+            return new AttachmentObjectInstanceJint(Engine, (DynamicAttachment)attachment);
 
             void ThrowInvalidFirstParameter()
             {
@@ -147,12 +135,12 @@ namespace Raven.Server.Documents.Patch
                 throw new InvalidOperationException($"{nameof(LoadAttachment)} may only be called with one argument, but '{args.Length}' were passed.");
 
             if (args[0].IsNull())
-                return DynamicJsNull.ImplicitNull;
+                return DynamicJsNullJint.ImplicitNullJint;
 
             if (args[0].IsObject() == false)
                 ThrowInvalidParameter();
 
-            var doc = args[0].AsObject() as BlittableObjectInstance;
+            var doc = args[0].AsObject() as BlittableObjectInstanceJint;
             if (doc == null)
                 ThrowInvalidParameter();
 
@@ -161,14 +149,14 @@ namespace Raven.Server.Documents.Patch
 
             var attachments = CurrentIndexingScope.Current.LoadAttachments(doc.DocumentId, GetAttachmentNames());
             if (attachments.Count == 0)
-                return EmptyArray(_scriptEngine);
+                return EmptyArray(Engine);
 
             var values = new JsValue[attachments.Count];
             for (var i = 0; i < values.Length; i++)
-                values[i] = new AttachmentObjectInstance(_scriptEngine, attachments[i]);
+                values[i] = new AttachmentObjectInstanceJint(Engine, attachments[i]);
 
-            var array = _scriptEngine.Array.Construct(Arguments.Empty);
-            _scriptEngine.Array.PrototypeObject.Push(array, values);
+            var array = Engine.Array.Construct(Arguments.Empty);
+            Engine.Array.PrototypeObject.Push(array, values);
 
             return array;
 
@@ -179,7 +167,7 @@ namespace Raven.Server.Documents.Patch
 
             IEnumerable<string> GetAttachmentNames()
             {
-                var metadata = doc.Get(Constants.Documents.Metadata.Key) as BlittableObjectInstance;
+                var metadata = doc.Get(Constants.Documents.Metadata.Key) as BlittableObjectInstanceJint;
                 if (metadata == null)
                     yield break;
 
@@ -212,20 +200,20 @@ namespace Raven.Server.Documents.Patch
 
         private JsValue GetNamesFor(JsValue self, JsValue[] args, string metadataKey, string methodName)
         {
-            if (args.Length != 1 || !(args[0].AsObject() is BlittableObjectInstance boi))
+            if (args.Length != 1 || !(args[0].AsObject() is BlittableObjectInstanceJint boi))
                 throw new InvalidOperationException($"{methodName}(doc) must be called with a single entity argument");
 
             if (!(boi.Blittable[Constants.Documents.Metadata.Key] is BlittableJsonReaderObject metadata))
-                return EmptyArray(_scriptEngine);
+                return EmptyArray(Engine);
 
             if (metadata.TryGet(metadataKey, out BlittableJsonReaderArray timeSeries) == false)
-                return EmptyArray(_scriptEngine);
+                return EmptyArray(Engine);
 
             JsValue[] timeSeriesArray = new JsValue[timeSeries.Length];
             for (var i = 0; i < timeSeries.Length; i++)
                 timeSeriesArray[i] = timeSeries[i]?.ToString();
 
-            return _scriptEngine.Array.Construct(timeSeriesArray);
+            return Engine.Array.Construct(timeSeriesArray);
 
             static ArrayInstance EmptyArray(Engine engine)
             {
@@ -233,7 +221,7 @@ namespace Raven.Server.Documents.Patch
             }
         }
 
-        internal JsValue GetDocumentId(JsValue self, JsValue[] args)
+        public JsValue GetDocumentId(JsValue self, JsValue[] args)
         {
             if (args.Length != 1 && args.Length != 2) //length == 2 takes into account Query Arguments that can be added to args
                 throw new InvalidOperationException("id(doc) must be called with a single argument");
@@ -246,7 +234,7 @@ namespace Raven.Server.Documents.Patch
 
             var objectInstance = args[0].AsObject();
 
-            if (objectInstance is BlittableObjectInstance doc && doc.DocumentId != null)
+            if (objectInstance is BlittableObjectInstanceJint doc && doc.DocumentId != null)
                 return doc.DocumentId;
 
             var jsValue = objectInstance.Get(Constants.Documents.Metadata.Key);
@@ -282,7 +270,7 @@ namespace Raven.Server.Documents.Patch
             if (o is Tuple<Document, Lucene.Net.Documents.Document, IState, Dictionary<string, IndexField>, bool?, ProjectionOptions> t)
             {
                 var d = t.Item1;
-                return new BlittableObjectInstance(engine, null, Clone(d.Data, context), d)
+                return new BlittableObjectInstanceJint(engine, null, Clone(d.Data, context), d)
                 {
                     LuceneDocument = t.Item2,
                     LuceneState = t.Item3,
@@ -293,16 +281,16 @@ namespace Raven.Server.Documents.Patch
             }
             if (o is Document doc)
             {
-                return new BlittableObjectInstance(engine, null, Clone(doc.Data, context), doc);
+                return new BlittableObjectInstanceJint(engine, null, Clone(doc.Data, context), doc);
             }
             if (o is DocumentConflict dc)
             {
-                return new BlittableObjectInstance(engine, null, Clone(dc.Doc, context), dc.Id, dc.LastModified, dc.ChangeVector);
+                return new BlittableObjectInstanceJint(engine, null, Clone(dc.Doc, context), dc.Id, dc.LastModified, dc.ChangeVector);
             }
 
             if (o is BlittableJsonReaderObject json)
             {
-                return new BlittableObjectInstance(engine, null, Clone(json, context), null, null, null);
+                return new BlittableObjectInstanceJint(engine, null, Clone(json, context), null, null, null);
             }
 
             if (o == null)
@@ -337,7 +325,7 @@ namespace Raven.Server.Documents.Patch
                 var args = new JsValue[1];
                 for (var i = 0; i < docList.Count; i++)
                 {
-                    args[0] = new BlittableObjectInstance(engine, null, Clone(docList[i].Data, context), docList[i]);
+                    args[0] = new BlittableObjectInstanceJint(engine, null, Clone(docList[i].Data, context), docList[i]);
                     engine.Array.PrototypeObject.Push(jsArray, args);
                 }
                 return jsArray;
@@ -364,52 +352,11 @@ namespace Raven.Server.Documents.Patch
                 return lcs.ToString();
             if (o is LazyNumberValue lnv)
             {
-                return BlittableObjectInstance.BlittableObjectProperty.GetJsValueForLazyNumber(engine, lnv);
+                return BlittableObjectInstanceJint.BlittableObjectProperty.GetJsValueForLazyNumber(engine, lnv);
             }
             if (o is JsValue js)
                 return js;
             throw new InvalidOperationException("No idea how to convert " + o + " to JsValue");
-        }
-
-        private void AssertAdminScriptInstance()
-        {
-            if (_runner._enableClr == false)
-                throw new InvalidOperationException("Unable to run admin scripts using this instance of the script runner, the EnableClr is set to false");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BlittableJsonReaderObject Clone(BlittableJsonReaderObject origin, JsonOperationContext context)
-        {
-            if (ReadOnly)
-                return origin;
-
-            var noCache = origin.NoCache;
-            origin.NoCache = true;
-            // RavenDB-8286
-            // here we need to make sure that we aren't sending a value to
-            // the js engine that might be modified by the actions of the js engine
-            // for example, calling put() might cause the original data to change
-            // because we defrag the data that we looked at. We are handling this by
-            // ensuring that we have our own, safe, copy.
-            var cloned = origin.Clone(context);
-            cloned.NoCache = true;
-            _disposables.Add(cloned);
-
-            origin.NoCache = noCache;
-            return cloned;
-        }
-
-        public void Clear()
-        {
-            foreach (var disposable in _disposables)
-                disposable.Dispose();
-            _disposables.Clear();
-            _context = null;
-        }
-
-        public void Reset(JsonOperationContext ctx)
-        {
-            _context = ctx;
         }
     }
 }
