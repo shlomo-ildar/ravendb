@@ -2,6 +2,7 @@ using Raven.Client.Documents.Smuggler;
 using Raven.Client.ServerWide.JavaScript;
 using Raven.Server.Config;
 using Raven.Server.Config.Categories;
+using Raven.Server.Config.Settings;
 
 namespace Raven.Server.Documents.Indexes.Static
 {
@@ -10,14 +11,14 @@ namespace Raven.Server.Documents.Indexes.Static
         public JavaScriptEngineType EngineType { get; set; }
         public bool StrictMode { get; set; }
         public int MaxSteps { get; set; }
-        public int MaxDurationInMs { get; set; }
+        public TimeSetting MaxDuration { get; set; }
 
-        public JavaScriptOptions(JavaScriptEngineType engineType, bool strictMode, int maxSteps, int maxDurationInMs)
+        public JavaScriptOptions(JavaScriptEngineType engineType, bool strictMode, int maxSteps, TimeSetting maxDuration)
         {
             EngineType = engineType;
             StrictMode = strictMode;
             MaxSteps = maxSteps;
-            MaxDurationInMs = maxDurationInMs;
+            MaxDuration = maxDuration;
         }
 
         public JavaScriptOptions(IndexingConfiguration indexConfiguration, RavenConfiguration configuration)
@@ -28,7 +29,7 @@ namespace Raven.Server.Documents.Indexes.Static
             EngineType = indexConfiguration.JsEngineType ?? jsConfig.EngineType;
             StrictMode = indexConfiguration.JsStrictMode ?? patchingConfig.StrictMode ?? jsConfig.StrictMode; // patching is of priority for backward compatibility
             MaxSteps = indexConfiguration.JsMaxSteps ?? jsConfig.MaxSteps;
-            MaxDurationInMs = indexConfiguration.JsMaxDurationInMs ?? jsConfig.MaxDurationInMs;
+            MaxDuration = indexConfiguration.JsMaxDuration ?? jsConfig.MaxDuration;
         }
 
         public JavaScriptOptions(IJavaScriptOptions indexConfiguration)
@@ -36,7 +37,7 @@ namespace Raven.Server.Documents.Indexes.Static
             EngineType = indexConfiguration.EngineType;
             StrictMode = indexConfiguration.StrictMode;
             MaxSteps = indexConfiguration.MaxSteps;
-            MaxDurationInMs = indexConfiguration.MaxDurationInMs;
+            MaxDuration = indexConfiguration.MaxDuration;
         }
 
         public JavaScriptOptions(JavaScriptOptionsForSmuggler jsOptionsForSmuggler)
@@ -44,7 +45,7 @@ namespace Raven.Server.Documents.Indexes.Static
             EngineType = jsOptionsForSmuggler.EngineType;
             StrictMode = jsOptionsForSmuggler.StrictMode;
             MaxSteps = jsOptionsForSmuggler.MaxSteps;
-            MaxDurationInMs = jsOptionsForSmuggler.MaxDurationInMs;
+            MaxDuration = new TimeSetting(jsOptionsForSmuggler.MaxDuration, TimeUnit.Milliseconds);
         }
     }
 }

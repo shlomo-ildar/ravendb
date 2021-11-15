@@ -17,6 +17,7 @@ using Sparrow.Json;
 using Raven.Client.Util;
 using Jint.Native;
 using Raven.Client.Exceptions.Documents.Patching;
+using Raven.Server.Config.Settings;
 
 namespace Raven.Server.Documents.Patch.V8
 {
@@ -107,7 +108,7 @@ var process = {
             string strictModeFlag = jsOptions.StrictMode ? "--use_strict" : "--no-use_strict";
             string[] optionsCmd = {strictModeFlag};
             SetFlagsFromCommandLine(optionsCmd);
-            SetMaxDuration(jsOptions.MaxDurationInMs);
+            SetMaxDuration((int)jsOptions.MaxDuration.GetValue(TimeUnit.Milliseconds));
         }
 
         // ------------------------------------------ IJavaScriptEngineHandle implementation

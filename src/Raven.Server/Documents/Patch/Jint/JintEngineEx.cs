@@ -43,7 +43,7 @@ var process = {
                     .SetReferencesResolver(refResolver)
                     .Strict(jsOptions.StrictMode)
                     .MaxStatements(jsOptions.MaxSteps)
-                    //.TimeoutInterval(TimeSpan.FromMilliseconds(jsConfiguration.MaxDurationInMs)) // TODO In Jint TimeConstraint2 is the internal class so the approach applied to MaxStatements doesn't work here
+                    //.TimeoutInterval(TimeSpan.FromMilliseconds(jsConfiguration.MaxDuration)) // TODO In Jint TimeConstraint2 is the internal class so the approach applied to MaxStatements doesn't work here
                     .AddObjectConverter(new JintGuidConverter())
                     .AddObjectConverter(new JintStringConverter())
                     .AddObjectConverter(new JintEnumConverter())
