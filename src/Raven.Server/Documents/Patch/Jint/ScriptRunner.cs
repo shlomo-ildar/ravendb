@@ -657,7 +657,7 @@ namespace Raven.Server.Documents.Patch
                         return boi.Blittable.ToString();
                     }
 
-                    using (var blittable =  JsBlittableBridgeJint.Translate(_jsonCtx, ScriptEngineJint, obj.AsObject()))
+                    using (var blittable =  JsBlittableBridgeJint.Translate(_jsonCtx, ScriptEngineJint, obj.AsObject(), isRoot: !recursive))
                     {
                         return blittable.ToString();
                     }
