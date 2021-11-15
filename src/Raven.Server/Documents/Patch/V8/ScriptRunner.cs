@@ -952,7 +952,7 @@ namespace Raven.Server.Documents.Patch
                                 _documentIds = new HashSet<string>();
 
                             _documentIds.Clear();
-                            IncludeUtil.GetDocIdFromInclude(_jsOptions.EngineType, b.Blittable, path, _documentIds, _database.IdentityPartsSeparator);
+                            IncludeUtil.GetDocIdFromInclude(b.Blittable, path, _documentIds, _database.IdentityPartsSeparator);
                             if (path.IndexOf("[]", StringComparison.InvariantCulture) != -1) // array
                                 return ScriptEngineV8.FromObject(_documentIds.Select(LoadDocumentInternalV8).ToList());
                             if (_documentIds.Count == 0)

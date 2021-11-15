@@ -10,7 +10,6 @@ namespace Raven.Server.SqlMigration.Schema
 {
     public class SqlTableSchema : IDynamicJson
     {
-        private IJavaScriptOptions _jsOptions;
         public string Schema { get; set; }
         
         public string TableName { get; set; }
@@ -23,9 +22,8 @@ namespace Raven.Server.SqlMigration.Schema
         
         public List<TableReference> References { get; set; } = new List<TableReference>();
 
-        public SqlTableSchema(IJavaScriptOptions jsOptions, string schema, string tableName, string defaultQuery)
+        public SqlTableSchema(string schema, string tableName, string defaultQuery)
         {
-            _jsOptions = jsOptions;
             Schema = schema;
             TableName = tableName;
             DefaultQuery = defaultQuery;
