@@ -29,7 +29,8 @@ namespace Raven.Server.Documents.Patch.V8
         {
             try
             {
-                if (args.Length != 1 || !(args[0].BoundObject is BlittableObjectInstanceV8 boi))
+                if (args.Length != 1 && args.Length != 2 || //length == 2 takes into account Query Arguments that can be added to args 
+                    !(args[0].BoundObject is BlittableObjectInstanceV8 boi))
                     throw new InvalidOperationException("metadataFor(doc) must be called with a single entity argument");
 
                 return boi.GetMetadata();
