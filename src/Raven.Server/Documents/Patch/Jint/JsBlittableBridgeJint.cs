@@ -479,12 +479,14 @@ namespace Raven.Server.Documents.Patch.Jint
             }
         }
 
-        public static BlittableJsonReaderObject Translate(JsonOperationContext context, Engine scriptEngine, ObjectInstance objectInstance, IResultModifier modifier = null, BlittableJsonDocumentBuilder.UsageMode usageMode = BlittableJsonDocumentBuilder.UsageMode.None, bool isNested = false)
+        public static BlittableJsonReaderObject Translate(JsonOperationContext context, Engine scriptEngine, ObjectInstance objectInstance, 
+            IResultModifier modifier = null, BlittableJsonDocumentBuilder.UsageMode usageMode = BlittableJsonDocumentBuilder.UsageMode.None, 
+            bool isRoot = true)
         {
             if (objectInstance == null)
                 return null;
 
-            if (objectInstance is BlittableObjectInstanceJint boi && boi.Changed == false && isNested == false)
+            if (objectInstance is BlittableObjectInstanceJint boi && boi.Changed == false && isRoot)
                 return boi.Blittable.Clone(context);
 
             using (var writer = new ManualBlittableJsonDocumentBuilder<UnmanagedWriteBuffer>(context))
@@ -493,7 +495,7 @@ namespace Raven.Server.Documents.Patch.Jint
                 writer.StartWriteObjectDocument();
 
                 var blittableBridge = new JsBlittableBridgeJint(writer, usageMode, scriptEngine);
-                blittableBridge.WriteInstance(objectInstance, modifier, isRoot: true, filterProperties: false);
+                blittableBridge.WriteInstance(objectInstance, modifier, isRoot: isRoot, filterProperties: false);
 
                 writer.FinalizeDocument();
 
