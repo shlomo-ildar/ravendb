@@ -83,7 +83,7 @@ namespace Raven.Server.Documents.Queries.Results
 
             DocumentFields = query?.DocumentFields ?? DocumentFields.All;
 
-            _blittableTraverser = reduceResults ? BlittableJsonTraverser.FlatMapReduceResults(_jsOptions.EngineType) : BlittableJsonTraverser.Default(_jsOptions.EngineType);
+            _blittableTraverser = reduceResults ? BlittableJsonTraverser.FlatMapReduceResults : BlittableJsonTraverser.Default;
         }
 
 
@@ -599,7 +599,7 @@ namespace Raven.Server.Documents.Queries.Results
                 }
 
                 if (fieldToFetch.QueryField.SourceAlias != null
-                    && BlittableJsonTraverser.Default(_jsOptions.EngineType).TryRead(document.Data, fieldToFetch.QueryField.SourceAlias, out var sourceId, out _))
+                    && BlittableJsonTraverser.Default.TryRead(document.Data, fieldToFetch.QueryField.SourceAlias, out var sourceId, out _))
                 {
                     id = sourceId.ToString();
                 }
@@ -670,7 +670,7 @@ namespace Raven.Server.Documents.Queries.Results
                 {
                     if (_loadedDocumentsByAliasName.TryGetValue(fieldToFetch.QueryField.LoadFromAlias, out var loadedDoc))
                     {
-                        IncludeUtil.GetDocIdFromInclude(_jsOptions.EngineType, loadedDoc.Data, fieldToFetch.QueryField.SourceAlias, _loadedDocumentIds, _database.IdentityPartsSeparator);
+                        IncludeUtil.GetDocIdFromInclude(loadedDoc.Data, fieldToFetch.QueryField.SourceAlias, _loadedDocumentIds, _database.IdentityPartsSeparator);
                     }
                 }
                 else if (fieldToFetch.CanExtractFromIndex)
@@ -693,7 +693,7 @@ namespace Raven.Server.Documents.Queries.Results
                 }
                 else
                 {
-                    IncludeUtil.GetDocIdFromInclude(_jsOptions.EngineType, document.Data, fieldToFetch.QueryField.SourceAlias, _loadedDocumentIds, _database.IdentityPartsSeparator);
+                    IncludeUtil.GetDocIdFromInclude(document.Data, fieldToFetch.QueryField.SourceAlias, _loadedDocumentIds, _database.IdentityPartsSeparator);
                 }
             }
             else

@@ -10,52 +10,17 @@ namespace Raven.Server.Json
 {
     public class BlittableJsonTraverser
     {
-        private static BlittableJsonTraverser DefaultJint = CreateDefault(JavaScriptEngineType.Jint);
-        private static BlittableJsonTraverser DefaultV8 = CreateDefault(JavaScriptEngineType.V8);
+        public static BlittableJsonTraverser Default = new BlittableJsonTraverser();
 
         // map-reduce results have always a flat structure, let's ignore separators
-        private static BlittableJsonTraverser FlatMapReduceResultsJint = CreateFlatMapReduceResults(JavaScriptEngineType.Jint);
-        private static BlittableJsonTraverser FlatMapReduceResultsV8 = CreateFlatMapReduceResults(JavaScriptEngineType.V8);
+        public static BlittableJsonTraverser FlatMapReduceResults = new BlittableJsonTraverser(new char[] { });
 
-        public static BlittableJsonTraverser CreateDefault(JavaScriptEngineType jsEngineType)
-        {
-            return new BlittableJsonTraverser(jsEngineType);
-        }
-
-        public static BlittableJsonTraverser CreateFlatMapReduceResults(JavaScriptEngineType jsEngineType)
-        {
-            return FlatMapReduceResultsJint ??= new BlittableJsonTraverser(jsEngineType, new char[] { });
-        }
-
-        public static BlittableJsonTraverser Default(JavaScriptEngineType? jsEngineType)
-        {
-            return TypeConverter.GetJsEngineType(jsEngineType) switch
-            {
-                JavaScriptEngineType.Jint => DefaultJint,
-                JavaScriptEngineType.V8 => DefaultV8,
-                _ => throw new NotSupportedException($"Not supported JS engine type '{jsEngineType}'.")
-            };
-        }
-
-        public static BlittableJsonTraverser FlatMapReduceResults(JavaScriptEngineType? jsEngineType)
-        {
-            return TypeConverter.GetJsEngineType(jsEngineType) switch
-            {
-                JavaScriptEngineType.Jint => FlatMapReduceResultsJint,
-                JavaScriptEngineType.V8 => FlatMapReduceResultsV8,
-                _ => throw new NotSupportedException($"Not supported JS engine type '{jsEngineType}'.")
-            };
-        }
-
-        private readonly JavaScriptEngineType _jsEngineType;
         private const char PropertySeparator = '.';
         private const char CollectionSeparatorStartBracket = '[';
         private const char CollectionSeparatorEndBracket = ']';
         private const string ValuesProperty = "$Values[]";
         public static readonly char[] CollectionAndPropertySeparators = { CollectionSeparatorStartBracket, CollectionSeparatorEndBracket, PropertySeparator };
 
-        public JavaScriptEngineType JsEngineType { get { return _jsEngineType;  } }
-        
         public static readonly char[] PropertySeparators =
         {
             PropertySeparator
@@ -67,9 +32,8 @@ namespace Raven.Server.Json
             CollectionSeparatorStartBracket
         };
 
-        private BlittableJsonTraverser(JavaScriptEngineType jsEngineType, char[] nonDefaultSeparators = null)
+        private BlittableJsonTraverser(char[] nonDefaultSeparators = null)
         {
-            _jsEngineType = jsEngineType;
             if (nonDefaultSeparators != null)
                 _separators = nonDefaultSeparators;
         }

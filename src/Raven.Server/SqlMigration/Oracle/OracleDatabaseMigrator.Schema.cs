@@ -27,7 +27,7 @@ namespace Raven.Server.SqlMigration.Oracle
                                                                       "from user_constraints inner join USER_CONS_COLUMNS on user_constraints.CONSTRAINT_NAME = USER_CONS_COLUMNS.CONSTRAINT_NAME " +
                                                                       "where user_constraints.constraint_TYPE = 'P' OR user_constraints.constraint_TYPE = 'R'";
 
-        public override DatabaseSchema FindSchema(IJavaScriptOptions jsOptions)
+        public override DatabaseSchema FindSchema()
         {
             using (var connection = OpenConnection())
             {
@@ -49,15 +49,15 @@ namespace Raven.Server.SqlMigration.Oracle
                     CatalogName = schemaName ?? ConnectionString.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries).First(s => s.StartsWith("USER")).Split(new char[] { '=' }, StringSplitOptions.RemoveEmptyEntries)[1]
             };
 
-                FindTableNames(jsOptions, connection, schema);
+                FindTableNames(connection, schema);
                 FindPrimaryKeys(connection, schema);
-                FindForeignKeys(jsOptions, connection, schema);
+                FindForeignKeys(connection, schema);
 
                 return schema;
             }
         }
 
-        private void FindTableNames(IJavaScriptOptions jsOptions, DbConnection connection, DatabaseSchema dbSchema)
+        private void FindTableNames(DbConnection connection, DatabaseSchema dbSchema)
         {
             using (var cmd = connection.CreateCommand())
             {
@@ -72,7 +72,7 @@ namespace Raven.Server.SqlMigration.Oracle
 
                         if (tableSchema == null)
                         {
-                            tableSchema = new SqlTableSchema(jsOptions, schemaAndTableName.Schema, schemaAndTableName.TableName,
+                            tableSchema = new SqlTableSchema(schemaAndTableName.Schema, schemaAndTableName.TableName,
                                 GetSelectAllQueryForTable(schemaAndTableName.Schema, schemaAndTableName.TableName));
                             dbSchema.Tables.Add(tableSchema);
                         }
@@ -104,7 +104,7 @@ namespace Raven.Server.SqlMigration.Oracle
 
         }
 
-        private void FindForeignKeys(IJavaScriptOptions jsOptions, DbConnection connection, DatabaseSchema dbSchema)
+        private void FindForeignKeys(DbConnection connection, DatabaseSchema dbSchema)
         {
             var referentialConstraints = new Dictionary<string, string>();
 
@@ -127,7 +127,7 @@ namespace Raven.Server.SqlMigration.Oracle
                 {
                     var pkTable = dbSchema.GetTable(pkCacheValue.Schema, pkCacheValue.TableName);
 
-                    pkTable.References.Add(new TableReference(jsOptions, fkCacheValue.Schema, fkCacheValue.TableName)
+                    pkTable.References.Add(new TableReference(fkCacheValue.Schema, fkCacheValue.TableName)
                     {
                         Columns = fkCacheValue.ColumnNames
                     });

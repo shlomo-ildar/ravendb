@@ -20,24 +20,24 @@ namespace Raven.Server.Documents.Queries.AST
 
     public static class QueryExpressionExtensions
     {
-        private static object Evaluate(IJavaScriptOptions jsOptions, QueryExpression q, BlittableJsonReaderObject value)
+        private static object Evaluate(QueryExpression q, BlittableJsonReaderObject value)
         {
             switch (q)
             {
                 case FieldExpression field:
-                    BlittableJsonTraverser.Default(jsOptions.EngineType).TryRead(value, field.FieldValue, out var result, out var leftPath);
+                    BlittableJsonTraverser.Default.TryRead(value, field.FieldValue, out var result, out var leftPath);
                     return result;
                 default:
                     return null;
             }
         }
 
-        public static bool IsMatchedBy(this QueryExpression where, IJavaScriptOptions jsOptions, BlittableJsonReaderObject value, BlittableJsonReaderObject queryParameters, bool shouldCaseSensitiveStringCompare = false)
+        public static bool IsMatchedBy(this QueryExpression where, BlittableJsonReaderObject value, BlittableJsonReaderObject queryParameters, bool shouldCaseSensitiveStringCompare = false)
         {
             switch (where)
             {
                 case BetweenExpression between:
-                    var src = Evaluate(jsOptions, between.Source, value);
+                    var src = Evaluate(between.Source, value);
                     var hValue = GetFieldValue(between.Max.Token.Value, between.Max.Value, queryParameters);
                     var lValue = GetFieldValue(between.Min.Token.Value, between.Min.Value, queryParameters);
 
@@ -52,16 +52,16 @@ namespace Raven.Server.Documents.Queries.AST
                     return true;
 
                 case BinaryExpression be:
-                    return IsMatchedBy(be, jsOptions, value, queryParameters, shouldCaseSensitiveStringCompare);
+                    return IsMatchedBy(be, value, queryParameters, shouldCaseSensitiveStringCompare);
                 case NegatedExpression not:
-                    var result = IsMatchedBy(not.Expression, jsOptions, value, queryParameters, shouldCaseSensitiveStringCompare);
+                    var result = IsMatchedBy(not.Expression, value, queryParameters, shouldCaseSensitiveStringCompare);
                     return !result;
                 case InExpression ine:
-                    var inSrc = Evaluate(jsOptions, ine.Source, value);
+                    var inSrc = Evaluate(ine.Source, value);
                     int matches = 0;
                     foreach (var item in ine.Values)
                     {
-                        var val = GetValue(jsOptions, item, value, queryParameters);
+                        var val = GetValue(item, value, queryParameters);
                         if (val is BlittableJsonReaderArray array)
                         {
                             foreach (var el in array)
@@ -92,7 +92,7 @@ namespace Raven.Server.Documents.Queries.AST
                         case MethodType.Exact:
                             if (me.Arguments.Count == 1)
                             {
-                                return me.Arguments[0].IsMatchedBy(jsOptions, value, queryParameters, true);
+                                return me.Arguments[0].IsMatchedBy(value, queryParameters, true);
                             }
 
                             break;
@@ -103,18 +103,18 @@ namespace Raven.Server.Documents.Queries.AST
             }
         }
 
-        private static bool IsMatchedBy(IJavaScriptOptions jsOptions, BinaryExpression be, BlittableJsonReaderObject value, BlittableJsonReaderObject queryParameters, bool shouldCaseSensitiveStringCompare)
+        private static bool IsMatchedBy(BinaryExpression be, BlittableJsonReaderObject value, BlittableJsonReaderObject queryParameters, bool shouldCaseSensitiveStringCompare)
         {
             switch (be.Operator)
             {
                 case OperatorType.And:
-                    return IsMatchedBy(be.Left, jsOptions, value, queryParameters) && IsMatchedBy(be.Right, jsOptions, value, queryParameters, shouldCaseSensitiveStringCompare);
+                    return IsMatchedBy(be.Left, value, queryParameters) && IsMatchedBy(be.Right, value, queryParameters, shouldCaseSensitiveStringCompare);
                 case OperatorType.Or:
-                    return IsMatchedBy(be.Left, jsOptions, value, queryParameters) || IsMatchedBy(be.Right, jsOptions, value, queryParameters, shouldCaseSensitiveStringCompare);
+                    return IsMatchedBy(be.Left, value, queryParameters) || IsMatchedBy(be.Right, value, queryParameters, shouldCaseSensitiveStringCompare);
             }
 
-            var left = GetValue(jsOptions, be.Left, value, queryParameters);
-            var right = GetValue(jsOptions, be.Right, value, queryParameters);
+            var left = GetValue(be.Left, value, queryParameters);
+            var right = GetValue(be.Right, value, queryParameters);
 
             switch (be.Operator)
             {
@@ -283,14 +283,14 @@ namespace Raven.Server.Documents.Queries.AST
         }
 
         internal static object True = true, False = false; // to avoid constant heap allocs
-        private static object GetValue(IJavaScriptOptions jsOptions, QueryExpression qe, BlittableJsonReaderObject value, BlittableJsonReaderObject queryParameters)
+        private static object GetValue(QueryExpression qe, BlittableJsonReaderObject value, BlittableJsonReaderObject queryParameters)
         {
             switch (qe)
             {
                 case ValueExpression ve:
                     return ve.GetValue(queryParameters);
                 case FieldExpression fe:
-                    BlittableJsonTraverser.Default(jsOptions.EngineType).TryRead(value, fe.FieldValue, out var result, out var leftPath);
+                    BlittableJsonTraverser.Default.TryRead(value, fe.FieldValue, out var result, out var leftPath);
                     return result;
                 default:
                     throw new NotSupportedException("Cannot get value of " + qe.Type + ", " + qe);
