@@ -274,7 +274,7 @@ namespace Raven.Server.Documents.Queries
                     var jsOptions = Database.JsOptions;
                     using (var result = queryContext.Documents.ReadObject(resultAsJson, "graph/result"))
                     {
-                        if (filter.IsMatchedBy(jsOptions, result, query.QueryParameters) == false)
+                        if (filter.IsMatchedBy(result, query.QueryParameters) == false)
                             matchResults[i] = default;
                     }
                 }

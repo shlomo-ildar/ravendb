@@ -25,7 +25,7 @@ namespace Raven.Server.SqlMigration
     {
         protected readonly string ConnectionString;
         
-        public abstract DatabaseSchema FindSchema(IJavaScriptOptions jsOptions);
+        public abstract DatabaseSchema FindSchema();
 
         protected GenericDatabaseMigrator(string connectionString)
         {

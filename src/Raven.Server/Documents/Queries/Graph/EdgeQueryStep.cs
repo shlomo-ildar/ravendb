@@ -283,8 +283,7 @@ namespace Raven.Server.Documents.Queries.Graph
             {
                 if (_edgesExpression.Project != null)
                 {
-                    var jsOptions = DocumentDatabase.GetJsOptions(configuration);
-                    if (BlittableJsonTraverser.Default(jsOptions.EngineType).TryRead(bjro, _edgesExpression.Project.FieldValue, out var id, out _))
+                    if (BlittableJsonTraverser.Default.TryRead(bjro, _edgesExpression.Project.FieldValue, out var id, out _))
                     {
                         if (id != null)
                         {

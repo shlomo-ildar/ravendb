@@ -67,7 +67,7 @@ namespace Raven.Server.Documents.Includes
                 _includedKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var include in _includes)
-                IncludeUtil.GetDocIdFromInclude(null, document.Data, new StringSegment(include), _includedKeys, _database.IdentityPartsSeparator);
+                IncludeUtil.GetDocIdFromInclude(document.Data, new StringSegment(include), _includedKeys, _database.IdentityPartsSeparator);
         }
 
         internal void Materialize()

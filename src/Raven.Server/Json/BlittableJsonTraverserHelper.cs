@@ -64,7 +64,6 @@ namespace Raven.Server.Json
             StringSegment leftPath, 
             ref object value)
         {
-            var jsEngineType = blittableJsonTraverser.JsEngineType;
             value = TypeConverter.ConvertForIndexing(value);
 
             if (leftPath == "Length" || leftPath == "length" ||

@@ -25,7 +25,7 @@ namespace Raven.Server.SqlMigration.NpgSQL
                                                                       " FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE " +
                                                                       "ORDER BY ORDINAL_POSITION";
 
-        public override DatabaseSchema FindSchema(IJavaScriptOptions jsOptions)
+        public override DatabaseSchema FindSchema()
         {
             using (var connection = OpenConnection())
             {
@@ -34,15 +34,15 @@ namespace Raven.Server.SqlMigration.NpgSQL
                     CatalogName = connection.Database
                 };
 
-                FindTableNames(jsOptions, connection, schema);
+                FindTableNames(connection, schema);
                 FindPrimaryKeys(connection, schema);
-                FindForeignKeys(jsOptions, connection, schema);
+                FindForeignKeys(connection, schema);
 
                 return schema;
             }
         }
 
-        private void FindTableNames(IJavaScriptOptions jsOptions, DbConnection connection, DatabaseSchema dbSchema)
+        private void FindTableNames(DbConnection connection, DatabaseSchema dbSchema)
         {
             using (var cmd = connection.CreateCommand())
             {
@@ -57,7 +57,7 @@ namespace Raven.Server.SqlMigration.NpgSQL
 
                         if (tableSchema == null)
                         {
-                            tableSchema = new SqlTableSchema(jsOptions, schemaAndTableName.Schema, schemaAndTableName.TableName,
+                            tableSchema = new SqlTableSchema(schemaAndTableName.Schema, schemaAndTableName.TableName,
                                 GetSelectAllQueryForTable(schemaAndTableName.Schema, schemaAndTableName.TableName));
                             dbSchema.Tables.Add(tableSchema);
                         }
@@ -89,7 +89,7 @@ namespace Raven.Server.SqlMigration.NpgSQL
 
         }
 
-        private void FindForeignKeys(IJavaScriptOptions jsOptions, DbConnection connection, DatabaseSchema dbSchema)
+        private void FindForeignKeys(DbConnection connection, DatabaseSchema dbSchema)
         {
             var referentialConstraints = new Dictionary<string, string>();
 
@@ -112,7 +112,7 @@ namespace Raven.Server.SqlMigration.NpgSQL
                 {
                     var pkTable = dbSchema.GetTable(pkCacheValue.Schema, pkCacheValue.TableName);
 
-                    pkTable.References.Add(new TableReference(jsOptions, fkCacheValue.Schema, fkCacheValue.TableName)
+                    pkTable.References.Add(new TableReference(fkCacheValue.Schema, fkCacheValue.TableName)
                     {
                         Columns = fkCacheValue.ColumnNames
                     });

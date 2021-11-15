@@ -123,7 +123,7 @@ namespace Raven.Server.Documents.Indexes.MapReduce.Auto
                 {
                     var groupByField = Definition.OrderedGroupByFields[i];
 
-                    BlittableJsonTraverserHelper.TryRead(BlittableJsonTraverser.Default(_jsOptions.EngineType), document, groupByField.Name, out object result);
+                    BlittableJsonTraverserHelper.TryRead(BlittableJsonTraverser.Default, document, groupByField.Name, out object result);
 
                     if (_isFanout == false)
                     {
@@ -245,7 +245,7 @@ namespace Raven.Server.Documents.Indexes.MapReduce.Auto
                 case AggregationOperation.Count:
                     return 1;
                 case AggregationOperation.Sum:
-                    BlittableJsonTraverserHelper.TryRead(BlittableJsonTraverser.Default(_jsOptions.EngineType), document, autoIndexField.Name, out object fieldValue);
+                    BlittableJsonTraverserHelper.TryRead(BlittableJsonTraverser.Default, document, autoIndexField.Name, out object fieldValue);
 
                     var arrayResult = fieldValue as IEnumerable<object>;
 
@@ -282,7 +282,7 @@ namespace Raven.Server.Documents.Indexes.MapReduce.Auto
                     // if fanout then we need to insert each value separately in map results
                     return arrayResult;
                 case AggregationOperation.None:
-                    BlittableJsonTraverserHelper.TryRead(BlittableJsonTraverser.Default(_jsOptions.EngineType), document, autoIndexField.Name, out object result);
+                    BlittableJsonTraverserHelper.TryRead(BlittableJsonTraverser.Default, document, autoIndexField.Name, out object result);
 
                     // explicitly adding this even if the value isn't there, as a null
                     return result;
