@@ -9,7 +9,7 @@ namespace Raven.Server.Smuggler.Documents.Data
 {
     public class DatabaseSmugglerOptionsServerSide : DatabaseSmugglerOptions, IDatabaseSmugglerImportOptions, IDatabaseSmugglerExportOptions
     {
-        public class JavaScriptOptionsOptionsServerSide : JavaScriptOptions
+        public class JavaScriptOptionsOptionsServerSide : JavaScriptOptionsSmuggler
         {
             public JavaScriptOptionsOptionsServerSide()
             {
