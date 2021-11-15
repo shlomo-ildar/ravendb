@@ -35,8 +35,9 @@ namespace Raven.Server.Documents.Patch
             _usageMode = usageMode;
         }
 
-        public static BlittableJsonReaderObject Translate(JsonOperationContext context, IJsEngineHandle engine, JsHandle objectInstance, IResultModifier modifier = null,
-            BlittableJsonDocumentBuilder.UsageMode usageMode = BlittableJsonDocumentBuilder.UsageMode.None, bool isRoot = true)
+        public static BlittableJsonReaderObject Translate(JsonOperationContext context, IJsEngineHandle engine, JsHandle objectInstance, 
+            IResultModifier modifier = null, BlittableJsonDocumentBuilder.UsageMode usageMode = BlittableJsonDocumentBuilder.UsageMode.None, 
+            bool isRoot = true)
         {
             var jsEngineType = engine.EngineType;
             return  jsEngineType switch
