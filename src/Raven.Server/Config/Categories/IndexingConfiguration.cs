@@ -169,19 +169,27 @@ namespace Raven.Server.Config.Categories
         public TimeSetting MapTimeoutAfterEtagReached { get; protected set; }
 
         [Description("EXPERT: the type of JavaScript engine that will be used by RavenDB: 'Jint'  or 'V8'")]
+        [DefaultValue(null)]
+        [IndexUpdateType(IndexUpdateType.Reset)]
         [ConfigurationEntry("Indexing.EngineForScript", ConfigurationEntryScope.ServerWideOrPerDatabase)]
         public JavaScriptEngineType? JsEngineType { get; set; }
 
         [Description("EXPERT: Enables Strict Mode in JavaScript engine. Default: true")]
+        [DefaultValue(null)]
+        [IndexUpdateType(IndexUpdateType.Reset)]
         [ConfigurationEntry("Indexing.StrictModeForScript", ConfigurationEntryScope.ServerWideOrPerDatabase)]
         public bool? JsStrictMode { get; set; }
 
         [Description("EXPERT: Maximum number of steps in the JS script execution (Jint)")]
+        [DefaultValue(null)]
+        [IndexUpdateType(IndexUpdateType.Reset)]
         [ConfigurationEntry("Indexing.MaxStepsForScript", ConfigurationEntryScope.ServerWideOrPerDatabase)]
         public int? JsMaxSteps { get; set; }
 
         [Description("EXPERT: Maximum duration in milliseconds of the JS script execution (V8)")]  // TODO [shlomo] To expose in Jint TimeConstraint2 class (as it was made to MaxStatements)
         [TimeUnit(TimeUnit.Milliseconds)]
+        [DefaultValue(null)]
+        [IndexUpdateType(IndexUpdateType.Reset)]
         [ConfigurationEntry("Indexing.MaxDurationForScript", ConfigurationEntryScope.ServerWideOrPerDatabase)]
         public TimeSetting? JsMaxDuration { get; set; }
 
