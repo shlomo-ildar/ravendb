@@ -127,6 +127,10 @@ namespace Raven.Server.Documents.Indexes.Static
             EngineExV8 = new V8EngineEx(JsOptions);
             EngineHandle = EngineExV8;
             EngineV8 = EngineExV8;
+        }
+
+        protected void InitializeV82()
+        {
             JsUtilsV8 = (JavaScriptUtilsV8)JsUtils;
         }
 

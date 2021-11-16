@@ -96,6 +96,10 @@ namespace Raven.Server.Documents.Indexes.Static
             EngineExJint = new JintEngineEx(JsOptions, refResolver);
             EngineHandle = EngineExJint;
             _engineForParsing = EngineExJint;
+        }
+
+        protected void InitializeJint2()
+        {
             JsUtilsJint = (JavaScriptUtilsJint)JsUtils;
         }
 
