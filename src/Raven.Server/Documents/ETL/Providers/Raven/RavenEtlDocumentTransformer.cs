@@ -30,7 +30,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
         private readonly ScriptInput _script;
         private JsHandle _addAttachmentMethod;
         private JsHandle _addCounterMethod;
-        private JsHandle _addTimeSeriesMethod; //PropertyDescriptor
+        private JsHandle _addTimeSeriesMethod;
 
         public RavenEtlDocumentTransformer(Transformation transformation, DocumentDatabase database, DocumentsOperationContext context, ScriptInput script)
             : base(database, context, script.Transformation, script.BehaviorFunctions)
@@ -43,6 +43,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
 
         public override void Dispose()
         {
+            _currentRun.Dispose();
             _addAttachmentMethod.Dispose();
             _addCounterMethod.Dispose();
             _addTimeSeriesMethod.Dispose();
