@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Jint;
 using Jint.Native;
 using Jint.Native.Boolean;
@@ -21,19 +22,22 @@ namespace Raven.Server.Documents.Patch
     public struct JsHandleJint : IJsHandle<JsHandle>
     {
         public JsValue Item;
-        public ObjectInstance Obj;
 
         public JsHandleJint(JsValue value)
         {
             Item = value;
-            Obj = value as ObjectInstance;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             Item = null;
-            Obj = null;
+        }
+
+        public ObjectInstance Obj {
+            get {
+                return Item as ObjectInstance; 
+            }
         }
 
         public JsHandle Clone()
@@ -44,7 +48,6 @@ namespace Raven.Server.Documents.Patch
         public JsHandle Set(JsHandle value)
         {
             Item = value.Jint.Item;
-            Obj = value.Jint.Obj;
             return new JsHandle(Item);
         }
         
@@ -60,7 +63,7 @@ namespace Raven.Server.Documents.Patch
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                if (Obj == null)
+                if (Item == null)
                     throw new NotSupportedException($"Engine property is not supported for non-object Jint value.");
                 return Obj.Engine as IJsEngineHandle;
             }

@@ -11,13 +11,14 @@ namespace Raven.Server.Documents.Patch
 {
     public struct JsHandleJintError
     {
-        public string Message;
         public JSValueType ErrorType;
+
+        public string Message;
 
         public JsHandleJintError(string message, JSValueType errorType)
         {
-            Message = message;
             ErrorType = errorType;
+            Message = message;
         }
 
         public void Throw()
@@ -34,22 +35,17 @@ namespace Raven.Server.Documents.Patch
     }
     
     
-    [StructLayout(LayoutKind.Explicit)]
     public struct JsHandle : IJsHandle<JsHandle>
     {
 
         public static JsHandle Empty(JavaScriptEngineType engineType) => new JsHandle(engineType);
         
-        [FieldOffset(0)]
-        public JsHandleType Type;
+        public JsHandleType Kind;
 
-        [FieldOffset(1)]
         public JsHandleV8 V8;
 
-        [FieldOffset(1)]
         public JsHandleJint Jint;
 
-        [FieldOffset(1)]
         public JsHandleJintError JintError;
 
 
@@ -58,14 +54,14 @@ namespace Raven.Server.Documents.Patch
             switch (engineType)
             {
                 case JavaScriptEngineType.V8:
-                    Type = JsHandleType.V8;
+                    Kind = JsHandleType.V8;
                     Jint = default;
                     JintError = default;
                     var h = InternalHandle.Empty;
                     V8 = new JsHandleV8(ref h);
                     break;
                 case JavaScriptEngineType.Jint:
-                    Type = JsHandleType.Jint;
+                    Kind = JsHandleType.Jint;
                     V8 = default;
                     JintError = default;
                     Jint = new JsHandleJint(null);
@@ -77,8 +73,8 @@ namespace Raven.Server.Documents.Patch
             
         public JsHandle(ref JsHandle value)
         {
-            Type = value.Type;
-            switch (Type)
+            Kind = value.Kind;
+            switch (Kind)
             {
                 case JsHandleType.V8:
                     Jint = default;
@@ -98,13 +94,13 @@ namespace Raven.Server.Documents.Patch
                     JintError = new JsHandleJintError(e.Message, e.ErrorType);
                     break;
                 default:
-                    throw new NotSupportedException($"Not supported JsHandleType '{value.Type}'.");
+                    throw new NotSupportedException($"Not supported JsHandleType '{value.Kind}'.");
             }    
         }
 
         public JsHandle(InternalHandle value)
         {
-            Type = JsHandleType.V8;
+            Kind = JsHandleType.V8;
             Jint = default;
             JintError = default;
             V8 = new JsHandleV8(ref value);
@@ -112,7 +108,7 @@ namespace Raven.Server.Documents.Patch
 
         public JsHandle(JsValue value)
         {
-            Type = JsHandleType.Jint;
+            Kind = JsHandleType.Jint;
             V8 = default;
             JintError = default;
             Jint = new JsHandleJint(value);
@@ -120,7 +116,7 @@ namespace Raven.Server.Documents.Patch
 
         public JsHandle(ObjectInstance value)
         {
-            Type = JsHandleType.Jint;
+            Kind = JsHandleType.Jint;
             V8 = default;
             JintError = default;
             Jint = new JsHandleJint(value);
@@ -128,7 +124,7 @@ namespace Raven.Server.Documents.Patch
 
         public JsHandle(string message, JSValueType errorType)
         {
-            Type = JsHandleType.JintError;
+            Kind = JsHandleType.JintError;
             V8 = default;
             Jint = default;
             JintError = new JsHandleJintError(message, errorType);
@@ -136,7 +132,7 @@ namespace Raven.Server.Documents.Patch
 
         public void Dispose()
         {
-            switch (Type)
+            switch (Kind)
             {
                 case JsHandleType.V8:
                     V8.Dispose();
@@ -147,7 +143,7 @@ namespace Raven.Server.Documents.Patch
                 case JsHandleType.JintError:
                     break;
                 default:
-                    throw new NotSupportedException($"Not supported JsHandleType '{Type}'.");
+                    throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.");
             }
         }
         
@@ -158,12 +154,12 @@ namespace Raven.Server.Documents.Patch
 
         public JsHandle Set(JsHandle value)
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.Set(value),
                 JsHandleType.Jint => Jint.Set(value),
                 JsHandleType.JintError => JintError.Set(value),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
         
@@ -195,12 +191,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => JavaScriptEngineType.V8,
                     JsHandleType.Jint => JavaScriptEngineType.Jint,
                     JsHandleType.JintError => JavaScriptEngineType.Jint,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -209,11 +205,11 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8,
                     JsHandleType.Jint => Jint,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -222,11 +218,11 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.Object,
                     JsHandleType.Jint => Jint.Object,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -235,12 +231,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.HasObject,
                     JsHandleType.Jint => Jint.HasObject,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -249,12 +245,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsEmpty,
                     JsHandleType.Jint => Jint.IsEmpty,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -263,12 +259,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsUndefined,
                     JsHandleType.Jint => Jint.IsUndefined,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -277,12 +273,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsNull,
                     JsHandleType.Jint => Jint.IsNull,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -292,12 +288,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsNumberEx,
                     JsHandleType.Jint => Jint.IsNumberEx,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -306,12 +302,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsNumberOrIntEx,
                     JsHandleType.Jint => Jint.IsNumberOrIntEx,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -320,12 +316,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsStringEx,
                     JsHandleType.Jint => Jint.IsStringEx,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -334,12 +330,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsBoolean,
                     JsHandleType.Jint => Jint.IsBoolean,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -348,12 +344,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsInt32,
                     JsHandleType.Jint => Jint.IsInt32,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -362,12 +358,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsNumber,
                     JsHandleType.Jint => Jint.IsNumber,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -376,12 +372,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsString,
                     JsHandleType.Jint => Jint.IsString,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -390,12 +386,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsObject,
                     JsHandleType.Jint => Jint.IsObject,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -404,12 +400,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsBinder,
                     JsHandleType.Jint => Jint.IsBinder,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -418,12 +414,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsFunction,
                     JsHandleType.Jint => Jint.IsFunction,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -432,12 +428,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsDate,
                     JsHandleType.Jint => Jint.IsDate,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -446,12 +442,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsArray,
                     JsHandleType.Jint => Jint.IsArray,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -460,12 +456,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsRegExp,
                     JsHandleType.Jint => Jint.IsRegExp,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -474,12 +470,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsObjectType,
                     JsHandleType.Jint => Jint.IsObjectType,
                     JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -488,12 +484,12 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.IsError,
                     JsHandleType.Jint => Jint.IsError,
                     JsHandleType.JintError => true,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -502,11 +498,11 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.AsBoolean,
                     JsHandleType.Jint => Jint.AsBoolean,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -515,11 +511,11 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.AsInt32,
                     JsHandleType.Jint => Jint.AsInt32,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -528,11 +524,11 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.AsDouble,
                     JsHandleType.Jint => Jint.AsDouble,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -541,11 +537,11 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.AsString,
                     JsHandleType.Jint => Jint.AsString,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -554,11 +550,11 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.AsDate,
                     JsHandleType.Jint => Jint.AsDate,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -568,11 +564,11 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.ValueType,
                     JsHandleType.Jint => Jint.ValueType,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -581,11 +577,11 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.BoundObject,
                     JsHandleType.Jint => Jint.BoundObject,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -594,11 +590,11 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.ArrayLength,
                     JsHandleType.Jint => Jint.ArrayLength,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
@@ -607,18 +603,18 @@ namespace Raven.Server.Documents.Patch
         {
             get
             {
-                return Type switch
+                return Kind switch
                 {
                     JsHandleType.V8 => V8.Engine,
                     JsHandleType.Jint => Jint.Engine,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
         }
         
         public void ThrowOnError()
         {
-            switch (Type)
+            switch (Kind)
             {
                 case JsHandleType.V8:
                     V8.ThrowOnError();
@@ -630,33 +626,33 @@ namespace Raven.Server.Documents.Patch
                     JintError.Throw();
                     break;
                 default:
-                    throw new NotSupportedException($"Not supported JsHandleType '{Type}'.");
+                    throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.");
             }
         }
 
         public bool HasOwnProperty(string name)
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.HasOwnProperty(name),
                 JsHandleType.Jint => Jint.HasOwnProperty(name),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         public bool HasProperty(string name)
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.HasProperty(name),
                 JsHandleType.Jint => Jint.HasProperty(name),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         public void FastAddProperty(string name, JsHandle value, bool writable, bool enumerable, bool configurable)
         {
-            switch (Type)
+            switch (Kind)
             {
                 case JsHandleType.V8:
                     V8.FastAddProperty(name, value, writable, enumerable, configurable);
@@ -665,178 +661,178 @@ namespace Raven.Server.Documents.Patch
                     Jint.FastAddProperty(name, value, writable, enumerable, configurable);
                     break;
                 default:
-                    throw new NotSupportedException($"Not supported JsHandleType '{Type}'.");
+                    throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.");
             }
         }       
         
         public bool SetProperty(string name, JsHandle value, bool throwOnError = false)
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.SetProperty(name, value),
                 JsHandleType.Jint => Jint.SetProperty(name, value),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         public bool SetProperty(int index, JsHandle value, bool throwOnError = false)
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.SetProperty(index, value, throwOnError),
                 JsHandleType.Jint => Jint.SetProperty(index, value, throwOnError),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         public bool TryGetValue(string propertyName, out JsHandle value)
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.TryGetValue(propertyName, out value),
                 JsHandleType.Jint => Jint.TryGetValue(propertyName, out value),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         public JsHandle GetOwnProperty(string name)
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.GetOwnProperty(name),
                 JsHandleType.Jint => Jint.GetOwnProperty(name),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         public JsHandle GetOwnProperty(Int32 index)
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.GetOwnProperty(index),
                 JsHandleType.Jint => Jint.GetOwnProperty(index),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         public JsHandle GetProperty(string name)
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.GetProperty(name),
                 JsHandleType.Jint => Jint.GetProperty(name),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         public JsHandle GetProperty(int index)
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.GetProperty(index),
                 JsHandleType.Jint => Jint.GetProperty(index),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         public bool DeleteProperty(string name, bool throwOnError = false)
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.DeleteProperty(name, throwOnError),
                 JsHandleType.Jint => Jint.DeleteProperty(name, throwOnError),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         public bool DeleteProperty(int index, bool throwOnError = false)
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.DeleteProperty(index, throwOnError),
                 JsHandleType.Jint => Jint.DeleteProperty(index, throwOnError),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         public string[] GetPropertyNames()
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.GetPropertyNames(),
                 JsHandleType.Jint => Jint.GetPropertyNames(),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         public string[] GetOwnPropertyNames()
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.GetPropertyNames(),
                 JsHandleType.Jint => Jint.GetPropertyNames(),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         public IEnumerable<KeyValuePair<string, JsHandle>> GetOwnProperties()
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.GetOwnProperties(),
                 JsHandleType.Jint => Jint.GetOwnProperties(),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
         
         public IEnumerable<KeyValuePair<string, JsHandle>> GetProperties()
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.GetProperties(),
                 JsHandleType.Jint => Jint.GetProperties(),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         public JsHandle Call(string functionName, JsHandle _this, params JsHandle[] args)
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.Call(functionName, _this, args),
                 JsHandleType.Jint => Jint.Call(functionName, _this, args),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         public JsHandle StaticCall(string functionName, params JsHandle[] args)
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.StaticCall(functionName, args),
                 JsHandleType.Jint => Jint.StaticCall(functionName, args),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         public JsHandle Call(JsHandle _this, params JsHandle[] args)
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.Call(_this, args),
                 JsHandleType.Jint => Jint.Call(_this, args),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
 
         [Pure]
         public JsHandle StaticCall(params JsHandle[] args)
         {
-            return Type switch
+            return Kind switch
             {
                 JsHandleType.V8 => V8.StaticCall(args),
                 JsHandleType.Jint => Jint.StaticCall(args),
-                _ => throw new NotSupportedException($"Not supported JsHandleType '{Type}'.")
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
     }
