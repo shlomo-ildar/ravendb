@@ -47,6 +47,8 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
             GC.SuppressFinalize(this);
             
             _stats = null;
+
+            _deletes.Clear();
             _deletes = null;
 
             _putsByJsReference.Dispose();
