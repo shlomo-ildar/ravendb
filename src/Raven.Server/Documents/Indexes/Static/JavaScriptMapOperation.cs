@@ -73,7 +73,7 @@ namespace Raven.Server.Documents.Indexes.Static
                 _engineHandle.MakeSnapshot("map");
 #endif
 
-                if (jsItem.IsBinder)
+                if (jsItem.IsObject)
                 {
                     using (jsItem)
                     {
@@ -150,7 +150,8 @@ namespace Raven.Server.Documents.Indexes.Static
                 }
                 else
                 {
-                    throw new JavaScriptIndexFuncException($"Failed to execute {MapString}", new Exception($"Entry item is not document: {jsItem.ToString()}"));
+                    using (jsItem)
+                        throw new JavaScriptIndexFuncException($"Failed to execute {MapString}", new Exception($"Entry item is not document: {jsItem.ToString()}"));
                 }
                 
                 _resolver?.ExplodeArgsOn(null, null);
