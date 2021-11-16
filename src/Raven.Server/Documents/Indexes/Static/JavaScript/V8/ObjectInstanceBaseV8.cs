@@ -48,7 +48,7 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript.V8
         private bool _disposed = false;
 
         bool IsImplicitNull;
-        protected DictionaryDisposeValueIHV8<string> _properties = new DictionaryDisposeValueIHV8<string>();
+        protected DictionaryCloningValueIHV8<string> _properties = new DictionaryCloningValueIHV8<string>();
 
 #if DEBUG
         private V8EntityID _SelfID;
@@ -80,7 +80,7 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript.V8
             {
                 jsValue = NamedPropertyGetterOnce((V8EngineEx)engine, ref propertyName);
                 if (!jsValue.IsEmpty)
-                    _properties.Add(propertyName, ref jsValue);
+                    _properties.Add(propertyName, jsValue);
             }
 
             if (jsValue.IsEmpty)
@@ -110,6 +110,8 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript.V8
             if (disposing)
             {
                 _properties = null;
+                
+                GC.SuppressFinalize(this);
             }
 
             _disposed = true;
