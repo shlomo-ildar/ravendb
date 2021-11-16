@@ -1,4 +1,4 @@
-using Jint;
+﻿using Jint;
 using Jint.Native.Object;
 using Jint.Runtime.Descriptors;
 
