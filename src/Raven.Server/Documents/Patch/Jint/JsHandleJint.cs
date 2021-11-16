@@ -11,6 +11,7 @@ using Jint.Native.Symbol;
 using Jint.Native.String;
 using Jint.Native.RegExp;
 using Jint.Native.Array;
+using Jint.Native.Function;
 using Jint.Native.Object;
 using Jint.Runtime.Interop;
 using JintTypes = Jint.Runtime.Types;
@@ -159,7 +160,7 @@ namespace Raven.Server.Documents.Patch
         public bool IsFunction
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return false; }
+            get { return Item is ScriptFunctionInstance; }
         }
 
         public bool IsDate

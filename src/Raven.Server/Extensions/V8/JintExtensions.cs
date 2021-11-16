@@ -8,7 +8,7 @@ using Raven.Server.Documents.Patch;
 
 namespace Raven.Server.Extensions.V8
 {
-    public class JintEngineExForV8 : Engine, IJavaScriptEngineStatic
+    public class JintEngineExForV8 : Engine, IJavaScriptEngineForParsing
     {
         public static string JintStubInstruction = 
 @"To use some of the modern JS features like optional chaining you should add stubs for map and/or reduce functions and/or switch off whole additional sources with implementation details that are not used in the stubs.

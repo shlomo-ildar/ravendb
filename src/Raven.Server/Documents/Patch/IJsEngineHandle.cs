@@ -7,7 +7,7 @@ using JSValueType = V8.Net.JSValueType;
 
 namespace Raven.Server.Documents.Patch
 {
-    public interface IJavaScriptEngineStatic
+    public interface IJavaScriptEngineForParsing
     {
         JsHandle GetGlobalProperty(string propertyName);
 
@@ -20,7 +20,7 @@ namespace Raven.Server.Documents.Patch
     
     //public delegate JsValue JintFunction(JsValue self, JsValue[] args); // TODO [shlomo] to discuss with Pawel moving and using it inside Jint
 
-    public interface IJsEngineHandle : IJavaScriptEngineStatic, IDisposable
+    public interface IJsEngineHandle : IJavaScriptEngineForParsing, IDisposable
     {
         JavaScriptEngineType EngineType { get;  }
         

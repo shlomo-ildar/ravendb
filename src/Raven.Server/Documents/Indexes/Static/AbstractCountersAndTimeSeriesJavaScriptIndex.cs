@@ -72,7 +72,7 @@ function map() {{
 
         protected override void ProcessMaps(List<string> mapList, List<MapMetadata> mapReferencedCollections, out Dictionary<string, Dictionary<string, List<JavaScriptMapOperation>>> collectionFunctions)
         {
-            var mapsArrayStatic = _definitionsStatic.GetProperty(MapsProperty).Value;
+            var mapsArrayStatic = _definitionsForParsingJint.GetProperty(MapsProperty).Value;
             if (mapsArrayStatic.IsNull() || mapsArrayStatic.IsUndefined() || mapsArrayStatic.IsArray() == false)
                 ThrowIndexCreationException($"JavaScript: doesn't contain any map function or '{GlobalDefinitions}.{Maps}' was modified in the script");
 
