@@ -22,11 +22,13 @@ namespace Raven.Server.Documents.Patch
 {
     public struct JsHandleJint : IJsHandle<JsHandle>
     {
-        public JsValue Item;
+        private JsValue _item;
+        private ObjectInstance _obj;
 
         public JsHandleJint(JsValue value)
         {
-            Item = value;
+            _item = value;
+            _obj = _item as ObjectInstance;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -35,11 +37,17 @@ namespace Raven.Server.Documents.Patch
             Item = null;
         }
 
-        public ObjectInstance Obj {
-            get {
-                return Item as ObjectInstance; 
+        public JsValue Item
+        {
+            get => _item;
+            private set
+            {
+                _item = value;
+                _obj = _item as ObjectInstance;
             }
         }
+        
+        public ObjectInstance Obj { get => _obj; }
 
         public JsHandle Clone()
         {
@@ -64,9 +72,9 @@ namespace Raven.Server.Documents.Patch
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                if (Item == null)
+                if (_obj != null)
                     throw new NotSupportedException($"Engine property is not supported for non-object Jint value.");
-                return Obj.Engine as IJsEngineHandle;
+                return _obj.Engine as IJsEngineHandle;
             }
         }
 
@@ -154,7 +162,7 @@ namespace Raven.Server.Documents.Patch
         public bool IsBinder
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Obj is ObjectWrapper; }
+            get { return Item is ObjectWrapper; }
         }
 
         public bool IsFunction
@@ -280,10 +288,11 @@ namespace Raven.Server.Documents.Patch
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                if (Obj == null)
-                    throw new NotSupportedException($"Not supported for non object value.");
+                if (!IsBinder)
+                    throw new NotSupportedException($"Not supported for non-binder value.");
 
-                return Obj as IObjectWrapper;
+                var objWrapper = _obj as ObjectWrapper;
+                return objWrapper.Target;
             }
         }
         
@@ -300,73 +309,73 @@ namespace Raven.Server.Documents.Patch
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public JsHandle GetOwnProperty(string name)
         {
-            if (Obj == null)
+            if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
-            return new JsHandle(Obj.GetOwnProperty(name).Value);
+            return new JsHandle(_obj.GetOwnProperty(name).Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public JsHandle GetOwnProperty(Int32 index)
         {
-            if (Obj == null)
+            if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
-            return new JsHandle(Obj.GetOwnProperty(index).Value);
+            return new JsHandle(_obj.GetOwnProperty(index).Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasOwnProperty (string name)
         {
-            if (Obj == null)
+            if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
-            return Obj.HasOwnProperty(name);
+            return _obj.HasOwnProperty(name);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasProperty (string name)
         {
-            if (Obj == null)
+            if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
-            return Obj.HasProperty(name);
+            return _obj.HasProperty(name);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FastAddProperty(string name, JsHandle value, bool writable, bool enumerable, bool configurable)
         {
-            if (Obj == null)
+            if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
-            Obj.FastAddProperty(name, value.Jint.Item, writable, enumerable, configurable);
+            _obj.FastAddProperty(name, value.Jint.Item, writable, enumerable, configurable);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool SetProperty(string name, JsHandle value, bool throwOnError = false)
         {
-            if (Obj == null)
+            if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
-            return Obj.Set(name, value.Jint.Item, throwOnError);
+            return _obj.Set(name, value.Jint.Item, throwOnError);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool SetProperty(int index, JsHandle value, bool throwOnError = false)
         {
-            if (Obj == null)
+            if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
-            return Obj.Set(index, value.Jint.Item, throwOnError);
+            return _obj.Set(index, value.Jint.Item, throwOnError);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetValue(string propertyName, out JsHandle value)
         {
-            if (Obj == null)
+            if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
-            var res = Obj.TryGetValue(propertyName, out JsValue jsValue);
+            var res = _obj.TryGetValue(propertyName, out JsValue jsValue);
             value = new JsHandle(jsValue);
             return res;
         }
@@ -374,46 +383,46 @@ namespace Raven.Server.Documents.Patch
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public JsHandle GetProperty(string name)
         {
-            if (Obj == null)
+            if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
-            return new JsHandle(Obj.GetOwnProperty(name).Value);
+            return new JsHandle(_obj.GetOwnProperty(name).Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public JsHandle GetProperty(int index)
         {
-            if (Obj == null)
+            if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
-            return new JsHandle(Obj.GetOwnProperty(index).Value);
+            return new JsHandle(_obj.GetOwnProperty(index).Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool DeleteProperty(string name, bool throwOnError = false)
         {
-            if (Obj == null)
+            if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
             var res = true;
             if (throwOnError)
-                Obj.DeletePropertyOrThrow(name);
+                _obj.DeletePropertyOrThrow(name);
             else
-                res = Obj.Delete(name);
+                res = _obj.Delete(name);
             return res;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool DeleteProperty(int index, bool throwOnError = false)
         {
-            if (Obj == null)
+            if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
             var res = true;
             if (throwOnError)
-                Obj.DeletePropertyOrThrow(index);
+                _obj.DeletePropertyOrThrow(index);
             else
-                res = Obj.Delete(index);
+                res = _obj.Delete(index);
             return res;
         }
 
@@ -426,10 +435,10 @@ namespace Raven.Server.Documents.Patch
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string[] GetOwnPropertyNames()
         {
-            if (Obj == null)
+            if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
-            var jsKeys = Obj.GetOwnPropertyKeys();
+            var jsKeys = _obj.GetOwnPropertyKeys();
             int arrayLength = jsKeys.Count;
             var res = new string[arrayLength];
             for (int i = 0; i < arrayLength; ++i)
@@ -443,10 +452,10 @@ namespace Raven.Server.Documents.Patch
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<KeyValuePair<string, JsHandle>> GetOwnProperties()
         {
-            if (Obj == null)
+            if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
-            foreach (var kvp in Obj.GetOwnProperties())
+            foreach (var kvp in _obj.GetOwnProperties())
             {
                 yield return new KeyValuePair<string, JsHandle>(kvp.Key.AsString(), new JsHandle(kvp.Value.Value));
             }
@@ -461,7 +470,7 @@ namespace Raven.Server.Documents.Patch
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public JsHandle Call(string functionName, JsHandle _this, params JsHandle[] args)
         {
-            if (Obj == null)
+            if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
             int arrayLength = args.Length;
@@ -471,7 +480,7 @@ namespace Raven.Server.Documents.Patch
                 jsArgs[i] = args[i].Jint.Item;
             }
 
-            return new JsHandle(Obj.Call(functionName, _this.Jint.Item, jsArgs));
+            return new JsHandle(_obj.Call(functionName, _this.Jint.Item, jsArgs));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -483,7 +492,7 @@ namespace Raven.Server.Documents.Patch
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public JsHandle Call(JsHandle _this, params JsHandle[] args)
         {
-            if (Obj == null)
+            if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
             int arrayLength = args.Length;
@@ -493,7 +502,7 @@ namespace Raven.Server.Documents.Patch
                 jsArgs[i] = args[i].Jint.Item;
             }
 
-            return new JsHandle(Obj.Call(_this.Jint.Item, jsArgs));
+            return new JsHandle(_obj.Call(_this.Jint.Item, jsArgs));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
