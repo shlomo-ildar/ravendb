@@ -12,9 +12,11 @@ namespace Raven.Server.Config.Categories
         // These options are left here for backward compatibility: nullable without default values to be used in priority order in case were set by user (the same approach as with indexing)
         /// </summary>
         [ConfigurationEntry("Patching.MaxStepsForScript", ConfigurationEntryScope.ServerWideOrPerDatabase)]
+        [DefaultValue(null)]
         public int? MaxStepsForScript { get; set; }
 
         [Description("Enables Strict Mode in JavaScript engine. Default: true")]
+        [DefaultValue(null)]
         [ConfigurationEntry("Patching.StrictMode", ConfigurationEntryScope.ServerWideOrPerDatabase)]
         public bool? StrictMode { get; set; }
     }
