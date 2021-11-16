@@ -22,7 +22,7 @@ namespace Raven.Server.Documents.Indexes.Static
     {
         private readonly JavaScriptIndexUtils _jsIndexUtils;
         private readonly IJsEngineHandle _engineHandle;
-        private IJavaScriptEngineStatic _engineStatic { get; }
+        private IJavaScriptEngineForParsing EngineForParsing { get; }
         protected readonly Engine _engineStaticJint;
 
         public FunctionInstance MapFuncJint;
@@ -40,8 +40,8 @@ namespace Raven.Server.Documents.Indexes.Static
 
         public JavaScriptMapOperation(JavaScriptIndexUtils jsIndexUtils, FunctionInstance mapFuncJint, JsHandle mapFunc, string indexName, string mapString)
         {
-            _engineStatic = jsIndexUtils.EngineStatic;
-            _engineStaticJint = (Engine)_engineStatic;
+            EngineForParsing = jsIndexUtils.EngineForParsing;
+            _engineStaticJint = (Engine)EngineForParsing;
 
             _jsIndexUtils = jsIndexUtils;
             _engineHandle = _jsIndexUtils.EngineHandle;

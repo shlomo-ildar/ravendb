@@ -16,13 +16,13 @@ namespace Raven.Server.Documents.Indexes.Static.Utils
         public readonly IJavaScriptUtils JsUtils;
         public readonly IJsEngineHandle EngineHandle;
 
-        public readonly IJavaScriptEngineStatic EngineStatic;
+        public readonly IJavaScriptEngineForParsing EngineForParsing;
 
-        public JavaScriptIndexUtils(IJavaScriptUtils jsUtils, IJavaScriptEngineStatic engineStatic)
+        public JavaScriptIndexUtils(IJavaScriptUtils jsUtils, IJavaScriptEngineForParsing engineForParsing)
         {
             JsUtils = jsUtils;
             EngineHandle = JsUtils.EngineHandle;
-            EngineStatic = engineStatic;
+            EngineForParsing = engineForParsing;
         }
 
         public static IEnumerable<ReturnStatement> GetReturnStatements(IFunction function)
