@@ -80,7 +80,7 @@ var process = {
         
         public static void DisposeAndCollectGarbage(List<object> items, string? snapshotName)
         {
-            V8Engine engine = null;
+            V8Engine? engine = null;
             for (int i = items.Count - 1; i >= 0; i--)
             {
                 var h = (InternalHandle)items[i];
@@ -100,7 +100,7 @@ var process = {
             //.LocalTimeZone(TimeZoneInfo.Utc);  // TODO -> ??? maybe these V8 args: harmony_intl_locale_info, harmony_intl_more_timezone
         }
 
-        public void SetOptions(IJavaScriptOptions jsOptions)
+        public void SetOptions(IJavaScriptOptions? jsOptions)
         {
             SetBasicConfiguration();
             if (jsOptions == null)
@@ -253,7 +253,7 @@ var process = {
         public readonly TypeBinder TypeBinderAttachmentObjectInstance;
         public readonly TypeBinder TypeBinderLazyNumberValue;
 
-        public V8EngineEx(IJavaScriptOptions jsOptions = null, bool autoCreateGlobalContext = true) : base(autoCreateGlobalContext, jsConverter: new JsConverter())
+        public V8EngineEx(IJavaScriptOptions? jsOptions = null, bool autoCreateGlobalContext = true) : base(autoCreateGlobalContext, jsConverter: new JsConverter())
         {
             SetOptions(jsOptions);
             
