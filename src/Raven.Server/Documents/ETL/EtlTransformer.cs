@@ -126,8 +126,6 @@ namespace Raven.Server.Documents.ETL
 
         public virtual void Dispose()
         {
-            GC.SuppressFinalize(this);
-
             using (_returnMainRun)
             using (_behaviorFunctionsRun)
             {
