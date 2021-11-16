@@ -12,34 +12,61 @@ using Raven.Server.Documents.Patch;
 
 namespace Raven.Server.Documents.ETL.Providers.Raven
 {
-    public class RavenEtlScriptRun
+    public class RavenEtlScriptRun : IDisposable
     {
-        private readonly EtlStatsScope _stats;
-        private readonly List<ICommandData> _deletes = new List<ICommandData>();
+        private EtlStatsScope _stats;
+        private List<ICommandData> _deletes = new List<ICommandData>();
 
-        private DictionaryDisposeKeyJH<(string Id, BlittableJsonReaderObject Document)> _putsByJsReference;
+        private DictionaryCloningKeyJH<(string Id, BlittableJsonReaderObject Document)> _putsByJsReference;
         
-        private DictionaryDisposeKeyJH<List<(string Name, Attachment Attachment)>> _addAttachments;
+        private DictionaryCloningKeyJH<List<(string Name, Attachment Attachment)>> _addAttachments;
 
-        private DictionaryDisposeKeyJH<Attachment> _loadedAttachments;
+        private DictionaryCloningKeyJH<Attachment> _loadedAttachments;
 
-        private DictionaryDisposeKeyJH<List<CounterOperation>> _countersByJsReference;
+        private DictionaryCloningKeyJH<List<CounterOperation>> _countersByJsReference;
 
         private Dictionary<LazyStringValue, List<CounterOperation>> _countersByDocumentId;
         
-        private DictionaryDisposeKeyJH<Dictionary<string, TimeSeriesOperation>> _timeSeriesByJsReference;
+        private DictionaryCloningKeyJH<Dictionary<string, TimeSeriesOperation>> _timeSeriesByJsReference;
 
         private Dictionary<LazyStringValue, Dictionary<string, TimeSeriesBatchCommandData>> _timeSeriesByDocumentId;
 
-        private DictionaryDisposeKeyJH<(string Name, long Value)> _loadedCountersByJsReference;
+        private DictionaryCloningKeyJH<(string Name, long Value)> _loadedCountersByJsReference;
         
-        private DictionaryDisposeKeyJH<(string Name, IEnumerable<SingleResult> Value)> _loadedTimeSeriesByJsReference;
+        private DictionaryCloningKeyJH<(string Name, IEnumerable<SingleResult> Value)> _loadedTimeSeriesByJsReference;
 
         private Dictionary<string, List<ICommandData>> _fullDocuments;
 
         public RavenEtlScriptRun(EtlStatsScope stats)
         {
             _stats = stats;
+        }
+
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+            
+            _stats = null;
+            _deletes = null;
+
+            _putsByJsReference.Dispose();
+            _addAttachments.Dispose();
+            _loadedAttachments.Dispose();
+            _countersByJsReference.Dispose();
+
+            _countersByDocumentId.Clear();
+            _countersByDocumentId = null;
+
+            _timeSeriesByJsReference.Dispose();
+
+            _timeSeriesByDocumentId.Clear();
+            _timeSeriesByDocumentId = null;
+
+            _loadedCountersByJsReference.Dispose();
+            _loadedTimeSeriesByJsReference.Dispose();
+
+            _fullDocuments.Clear();
+            _fullDocuments = null;
         }
 
         public void Delete(ICommandData command)
@@ -101,7 +128,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
         {
             Debug.Assert(!instance.IsEmpty);
 
-            _putsByJsReference ??= new DictionaryDisposeKeyJH<(string Id, BlittableJsonReaderObject)>();
+            _putsByJsReference ??= new DictionaryCloningKeyJH<(string Id, BlittableJsonReaderObject)>();
 
             _putsByJsReference.Add(instance, (id, doc));
             _stats.IncrementBatchSize(doc.Size);
@@ -109,19 +136,19 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
 
         public void LoadAttachment(JsHandle attachmentReference, Attachment attachment)
         {
-            _loadedAttachments ??= new DictionaryDisposeKeyJH<Attachment>();
+            _loadedAttachments ??= new DictionaryCloningKeyJH<Attachment>();
             _loadedAttachments.Add(attachmentReference, attachment);
         }
 
         public void LoadCounter(JsHandle counterReference, string name, long value)
         {
-            _loadedCountersByJsReference ??= new DictionaryDisposeKeyJH<(string, long)>();
+            _loadedCountersByJsReference ??= new DictionaryCloningKeyJH<(string, long)>();
             _loadedCountersByJsReference.TryAdd(counterReference, (name, value));
         }
         
         public void LoadTimeSeries(JsHandle reference, string name, IEnumerable<SingleResult> value)
         {
-            (_loadedTimeSeriesByJsReference ??= new DictionaryDisposeKeyJH<(string, IEnumerable<SingleResult>)>())
+            (_loadedTimeSeriesByJsReference ??= new DictionaryCloningKeyJH<(string, IEnumerable<SingleResult>)>())
                 .TryAdd(reference, (name, value));
         }
 
@@ -129,7 +156,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
         {
             var attachment = _loadedAttachments[attachmentReference];
 
-            _addAttachments ??= new DictionaryDisposeKeyJH<List<(string, Attachment)>>();
+            _addAttachments ??= new DictionaryCloningKeyJH<List<(string, Attachment)>>();
 
             if (_addAttachments.TryGetValue(instance, out var attachments) == false)
             {
@@ -151,7 +178,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
             var counter = _loadedCountersByJsReference[counterReference];
 
             if (_countersByJsReference == null)
-                _countersByJsReference = new DictionaryDisposeKeyJH<List<CounterOperation>>();
+                _countersByJsReference = new DictionaryCloningKeyJH<List<CounterOperation>>();
 
             if (_countersByJsReference.TryGetValue(instance, out var operations) == false)
             {
@@ -208,7 +235,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
         {
             var (name, entries) = _loadedTimeSeriesByJsReference[timeSeriesReference];
 
-            _timeSeriesByJsReference ??= new DictionaryDisposeKeyJH<Dictionary<string, TimeSeriesOperation>>();
+            _timeSeriesByJsReference ??= new DictionaryCloningKeyJH<Dictionary<string, TimeSeriesOperation>>();
             if (_timeSeriesByJsReference.TryGetValue(instance, out var timeSeriesOperations) == false)
             {
                 timeSeriesOperations = new Dictionary<string, TimeSeriesOperation>();
