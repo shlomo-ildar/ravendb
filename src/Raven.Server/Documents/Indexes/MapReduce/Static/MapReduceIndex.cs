@@ -24,6 +24,7 @@ using Sparrow.Json;
 using Sparrow.Json.Parsing;
 using Voron;
 using Raven.Server.Config.Categories;
+using Raven.Server.Documents.Patch;
 using Raven.Server.Documents.Patch.V8;
 
 namespace Raven.Server.Documents.Indexes.MapReduce.Static
@@ -544,6 +545,8 @@ namespace Raven.Server.Documents.Indexes.MapReduce.Static
                         return false;
 
                     var output = _enumerator.Current;
+                    if (output is JsHandle jsOutput)
+                        output = jsOutput.Kind == JsHandleType.Jint ? jsOutput.Jint.Item.AsObject() : jsOutput.V8.Item;
 
                     using (_createBlittableResult.Start())
                     {
