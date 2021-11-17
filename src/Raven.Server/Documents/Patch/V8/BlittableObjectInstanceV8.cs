@@ -942,7 +942,6 @@ namespace Raven.Server.Documents.Patch.V8
 
             private InternalHandle TranslateToJs(BlittableObjectInstanceV8 owner, string key, BlittableJsonToken type, object value)
             {
-                InternalHandle jsRes = InternalHandle.Empty;
                 switch (type & BlittableJsonReaderBase.TypesMask)
                 {
                     case BlittableJsonToken.Null:
