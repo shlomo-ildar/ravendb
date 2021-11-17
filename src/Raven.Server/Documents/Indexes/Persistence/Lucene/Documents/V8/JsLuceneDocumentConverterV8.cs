@@ -34,18 +34,13 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents.V8
         {
         }
 
-        protected override int GetFields<T>(T instance, LazyStringValue key, LazyStringValue sourceDocumentId, object document, JsonOperationContext indexContext, IWriteOperationBuffer writeBuffer)
+        protected override int GetFields<T>(T instance, LazyStringValue key, LazyStringValue sourceDocumentId, object documentObj, JsonOperationContext indexContext, IWriteOperationBuffer writeBuffer)
         {
-            InternalHandle documentToProcess;
-            if (document is V8NativeObject documentToProcessObj)
-                documentToProcess = documentToProcessObj._;
-            else if (document is InternalHandle documentToProcess2)
-            {
-                documentToProcess = documentToProcess2;
-                if (!documentToProcess.IsObject)
-                    return 0;
-            }
-            else
+            if  (!(documentObj is JsHandle documentJH))
+                return 0;
+            var documentToProcess = documentJH.V8.Item;
+
+            if (!documentToProcess.IsObject)
                 return 0;
 
             int newFields = 0;
