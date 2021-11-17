@@ -37,8 +37,12 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents.Jint
         {
         }
 
-        protected override int GetFields<T>(T instance, LazyStringValue key, LazyStringValue sourceDocumentId, object document, JsonOperationContext indexContext, IWriteOperationBuffer writeBuffer)
+        protected override int GetFields<T>(T instance, LazyStringValue key, LazyStringValue sourceDocumentId, object documentObj, JsonOperationContext indexContext, IWriteOperationBuffer writeBuffer)
         {
+            if  (!(documentObj is JsHandle documentJH))
+                return 0;
+            var document = documentJH.Jint.Item;
+
             if (!(document is ObjectInstance documentToProcess))
                 return 0;
 
