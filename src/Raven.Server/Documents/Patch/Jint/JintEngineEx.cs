@@ -145,12 +145,12 @@ var process = {
         public void Execute(string source, string sourceName = "anonymousCode.js", bool throwExceptionOnError = true)
         {
             if (throwExceptionOnError)
-                this.Execute(source);
+                base.Execute(source);
             else
             {
                 try
                 {
-                    this.Execute(source);
+                    base.Execute(source);
                 }
                 catch
                 {

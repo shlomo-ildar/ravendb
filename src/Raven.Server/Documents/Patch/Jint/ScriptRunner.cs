@@ -79,7 +79,7 @@ namespace Raven.Server.Documents.Patch
         {
             public JintEngineEx ScriptEngineExJint;
             public Engine ScriptEngineJint;
-            public JavaScriptUtilsJint JavaScriptUtilsJint;
+            public JavaScriptUtilsJint JsUtilsJint;
 
             private JintPreventResolvingTasksReferenceResolver _refResolverJint = null;
 
@@ -90,8 +90,8 @@ namespace Raven.Server.Documents.Patch
                 ScriptEngineJint = ScriptEngineExJint;
                 ScriptEngineHandle = ScriptEngineExJint;
 
-                JavaScriptUtilsJint = new JavaScriptUtilsJint(_runnerBase, ScriptEngineExJint);
-                JavaScriptUtilsBase = JavaScriptUtilsJint;
+                JsUtilsJint = new JavaScriptUtilsJint(_runnerBase, ScriptEngineExJint);
+                JsUtilsBase = JsUtilsJint;
             }
 
             private (string Id, BlittableJsonReaderObject Doc) GetIdAndDocFromArg(JsValue docArg, string signature)
@@ -1429,7 +1429,7 @@ namespace Raven.Server.Documents.Patch
                     if (value == null)
                         return JsValue.Null;
 
-                    var jsValue = JavaScriptUtilsJint.TranslateToJs(ScriptEngineJint, _jsonCtx, value.Clone(_jsonCtx));
+                    var jsValue = JsUtilsJint.TranslateToJs(_jsonCtx, value.Clone(_jsonCtx));
                     return jsValue.AsObject().Get(Constants.CompareExchange.ObjectFieldName);
                 }
             }
@@ -1450,7 +1450,7 @@ namespace Raven.Server.Documents.Patch
                     });
                 }
 
-                return JavaScriptUtilsJint.TranslateToJs(ScriptEngineJint, _jsonCtx, document);
+                return JsUtilsJint.TranslateToJs(_jsonCtx, document);
             }
 
             private Client.Exceptions.Documents.Patching.JavaScriptException CreateFullError(JavaScriptException e)

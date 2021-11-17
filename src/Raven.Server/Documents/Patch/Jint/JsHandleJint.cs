@@ -78,16 +78,10 @@ namespace Raven.Server.Documents.Patch
             }
         }
 
-        public object Object
+        public object NativeObject
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { ThrowOnEmpty();  return Item.AsObject(); }
-        }
-
-        public bool HasObject
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return !IsEmpty && Item.IsObject() && Item.AsObject() != null; } // TODO [shlomo] check if this is correct
         }
 
         public bool IsEmpty
@@ -157,12 +151,6 @@ namespace Raven.Server.Documents.Patch
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return !IsEmpty && Item.IsObject(); }
-        }
-
-        public bool IsBinder
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Item is ObjectWrapper; }
         }
 
         public bool IsFunction
@@ -283,16 +271,16 @@ namespace Raven.Server.Documents.Patch
             }
         }
 
-        public object BoundObject
+        public object Object
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                if (!IsBinder)
-                    throw new NotSupportedException($"Not supported for non-binder value.");
+                if (!IsObject)
+                    throw new NotSupportedException($"Not supported for non-object value.");
 
                 var objWrapper = _obj as ObjectWrapper;
-                return objWrapper.Target;
+                return objWrapper?.Target ?? _obj;
             }
         }
         

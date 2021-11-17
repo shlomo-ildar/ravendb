@@ -38,16 +38,10 @@ namespace Raven.Server.Documents.Patch
             get { return Item.Engine as IJsEngineHandle; }
         }
 
-        public object Object
+        public object NativeObject
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return Item.Object; }
-        }
-
-        public bool HasObject
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Item.HasObject; }
         }
 
         public bool IsEmpty
@@ -116,12 +110,6 @@ namespace Raven.Server.Documents.Patch
             get { return Item.IsObject; }
         }
         
-        public bool IsBinder
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Item.IsBinder; }
-        }
-
         public bool IsFunction
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -194,10 +182,10 @@ namespace Raven.Server.Documents.Patch
             get { return Item.ValueType; }
         }
 
-        public object BoundObject
+        public object Object
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Item.BoundObject; }
+            get { return Item.BoundObject ?? Item.Object; }
         }
         
         public uint ArrayLength
