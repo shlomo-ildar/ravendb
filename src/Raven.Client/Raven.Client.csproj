@@ -21,15 +21,6 @@
   <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
     <Compile Remove="Properties\AssemblyInfo.Linux.cs" />
     <Compile Include="..\CommonAssemblyInfo.Windows.cs" Link="Properties\CommonAssemblyInfo.Windows.cs" />
-    <Compile Remove="ServerWide\JavaScript\Configuration.cs" />
-    <Compile Remove="ServerWide\Tcp\LicensedFeatures.cs" />
-    <Compile Remove="ServerWide\Operations\Integrations\PostgreSQL\PostgreSqlUser.cs" />
-    <Compile Remove="ServerWide\Operations\Integrations\PostgreSQL\PostgreSqlConfiguration.cs" />
-    <Compile Remove="ServerWide\Operations\Integrations\IntegrationConfigurations.cs" />
-    <Compile Remove="Documents\Operations\JsonPatchOperation.cs" />
-    <Compile Remove="Documents\Operations\Integrations\PostgreSQL\ConfigurePostgreSqlOperationResult.cs" />
-    <Compile Remove="Documents\Identity\IHiLoIdGenerator.cs" />
-    <Compile Remove="Documents\Commands\Batches\JsonPatchCommandData.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(OS)' != 'Windows_NT'">
     <Compile Remove="Properties\AssemblyInfo.Windows.cs" />
