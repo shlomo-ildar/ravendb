@@ -121,6 +121,35 @@ namespace Raven.Server.Documents.Patch.V8
             _writer.WriteArrayEnd();
         }
 
+        private void WriteValue(object parent, bool isRoot, string propertyName, InternalHandle jsValue)
+        {
+            if (jsValue.IsUndefined || jsValue.IsNull)
+                _writer.WriteValueNull();
+            else if (jsValue.IsArray)
+            {
+                //WriteArray(jsArr._); // seems to be simpler, except for it calls WriteJsonValue - but there should be no difference
+                _writer.StartWriteArray();
+                for (int i = 0; i < jsValue.ArrayLength; i++)
+                {
+                    using (var jsItem = jsValue.GetProperty(i))
+                    {
+                        WriteValue(jsValue, false, i.ToString(), jsItem);
+                    }
+                }
+                _writer.WriteArrayEnd();
+            }
+            else if (jsValue.IsObject)
+            {
+                if (jsValue.IsRegExp)
+                    _writer.WriteValueNull();
+                else
+                {
+                    var filterProperties = isRoot && string.Equals(propertyName, Constants.Documents.Metadata.Key, StringComparison.Ordinal);
+                    WriteNestedObject(jsValue, filterProperties);
+                }
+            }
+        }
+
         private void WriteValue(object parent, bool isRoot, string propertyName, object value)
         {
             if (value is bool b)
@@ -141,44 +170,6 @@ namespace Raven.Server.Documents.Patch.V8
             }
             else if (value == null)
                 _writer.WriteValueNull();
-            else if (value is InternalHandle jsValue) 
-            {
-                if (jsValue.IsUndefined || jsValue.IsNull)
-                    _writer.WriteValueNull();
-                else if (jsValue.IsArray)
-                {
-                    //WriteArray(jsArr._); // seems to be simpler, except for it calls WriteJsonValue - but there should be no difference
-                    _writer.StartWriteArray();
-                    for (int i = 0; i < jsValue.ArrayLength; i++)
-                    {
-                        using (var jsItem = jsValue.GetProperty(i))
-                        {
-                            WriteValue(jsValue, false, i.ToString(), jsItem);
-                        }
-                    }
-                    _writer.WriteArrayEnd();
-                }
-                else if (jsValue.IsObject)
-                {
-                    if (jsValue.IsRegExp)
-                        _writer.WriteValueNull();
-                    else
-                    {
-                        var filterProperties = isRoot && string.Equals(propertyName, Constants.Documents.Metadata.Key, StringComparison.Ordinal);
-                        WriteNestedObject(jsValue, filterProperties);
-                    }
-                }
-            }
-            else if (value is V8NativeObject jsObj)
-            {
-                if (jsObj._.IsRegExp)
-                    _writer.WriteValueNull();
-                else
-                {
-                    var filterProperties = isRoot && string.Equals(propertyName, Constants.Documents.Metadata.Key, StringComparison.Ordinal);
-                    WriteNestedObject(jsObj._, filterProperties);
-                }
-            }
             else if (value is LazyStringValue lsv)
             {
                 _writer.WriteValue(lsv);
