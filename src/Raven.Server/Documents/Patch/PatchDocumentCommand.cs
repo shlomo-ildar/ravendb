@@ -134,7 +134,7 @@ namespace Raven.Server.Documents.Patch
                     {
                         using (var jsDoc = run.TranslateToJs(context, originalDocument, false))
                         {
-                            documentInstance = jsDoc.BoundObject;
+                            documentInstance = jsDoc.Object;
                         }
                     }
                 }

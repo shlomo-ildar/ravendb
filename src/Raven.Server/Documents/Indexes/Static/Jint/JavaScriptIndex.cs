@@ -222,7 +222,7 @@ namespace Raven.Server.Documents.Indexes.Static
                         return new BlittableObjectInstanceJint(EngineJint, null, dbj.BlittableJson, id: null, lastModified: null, changeVector: null);
 
                     default:
-                        return JsUtilsJint.TranslateToJs(EngineJint, context: null, value);
+                        return JsUtilsJint.TranslateToJs(context: null, value);
                 }
             }
 

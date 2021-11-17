@@ -70,7 +70,7 @@ namespace Raven.Server.Documents.Patch
         public partial class SingleRun
         {
             public V8Engine ScriptEngineV8;
-            public JavaScriptUtilsV8 JavaScriptUtilsV8;
+            public JavaScriptUtilsV8 JsUtilsV8;
 
             public void InitializeV8()
             {
@@ -78,8 +78,8 @@ namespace Raven.Server.Documents.Patch
                 ScriptEngineV8 = scriptEngineExV8;
                 ScriptEngineHandle = scriptEngineExV8;
 
-                JavaScriptUtilsV8 = new JavaScriptUtilsV8(_runnerBase, scriptEngineExV8);
-                JavaScriptUtilsBase = JavaScriptUtilsV8;
+                JsUtilsV8 = new JavaScriptUtilsV8(_runnerBase, scriptEngineExV8);
+                JsUtilsBase = JsUtilsV8;
             }
 
             private (string Id, BlittableJsonReaderObject Doc) GetIdAndDocFromArg(InternalHandle docArg, string signature)
@@ -1667,7 +1667,7 @@ namespace Raven.Server.Documents.Patch
                     if (value == null)
                         return ScriptEngineV8.CreateNullValue();
 
-                    using (var jsValue = JavaScriptUtilsV8.TranslateToJs(_jsonCtx, value.Clone(_jsonCtx), true))
+                    using (var jsValue = JsUtilsV8.TranslateToJs(_jsonCtx, value.Clone(_jsonCtx), true))
                         return jsValue.GetProperty(Constants.CompareExchange.ObjectFieldName);
                 }
             }
@@ -1688,11 +1688,11 @@ namespace Raven.Server.Documents.Patch
                     });
                 }
 
-                return JavaScriptUtilsV8.TranslateToJs(_jsonCtx, document, true);
+                return JsUtilsV8.TranslateToJs(_jsonCtx, document, true);
             }
             public object TranslateToJsV8(JsonOperationContext context, object o, bool keepAlive = false)
             {
-                return JavaScriptUtilsV8.TranslateToJs(context, o, keepAlive: keepAlive);
+                return JsUtilsV8.TranslateToJs(context, o, keepAlive: keepAlive);
             }
 
             private JavaScriptException CreateFullError(V8Exception e)

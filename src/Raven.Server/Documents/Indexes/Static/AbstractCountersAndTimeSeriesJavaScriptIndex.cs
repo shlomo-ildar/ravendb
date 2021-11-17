@@ -72,12 +72,12 @@ function map() {{
 
         protected override void ProcessMaps(List<string> mapList, List<MapMetadata> mapReferencedCollections, out Dictionary<string, Dictionary<string, List<JavaScriptMapOperation>>> collectionFunctions)
         {
-            var mapsArrayStatic = _definitionsForParsingJint.GetProperty(MapsProperty).Value;
-            if (mapsArrayStatic.IsNull() || mapsArrayStatic.IsUndefined() || mapsArrayStatic.IsArray() == false)
+            var mapsArrayForParsingJint = _definitionsForParsingJint.GetProperty(MapsProperty).Value;
+            if (mapsArrayForParsingJint.IsNull() || mapsArrayForParsingJint.IsUndefined() || mapsArrayForParsingJint.IsArray() == false)
                 ThrowIndexCreationException($"JavaScript: doesn't contain any map function or '{GlobalDefinitions}.{Maps}' was modified in the script");
 
-            var mapsStatic = mapsArrayStatic.AsArray();
-            if (mapsStatic.Length == 0)
+            var mapsForParsingJint = mapsArrayForParsingJint.AsArray();
+            if (mapsForParsingJint.Length == 0)
                 ThrowIndexCreationException($"JavaScript: doesn't contain any map functions or '{GlobalDefinitions}.{Maps}' was modified in the script");
 
 
@@ -92,14 +92,14 @@ function map() {{
                 collectionFunctions = new Dictionary<string, Dictionary<string, List<JavaScriptMapOperation>>>();
                 for (int i = 0; i < maps.ArrayLength; i++)
                 {
-                    var mapObjStatic = mapsStatic.Get(i.ToString());
-                    if (mapObjStatic.IsNull() || mapObjStatic.IsUndefined() || mapObjStatic.IsObject() == false)
+                    var mapObjForParsingJint = mapsForParsingJint.Get(i.ToString());
+                    if (mapObjForParsingJint.IsNull() || mapObjForParsingJint.IsUndefined() || mapObjForParsingJint.IsObject() == false)
                         ThrowIndexCreationException($"JavaScript: map function #{i} is not a valid object");
-                    var mapStatic = mapObjStatic.AsObject();
-                    if (mapStatic.HasProperty(MethodProperty) == false)
+                    var mapForParsingJint = mapObjForParsingJint.AsObject();
+                    if (mapForParsingJint.HasProperty(MethodProperty) == false)
                         ThrowIndexCreationException($"JavaScript: map function #{i} is missing its {MethodProperty} property");
-                    var funcStatic = mapStatic.Get(MethodProperty).As<FunctionInstance>();
-                    if (funcStatic == null)
+                    var funcForParsingJint = mapForParsingJint.Get(MethodProperty).As<FunctionInstance>();
+                    if (funcForParsingJint == null)
                         ThrowIndexCreationException($"JavaScript: map function #{i} {MethodProperty} property isn't a 'FunctionInstance'");
 
                     using (var map = maps.GetProperty(i))
@@ -136,10 +136,10 @@ function map() {{
                                     if (func.IsFunction == false)
                                         ThrowIndexCreationException($"map function #{i} {MethodProperty} property isn't a 'FunctionInstance'");
 
-                                    var operation = new JavaScriptMapOperation(JsIndexUtils, funcStatic, func, Definition.Name, mapList[i]);
-                                    if (mapStatic.HasOwnProperty(MoreArgsProperty))
+                                    var operation = new JavaScriptMapOperation(JsIndexUtils, funcForParsingJint, func, Definition.Name, mapList[i]);
+                                    if (mapForParsingJint.HasOwnProperty(MoreArgsProperty))
                                     {
-                                        var moreArgsObjJint = mapStatic.Get(MoreArgsProperty);
+                                        var moreArgsObjJint = mapForParsingJint.Get(MoreArgsProperty);
                                         if (moreArgsObjJint.IsArray())
                                         {
                                             var arrayJint = moreArgsObjJint.AsArray();  

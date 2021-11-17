@@ -214,28 +214,14 @@ namespace Raven.Server.Documents.Patch
             }
         }
         
-        public object Object
+        public object NativeObject
         {
             get
             {
                 return Kind switch
                 {
-                    JsHandleType.V8 => V8.Object,
-                    JsHandleType.Jint => Jint.Object,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
-                };
-            }
-        }
-
-        public bool HasObject
-        {
-            get
-            {
-                return Kind switch
-                {
-                    JsHandleType.V8 => V8.HasObject,
-                    JsHandleType.Jint => Jint.HasObject,
-                    JsHandleType.JintError => false,
+                    JsHandleType.V8 => V8.NativeObject,
+                    JsHandleType.Jint => Jint.NativeObject,
                     _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }
@@ -390,20 +376,6 @@ namespace Raven.Server.Documents.Patch
                 {
                     JsHandleType.V8 => V8.IsObject,
                     JsHandleType.Jint => Jint.IsObject,
-                    JsHandleType.JintError => false,
-                    _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
-                };
-            }
-        }
-
-        public bool IsBinder
-        {
-            get
-            {
-                return Kind switch
-                {
-                    JsHandleType.V8 => V8.IsBinder,
-                    JsHandleType.Jint => Jint.IsBinder,
                     JsHandleType.JintError => false,
                     _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
@@ -573,14 +545,14 @@ namespace Raven.Server.Documents.Patch
             }
         }
 
-        public object BoundObject
+        public object Object
         {
             get
             {
                 return Kind switch
                 {
-                    JsHandleType.V8 => V8.BoundObject,
-                    JsHandleType.Jint => Jint.BoundObject,
+                    JsHandleType.V8 => V8.Object,
+                    JsHandleType.Jint => Jint.Object,
                     _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
                 };
             }

@@ -29,7 +29,7 @@ namespace Raven.Server.Documents.Patch
 
         public JsHandle GetOrCreate(string propertyName)
         {
-            if (Instance.BoundObject is IBlittableObjectInstance boi)
+            if (Instance.Object is IBlittableObjectInstance boi)
                 return boi.GetOrCreate(propertyName);
 
             JsHandle o = Instance.GetProperty(propertyName);
@@ -63,12 +63,12 @@ namespace Raven.Server.Documents.Patch
 
         public void Dispose()
         {
-            if (Instance.BoundObject is PatchV8.BlittableObjectInstanceV8 boiJint)
+            if (Instance.Object is PatchV8.BlittableObjectInstanceV8 boiJint)
                 boiJint.Reset();
-            else if (Instance.BoundObject is PatchV8.BlittableObjectInstanceV8 boiV8)
+            else if (Instance.Object is PatchV8.BlittableObjectInstanceV8 boiV8)
                 boiV8.Reset();
 
-            _parent?.JavaScriptUtilsBase.Clear();
+            _parent?.JsUtilsBase.Clear();
         }
         
     }

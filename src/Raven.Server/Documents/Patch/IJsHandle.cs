@@ -28,9 +28,7 @@ namespace Raven.Server.Documents.Patch
         
         IJsEngineHandle Engine { get; }
         
-        object Object { get; }
-
-        bool HasObject { get; }
+        object NativeObject { get; }
 
         bool IsEmpty { get; }
 
@@ -54,8 +52,6 @@ namespace Raven.Server.Documents.Patch
 
         bool IsObject { get; }
         
-        bool IsBinder { get; }
-
         bool IsFunction { get; }
 
         bool IsDate { get; }
@@ -81,7 +77,7 @@ namespace Raven.Server.Documents.Patch
         
         JSValueType ValueType { get; }
 
-        object BoundObject { get; }
+        object Object { get; }
 
         uint ArrayLength { get; }
         
