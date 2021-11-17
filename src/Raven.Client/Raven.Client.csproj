@@ -143,12 +143,4 @@
   <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
     <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Documents\Operations\Integrations\PostgreSQL" />
-    <Folder Include="ServerWide\JavaScript" />
-    <Folder Include="ServerWide\Operations\Integrations\PostgreSQL" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="RavenDB.Client.targets" />
-  </ItemGroup>
 </Project>
