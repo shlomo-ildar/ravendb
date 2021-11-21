@@ -78,7 +78,7 @@ namespace Raven.Server.Extensions.Jint
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static JsValue CreateArrayWithDisposal(this Engine engine, JsValue[] jsItems)
+        public static JsValue CreateArray(this Engine engine, JsValue[] jsItems)
         {
             return engine.FromObject(jsItems);
         }
