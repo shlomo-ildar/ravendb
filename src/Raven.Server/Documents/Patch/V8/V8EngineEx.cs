@@ -187,6 +187,18 @@ var process = {
             return new JsHandle(base.CreateEmptyArray());
         }
         
+        public JsHandle CreateArray(JsHandle[] items)
+        {
+            int arrayLength = items.Length;
+            var jsItems = new InternalHandle[arrayLength];
+            for (int i = 0; i < arrayLength; ++i)
+            {
+                var jhItem = items[i];
+                jsItems[i] = jhItem.V8.Item;
+            }
+            return new JsHandle(CreateArrayWithDisposal(jsItems));
+        }
+        
         public new JsHandle CreateArray(System.Array items)
         {
             return new JsHandle(base.CreateArray(items));

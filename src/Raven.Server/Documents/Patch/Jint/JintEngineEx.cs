@@ -202,6 +202,18 @@ var process = {
             return new JsHandle(be.CreateEmptyArray());
         }
         
+        public JsHandle CreateArray(JsHandle[] items)
+        {
+            int arrayLength = items.Length;
+            var jsItems = new JsValue[arrayLength];
+            for (int i = 0; i < arrayLength; ++i)
+            {
+                var jhItem = items[i];
+                jsItems[i] = jhItem.Jint.Item;
+            }
+            return new JsHandle(JintExtensions.CreateArray(this, jsItems));
+        }
+
         public JsHandle CreateArray(System.Array items)
         {
             int arrayLength = items.Length;
@@ -210,7 +222,7 @@ var process = {
             {
                 jsItems[i] = this.FromObject(items.GetValue(i));
             }
-            return new JsHandle(this.CreateArrayWithDisposal(jsItems));
+            return new JsHandle(JintExtensions.CreateArray(this, jsItems));
         }
 
         public JsHandle CreateArray(IEnumerable<object> items)

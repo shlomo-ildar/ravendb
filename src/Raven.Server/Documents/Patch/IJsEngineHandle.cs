@@ -53,6 +53,8 @@ namespace Raven.Server.Documents.Patch
         JsHandle CreateObject();
         
         JsHandle CreateEmptyArray();
+
+        JsHandle CreateArray(JsHandle[] items);
         
         JsHandle CreateArray(System.Array items);
         
