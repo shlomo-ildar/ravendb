@@ -179,6 +179,8 @@ namespace Raven.Server.Documents.Indexes.Static
             if (res != null)
             {
                 MapFuncJint = res.Value.Function;
+                if (MapFunc.EngineType == JavaScriptEngineType.Jint)
+                    MapFunc = new JsHandle(MapFuncJint);
                 theFuncAst = res.Value.FunctionAst;
             }
 
