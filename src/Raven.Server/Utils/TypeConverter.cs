@@ -234,7 +234,7 @@ namespace Raven.Server.Utils
                 type == typeof(DateTime) || type == typeof(DateTimeOffset) || type == typeof(TimeSpan))
                 return BlittableSupportedReturnType.Same;
 
-            if (value is JsValue || value is InternalHandle)
+            if (value is JsHandle || value is JsValue || value is InternalHandle)
                 return BlittableSupportedReturnType.Javascript;
 
             if (value is IEnumerable<IFieldable> || value is IFieldable)
@@ -288,28 +288,50 @@ namespace Raven.Server.Utils
                 case BlittableSupportedReturnType.String: return value.ToString();
                 case BlittableSupportedReturnType.Javascript:
                 {
-                    if (value is JsValue js)
+                    JsValue valueJint = null;
+                    InternalHandle valueV8 = InternalHandle.Empty;
+                    if (value is JsHandle jsHandle)
                     {
-                        if (js.IsNull())
+                        var jsEngineType = jsHandle.EngineType;
+                        switch (jsEngineType)
                         {
-                            if (forIndexing && js is DynamicJsNullJint dynamicJsNull)
+                            case JavaScriptEngineType.Jint:
+                                valueJint = jsHandle.Jint.Item;
+                                break;
+                            case JavaScriptEngineType.V8:
+                                valueV8 = jsHandle.V8.Item;
+                                break;
+                            default:
+                                throw new NotSupportedException($"Not supported JS engine kind '{jsEngineType}'.");
+                        }
+                    }
+                    else if (value is JsValue)
+                        valueJint = (JsValue)value;
+                    else if (value is InternalHandle)
+                        valueV8 = (InternalHandle)value;
+
+                    if (valueJint != null)
+                    {
+                        if (valueJint.IsNull())
+                        {
+                            if (forIndexing && valueJint is DynamicJsNullJint dynamicJsNull)
                                 return dynamicJsNull.IsExplicitNull ? DynamicNullObject.ExplicitNull : DynamicNullObject.Null;
 
                             return null;
                         }
 
-                        if (js.IsUndefined())
+                        if (valueJint.IsUndefined())
                             return null;
-                        if (js.IsString())
-                            return js.AsString();
-                        if (js.IsBoolean())
-                            return js.AsBoolean();
-                        if (js.IsNumber())
-                            return js.AsNumber();
-                        if (js.IsDate())
-                            return js.AsDate().ToDateTime();
+                        if (valueJint.IsString())
+                            return valueJint.AsString();
+                        if (valueJint.IsBoolean())
+                            return valueJint.AsBoolean();
+                        if (valueJint.IsNumber())
+                            return valueJint.AsNumber();
+                        if (valueJint.IsDate())
+                            return valueJint.AsDate().ToDateTime();
                         //object wrapper is an object so it must come before the object
-                        if (js is ObjectWrapper ow)
+                        if (valueJint is ObjectWrapper ow)
                         {
                             var target = ow.Target;
                             switch (target)
@@ -322,53 +344,53 @@ namespace Raven.Server.Utils
                                     return lnv; //should be already blittable supported type.
                             }
 
-                            ThrowInvalidObject(new JsHandle(js));
+                            ThrowInvalidObject(new JsHandle(valueJint));
                         }
                         //Array is an object in Jint
-                        else if (js.IsArray())
+                        else if (valueJint.IsArray())
                         {
-                            var arr = js.AsArray();
+                            var arr = valueJint.AsArray();
                             var convertedArray = EnumerateArray(root, arr, flattenArrays, forIndexing, recursiveLevel + 1, engine, context);
                             return new DynamicJsonArray(flattenArrays ? Flatten(convertedArray) : convertedArray);
                         }
-                        else if (js.IsObject())
+                        else if (valueJint.IsObject())
                         {
-                            return JsBlittableBridgeJint.Translate(context, (Engine)engine, js.AsObject(), isRoot: isRoot);
+                            return JsBlittableBridgeJint.Translate(context, (Engine)engine, valueJint.AsObject(), isRoot: isRoot);
                         }
-                        ThrowInvalidObject(new JsHandle(js));
+                        ThrowInvalidObject(new JsHandle(valueJint));
                     }
-                    else if (value is InternalHandle jsValue)
+                    else if (!valueV8.IsEmpty)
                     {
-                        if (jsValue.IsNull)
+                        if (valueV8.IsNull)
                         {
-                            if (forIndexing && jsValue.BoundObject is DynamicJsNullV8 dynamicJsNull)
+                            if (forIndexing && valueV8.BoundObject is DynamicJsNullV8 dynamicJsNull)
                                 return dynamicJsNull.IsExplicitNull ? DynamicNullObject.ExplicitNull : DynamicNullObject.Null;
 
                             return null;
                         }
 
-                        if (jsValue.IsUndefined)
+                        if (valueV8.IsUndefined)
                             return null;
-                        if (jsValue.IsStringEx)
-                            return jsValue.AsString;
-                        if (jsValue.IsRegExp)              // added, check
-                            return jsValue.AsString;
-                        if (jsValue.IsBoolean)
-                            return jsValue.AsBoolean;
-                        if (jsValue.IsInt32)               // added, check
-                            return jsValue.AsInt32;
-                        if (jsValue.IsNumberEx)
-                            return jsValue.AsDouble;
-                        if (jsValue.IsDate)
-                            return jsValue.AsDate;
-                        if (jsValue.IsArray)
+                        if (valueV8.IsStringEx)
+                            return valueV8.AsString;
+                        if (valueV8.IsRegExp)              // added, check
+                            return valueV8.AsString;
+                        if (valueV8.IsBoolean)
+                            return valueV8.AsBoolean;
+                        if (valueV8.IsInt32)               // added, check
+                            return valueV8.AsInt32;
+                        if (valueV8.IsNumberEx)
+                            return valueV8.AsDouble;
+                        if (valueV8.IsDate)
+                            return valueV8.AsDate;
+                        if (valueV8.IsArray)
                         {
-                            var convertedArray = EnumerateArray(root, jsValue, flattenArrays, forIndexing, recursiveLevel + 1, engine, context);
+                            var convertedArray = EnumerateArray(root, valueV8, flattenArrays, forIndexing, recursiveLevel + 1, engine, context);
                             return new DynamicJsonArray(flattenArrays ? Flatten(convertedArray) : convertedArray);
                         }                
-                        if (jsValue.IsObject)
+                        if (valueV8.IsObject)
                         {
-                            object boundObject = jsValue.BoundObject;
+                            object boundObject = valueV8.BoundObject;
                             if (boundObject != null)
                             {
                                 switch (boundObject)
@@ -381,13 +403,13 @@ namespace Raven.Server.Utils
                                         return lnv; //should be already blittable supported type.
                                 }
                             }
-                            return JsBlittableBridgeV8.Translate(context, (V8Engine)engine, jsValue, isRoot: isRoot);
+                            return JsBlittableBridgeV8.Translate(context, (V8Engine)engine, valueV8, isRoot: isRoot);
                         }
-                        ThrowInvalidObject(new JsHandle(jsValue));
+                        ThrowInvalidObject(new JsHandle(valueV8));
                         return null;
                     }
 
-                    return null;
+                    throw new InvalidOperationException("Invalid object type " + value.GetType());
                 }
                 case BlittableSupportedReturnType.Enumerable:
                 {
@@ -781,15 +803,14 @@ namespace Raven.Server.Utils
 
         public static IPropertyAccessor GetPropertyAccessorForMapReduceOutput(object value, Dictionary<string, CompiledIndexField> groupByFields)
         {
+            if (value is JsHandle) // We don't cache JS types
+                return PropertyAccessor.CreateMapReduceOutputAccessorJs(groupByFields);
+
             var type = value.GetType();
-
-            if (value is JsValue || value is InternalHandle) // We don't cache JS types
-                return PropertyAccessor.CreateMapReduceOutputAccessor(type, value, groupByFields, true);
-
             if (value is Dictionary<string, object>) // don't use cache when using dictionaries
                 return PropertyAccessor.Create(type, value);
 
-            return PropertyAccessorForMapReduceOutputCache.GetOrAdd(type, x => PropertyAccessor.CreateMapReduceOutputAccessor(type, value, groupByFields));
+            return PropertyAccessorForMapReduceOutputCache.GetOrAdd(type, x => PropertyAccessor.CreateMapReduceOutputAccessor(value, groupByFields, type: type));
         }
 
 
