@@ -47,6 +47,7 @@ namespace Raven.Server.Documents.Indexes.Static
             _engineHandle = _jsIndexUtils.EngineHandle;
 
             MapFunc = new JsHandle(ref mapFunc);
+            MapFuncJint = mapFuncJint ?? throw new ArgumentNullException(nameof(mapFuncJint));
             IndexName = indexName;
             MapString = mapString;
 
