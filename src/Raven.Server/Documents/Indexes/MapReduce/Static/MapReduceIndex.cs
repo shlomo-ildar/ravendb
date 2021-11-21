@@ -545,15 +545,11 @@ namespace Raven.Server.Documents.Indexes.MapReduce.Static
                         return false;
 
                     var output = _enumerator.Current;
-                    if (output is JsHandle jsOutput)
-                        output = jsOutput.Kind == JsHandleType.Jint ? jsOutput.Jint.Item.AsObject() : jsOutput.V8.Item;
-
                     using (_createBlittableResult.Start())
                     {
                         IPropertyAccessor accessor;
-
                         if (_parent._isMultiMap == false)
-                            accessor = _parent._propertyAccessor ??= PropertyAccessor.CreateMapReduceOutputAccessor(output.GetType(), output, _groupByFields);
+                            accessor = _parent._propertyAccessor ??= PropertyAccessor.CreateMapReduceOutputAccessor(output, _groupByFields);
                         else
                             accessor = TypeConverter.GetPropertyAccessorForMapReduceOutput(output, _groupByFields);
 
