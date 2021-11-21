@@ -72,7 +72,7 @@ namespace Raven.Server.Documents.Patch
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                if (_obj != null)
+                if (_obj == null)
                     throw new NotSupportedException($"Engine property is not supported for non-object Jint value.");
                 return _obj.Engine as IJsEngineHandle;
             }
