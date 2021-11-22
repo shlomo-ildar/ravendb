@@ -277,7 +277,7 @@ namespace Raven.Server.Documents.Patch
             get
             {
                 if (!IsObject)
-                    throw new NotSupportedException($"Not supported for non-object value.");
+                    return null;
 
                 var objWrapper = _obj as ObjectWrapper;
                 return objWrapper?.Target ?? _obj;
