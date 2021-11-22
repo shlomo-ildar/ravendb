@@ -431,7 +431,10 @@ namespace Raven.Server.Documents.Patch.Jint
 
                     IBlittableObjectProperty modifiedValue = default;
                     JsValue key = prop.Name.ToString();
-                    var existInObject = obj.TryGetValue(key.AsString(), out modifiedValue);
+                    var existInObject = obj.TryGetValue(key.AsString(), out modifiedValue, out bool isDeleted);
+
+                    if (isDeleted)
+                        continue;
 
                     if (existInObject)
                     {
