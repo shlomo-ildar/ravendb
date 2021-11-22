@@ -25,7 +25,7 @@ namespace Raven.Server.Documents.Patch
         SpatialResult? Distance { get; }
         float? IndexScore { get; }
 
-        bool TryGetValue(string propertyName, out IBlittableObjectProperty value);
+        bool TryGetValue(string propertyName, out IBlittableObjectProperty value, out bool isDeleted);
 
         JsHandle GetOrCreate(string key);
 

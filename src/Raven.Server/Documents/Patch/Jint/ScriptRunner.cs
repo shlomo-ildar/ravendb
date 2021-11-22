@@ -1369,7 +1369,7 @@ namespace Raven.Server.Documents.Patch
                         var propName = functionAst.TryGetFieldFromSimpleLambdaExpression();
 
                         IBlittableObjectProperty existingValue = default;
-                        if (selfInstance.TryGetValue(propName, out existingValue) && existingValue != null)
+                        if (selfInstance.TryGetValue(propName, out existingValue, out bool isDeleted) && existingValue != null)
                         {
                             if (existingValue.Changed)
                             {
