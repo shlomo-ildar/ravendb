@@ -214,7 +214,7 @@ namespace SlowTests.Core.AdminConsole
             DoNotReuseServer();
             var result = ExecuteScript(null, @"
                             return { 
-                                StrictMode: server.ServerStore.Configuration.Patching.StrictMode,
+                                StrictMode: server.ServerStore.Configuration.JavaScript.StrictMode,
                                 MaxConcurrentFlushes: server.ServerStore.Configuration.Storage.MaxConcurrentFlushes
                             };"
             );
