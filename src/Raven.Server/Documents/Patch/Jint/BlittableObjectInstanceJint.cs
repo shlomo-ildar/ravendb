@@ -131,7 +131,7 @@ namespace Raven.Server.Documents.Patch.Jint
             BlittableObjectProperty property = null;
             if (_ownValues?.TryGetValue(propertyName, out property) == true)
             {
-                bool existInObject = _deletes?.Contains(propertyName) == false;
+                bool existInObject = !(_deletes?.Contains(propertyName) == true);
                 if (existInObject)
                     value = property;
                 return existInObject;
