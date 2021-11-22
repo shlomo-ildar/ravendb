@@ -1,6 +1,9 @@
 using System;
 using System.Diagnostics;
+using Raven.Client.ServerWide.JavaScript;
 using Raven.Server.Config.Categories;
+using Raven.Server.Config.Settings;
+using Raven.Server.Documents.Indexes.Static;
 using Raven.Server.ServerWide.Context;
 using Raven.Server.Utils;
 using Sparrow.Json;
@@ -39,7 +42,8 @@ namespace Raven.Server.Documents.Patch
             try
             {
                 DocumentsOperationContext docsCtx = null;
-                IJavaScriptOptions jsOptions = _database?.JsOptions ?? _server.Configuration.JavaScript;
+                IJavaScriptOptions jsOptions = _database?.JsOptions ?? _server?.Configuration.JavaScript ?? 
+                    (IJavaScriptOptions)(new JavaScriptOptions(JavaScriptEngineType.Jint, true, 10000, new TimeSetting(100, TimeUnit.Milliseconds)));
                 using (_server.AdminScripts.GetScriptRunner(jsOptions, new AdminJsScriptKey(script.Script), false, out var run))
                 using (_server.ServerStore.ContextPool.AllocateOperationContext(out JsonOperationContext ctx))
                 using (_database?.DocumentsStorage.ContextPool.AllocateOperationContext(out docsCtx))

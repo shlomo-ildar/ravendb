@@ -7,6 +7,8 @@ using Raven.Server.ServerWide.Context;
 using Raven.Server.Config.Categories;
 using Raven.Client.ServerWide.JavaScript;
 using Jint.Native;
+using Raven.Server.Config.Settings;
+using Raven.Server.Documents.Indexes.Static;
 
 namespace Raven.Server.Documents.ETL
 {
@@ -33,11 +35,12 @@ namespace Raven.Server.Documents.ETL
         protected EtlTransformer(DocumentDatabase database, DocumentsOperationContext context,
             PatchRequest mainScript, PatchRequest behaviorFunctions)
         {
-            _jsOptions = database?.JsOptions ?? context.DocumentDatabase.JsOptions;
             Database = database;
             Context = context;
             _mainScript = mainScript;
             _behaviorFunctions = behaviorFunctions;
+            _jsOptions = Database?.JsOptions ?? Context?.DocumentDatabase?.JsOptions ?? 
+                new JavaScriptOptions(JavaScriptEngineType.Jint, true, 10000, new TimeSetting(100, TimeUnit.Milliseconds));
         }
 
         public virtual void Initialize(bool debugMode)
