@@ -66,10 +66,6 @@ function map() {{
             }
         }
 
-        protected override void OnInitializeEngine()
-        {
-        }
-
         protected override void ProcessMaps(List<string> mapList, List<MapMetadata> mapReferencedCollections, out Dictionary<string, Dictionary<string, List<JavaScriptMapOperation>>> collectionFunctions)
         {
             var mapsArrayForParsingJint = _definitionsForParsingJint.GetProperty(MapsProperty).Value;
