@@ -63,10 +63,14 @@ namespace Raven.Server.Documents.Patch
 
         public void Dispose()
         {
-            if (Instance.Object is PatchV8.BlittableObjectInstanceV8 boiJint)
-                boiJint.Reset();
-            else if (Instance.Object is PatchV8.BlittableObjectInstanceV8 boiV8)
-                boiV8.Reset();
+            if (Instance.IsObject)
+            {
+                var io = Instance.Object;
+                if (io is PatchJint.BlittableObjectInstanceJint boiJint)
+                    boiJint.Reset();
+                else if (io is PatchV8.BlittableObjectInstanceV8 boiV8)
+                    boiV8.Reset();
+            }
 
             _parent?.JsUtilsBase.Clear();
         }
