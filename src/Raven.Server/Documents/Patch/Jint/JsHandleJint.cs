@@ -156,7 +156,7 @@ namespace Raven.Server.Documents.Patch
         public bool IsFunction
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Item is ScriptFunctionInstance; }
+            get { return Item is FunctionInstance; }
         }
 
         public bool IsDate
