@@ -447,7 +447,7 @@ namespace Raven.Server.Documents.Patch.Jint
 
                     if (existInObject && modifiedValue.Changed)
                     {
-                        WriteJsonValue(obj, isRoot, prop.Name, modifiedValue.ValueHandle.Jint);
+                        WriteJsonValue(obj, isRoot, prop.Name, modifiedValue.ValueHandle.Jint.Item);
                     }
                     else
                     {
