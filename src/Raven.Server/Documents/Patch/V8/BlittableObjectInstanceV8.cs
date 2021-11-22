@@ -140,16 +140,18 @@ namespace Raven.Server.Documents.Patch.V8
             return new JsHandle(CreateObjectBinder(keepAlive));
         }
         
-        public bool TryGetValue(string propertyName, out IBlittableObjectProperty value)
+        public bool TryGetValue(string propertyName, out IBlittableObjectProperty value, out bool isDeleted)
         {
             value = null;
+            isDeleted = _deletes?.Contains(propertyName) == true;
+            if (isDeleted)
+                return false;
+
             BlittableObjectProperty property = null;
             if (_ownValues?.TryGetValue(propertyName, out property) == true)
             {
-                bool existInObject = !(_deletes?.Contains(propertyName) == true);
-                if (existInObject)
-                    value = property;
-                return existInObject;
+                value = property;
+                return true;
             }
             return false;
         }
