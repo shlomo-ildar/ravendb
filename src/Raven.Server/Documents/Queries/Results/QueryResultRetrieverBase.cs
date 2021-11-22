@@ -8,6 +8,7 @@ using Microsoft.Extensions.Azure;
 using Raven.Client;
 using Raven.Client.Documents.Indexes;
 using Raven.Client.Exceptions;
+using Raven.Client.ServerWide.JavaScript;
 using Raven.Server.Documents.Includes;
 using Raven.Server.Documents.Indexes;
 using Raven.Server.Documents.Indexes.Persistence.Lucene.Documents;
@@ -22,6 +23,8 @@ using Sparrow.Json;
 using Sparrow.Json.Parsing;
 using Sparrow.Server.Json.Sync;
 using Raven.Server.Config.Categories;
+using Raven.Server.Config.Settings;
+using Raven.Server.Documents.Indexes.Static;
 
 namespace Raven.Server.Documents.Queries.Results
 {
@@ -65,8 +68,6 @@ namespace Raven.Server.Documents.Queries.Results
             JsonOperationContext context, bool reduceResults, IncludeDocumentsCommand includeDocumentsCommand,
             IncludeCompareExchangeValuesCommand includeCompareExchangeValuesCommand, IncludeRevisionsCommand includeRevisionsCommand)
         {
-            _jsOptions = database?.JsOptions ?? documentsStorage.DocumentDatabase.JsOptions;
-                
             _database = database;
             _query = query;
             _context = context;
@@ -84,6 +85,9 @@ namespace Raven.Server.Documents.Queries.Results
             DocumentFields = query?.DocumentFields ?? DocumentFields.All;
 
             _blittableTraverser = reduceResults ? BlittableJsonTraverser.FlatMapReduceResults : BlittableJsonTraverser.Default;
+            
+            _jsOptions = _database?.JsOptions ?? DocumentsStorage?.DocumentDatabase?.JsOptions ?? 
+                new JavaScriptOptions(JavaScriptEngineType.Jint, true, 10000, new TimeSetting(100, TimeUnit.Milliseconds));
         }
 
 

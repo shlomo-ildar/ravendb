@@ -16,6 +16,7 @@ using Raven.Client.Documents.Operations.OngoingTasks;
 using Raven.Client.Exceptions.Documents.Patching;
 using Raven.Client.Json.Serialization;
 using Raven.Client.ServerWide;
+using Raven.Client.ServerWide.JavaScript;
 using Raven.Client.Util;
 using Raven.Server.Documents.ETL.Metrics;
 using Raven.Server.Documents.ETL.Providers.ElasticSearch;
@@ -43,6 +44,8 @@ using Sparrow.Threading;
 using Sparrow.Utils;
 using Size = Sparrow.Size;
 using Raven.Server.Config.Categories;
+using Raven.Server.Config.Settings;
+using Raven.Server.Documents.Indexes.Static;
 
 namespace Raven.Server.Documents.ETL
 {
@@ -142,7 +145,8 @@ namespace Raven.Server.Documents.ETL
 
         protected EtlProcess(Transformation transformation, TConfiguration configuration, DocumentDatabase database, ServerStore serverStore, string tag)
         {
-            _jsOptions = database?.JsOptions ?? serverStore.Configuration.JavaScript;
+            _jsOptions = database?.JsOptions ?? serverStore?.Configuration.JavaScript ?? 
+                (IJavaScriptOptions)(new JavaScriptOptions(JavaScriptEngineType.Jint, true, 10000, new TimeSetting(100, TimeUnit.Milliseconds)));
             Transformation = transformation;
             Configuration = configuration;
             _cts = CancellationTokenSource.CreateLinkedTokenSource(database.DatabaseShutdown);
