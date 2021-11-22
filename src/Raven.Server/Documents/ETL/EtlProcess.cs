@@ -142,7 +142,7 @@ namespace Raven.Server.Documents.ETL
 
         protected EtlProcess(Transformation transformation, TConfiguration configuration, DocumentDatabase database, ServerStore serverStore, string tag)
         {
-            _jsOptions = database.JsOptions;
+            _jsOptions = database?.JsOptions ?? serverStore.Configuration.JavaScript;
             Transformation = transformation;
             Configuration = configuration;
             _cts = CancellationTokenSource.CreateLinkedTokenSource(database.DatabaseShutdown);

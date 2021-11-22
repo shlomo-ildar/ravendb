@@ -33,7 +33,7 @@ namespace Raven.Server.Documents.ETL
         protected EtlTransformer(DocumentDatabase database, DocumentsOperationContext context,
             PatchRequest mainScript, PatchRequest behaviorFunctions)
         {
-            _jsOptions = database.JsOptions;
+            _jsOptions = database?.JsOptions ?? context.DocumentDatabase.JsOptions;
             Database = database;
             Context = context;
             _mainScript = mainScript;
