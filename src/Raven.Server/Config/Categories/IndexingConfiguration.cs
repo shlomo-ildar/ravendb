@@ -207,26 +207,26 @@ namespace Raven.Server.Config.Categories
         [Description("EXPERT: the type of JavaScript engine that will be used by RavenDB: 'Jint'  or 'V8'")]
         [DefaultValue(null)]
         [IndexUpdateType(IndexUpdateType.Reset)]
-        [ConfigurationEntry("Indexing.EngineForScript", ConfigurationEntryScope.ServerWideOrPerDatabase)]
+        [ConfigurationEntry("Indexing.EngineForScript", ConfigurationEntryScope.ServerWideOrPerDatabaseOrPerIndex)]
         public JavaScriptEngineType? JsEngineType { get; set; }
 
         [Description("EXPERT: Enables Strict Mode in JavaScript engine. Default: true")]
         [DefaultValue(null)]
         [IndexUpdateType(IndexUpdateType.Reset)]
-        [ConfigurationEntry("Indexing.StrictModeForScript", ConfigurationEntryScope.ServerWideOrPerDatabase)]
+        [ConfigurationEntry("Indexing.StrictModeForScript", ConfigurationEntryScope.ServerWideOrPerDatabaseOrPerIndex)]
         public bool? JsStrictMode { get; set; }
 
         [Description("EXPERT: Maximum number of steps in the JS script execution (Jint)")]
         [DefaultValue(null)]
         [IndexUpdateType(IndexUpdateType.Reset)]
-        [ConfigurationEntry("Indexing.MaxStepsForScript", ConfigurationEntryScope.ServerWideOrPerDatabase)]
+        [ConfigurationEntry("Indexing.MaxStepsForScript", ConfigurationEntryScope.ServerWideOrPerDatabaseOrPerIndex)]
         public int? JsMaxSteps { get; set; }
 
         [Description("EXPERT: Maximum duration in milliseconds of the JS script execution (V8)")]  // TODO [shlomo] To expose in Jint TimeConstraint2 class (as it was made to MaxStatements)
         [TimeUnit(TimeUnit.Milliseconds)]
         [DefaultValue(null)]
         [IndexUpdateType(IndexUpdateType.Reset)]
-        [ConfigurationEntry("Indexing.MaxDurationForScript", ConfigurationEntryScope.ServerWideOrPerDatabase)]
+        [ConfigurationEntry("Indexing.MaxDurationForScript", ConfigurationEntryScope.ServerWideOrPerDatabaseOrPerIndex)]
         public TimeSetting? JsMaxDuration { get; set; }
 
         [Description("Time (in minutes) between index cleanup")]
