@@ -423,7 +423,7 @@ namespace Raven.Server.Documents.Patch.V8
 
                     if (existInObject && modifiedValue.Changed)
                     {
-                        WriteJsonValue(jsObj, isRoot, filterProperties, prop.Name, modifiedValue.ValueHandle);
+                        WriteJsonValue(jsObj, isRoot, filterProperties, prop.Name, modifiedValue.ValueHandle.V8.Item);
                     }
                     else
                     {
