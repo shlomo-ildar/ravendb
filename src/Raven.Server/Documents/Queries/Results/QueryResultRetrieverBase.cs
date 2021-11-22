@@ -65,7 +65,7 @@ namespace Raven.Server.Documents.Queries.Results
             JsonOperationContext context, bool reduceResults, IncludeDocumentsCommand includeDocumentsCommand,
             IncludeCompareExchangeValuesCommand includeCompareExchangeValuesCommand, IncludeRevisionsCommand includeRevisionsCommand)
         {
-            _jsOptions = database.JsOptions;
+            _jsOptions = database?.JsOptions ?? documentsStorage.DocumentDatabase.JsOptions;
                 
             _database = database;
             _query = query;
