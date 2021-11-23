@@ -37,15 +37,32 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
 
         private Dictionary<string, List<ICommandData>> _fullDocuments;
 
+        private bool _disposed;
+        
         public RavenEtlScriptRun(EtlStatsScope stats)
         {
             _stats = stats;
+            _disposed = false;
         }
+
+        // TODO [shlomo] adding finalizer to RavenEtlScriptRun brakes the tests: 
+        // exited with code '134': Max number of concurrent tests is: 2 Ignore request for setting processor affinity. Requested cores: 3. Number of cores on the machine: 4.
+        /*~RavenEtlScriptRun()
+        {
+            Dispose(false);
+        }*/
 
         public void Dispose()
         {
+            Dispose(true);
             GC.SuppressFinalize(this);
-            
+        }
+
+        public void Dispose(bool disposing)
+        {
+            if (_disposed)
+                return;
+
             _stats = null;
 
             _deletes.Clear();
@@ -69,6 +86,8 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
 
             _fullDocuments.Clear();
             _fullDocuments = null;
+
+            _disposed = true;
         }
 
         public void Delete(ICommandData command)
