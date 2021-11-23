@@ -3,7 +3,9 @@ using System.Runtime.CompilerServices;
 using System.IO;
 using Esprima.Ast;
 using Jint;
+using Jint.Constraints;
 using Jint.Runtime;
+using Raven.Client.Util;
 using Raven.Server.Documents.Patch;
 
 namespace Raven.Server.Extensions.V8
@@ -94,6 +96,44 @@ Actually, it is worth to switch off the whole file in case it does not contain m
             return res;
         }
         
+        public IDisposable DisableConstraints()
+        {
+            var disposeMaxStatements = ChangeMaxStatements(0);
+            var disposeMaxDuration = ChangeMaxDuration(0);
+
+            void Restore()
+            {
+                disposeMaxStatements?.Dispose();
+                disposeMaxDuration?.Dispose();
+            }
+            
+            return new DisposableAction(Restore);
+        }
+
+        public IDisposable ChangeMaxStatements(int value)
+        {
+            var maxStatements = FindConstraint<MaxStatements>();
+            if (maxStatements == null)
+                return null;
+
+            var oldMaxStatements = maxStatements.Max;
+            maxStatements.Change(value == 0 ? int.MaxValue : value);
+
+            return new DisposableAction(() => maxStatements.Change(oldMaxStatements));
+        }
+
+        public IDisposable ChangeMaxDuration(int value)
+        {
+            var maxDuration = FindConstraint<MaxStatements>(); // TODO [shlomo] to expose in Jint TimeConstraint2 that is now internal, add Change method to it and replace MaxStatements to TimeConstraint2
+            if (maxDuration == null)
+                return null;
+
+            var oldMaxDuration = maxDuration.Max;
+            maxDuration.Change(value == 0 ? int.MaxValue : value); // TODO [shlomo] to replace on switching to TimeConstraint2: TimeSpan.FromMilliseconds(value == 0 ? int.MaxValue : value));
+
+            return new DisposableAction(() => maxDuration.Change(oldMaxDuration));
+        }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public JsHandle GetGlobalProperty(string propertyName)
         {
@@ -109,12 +149,12 @@ Actually, it is worth to switch off the whole file in case it does not contain m
         public void Execute(string source, string sourceName = "anonymousCode.js", bool throwExceptionOnError = true)
         {
             if (throwExceptionOnError)
-                this.Execute(source);
+                base.Execute(source);
             else
             {
                 try
                 {
-                    this.Execute(source);
+                    base.Execute(source);
                 }
                 catch
                 {
