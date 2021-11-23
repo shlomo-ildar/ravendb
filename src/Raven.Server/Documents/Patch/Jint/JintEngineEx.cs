@@ -89,8 +89,8 @@ var process = {
 
             void Restore()
             {
-                disposeMaxStatements.Dispose();
-                disposeMaxDuration.Dispose();
+                disposeMaxStatements?.Dispose();
+                disposeMaxDuration?.Dispose();
             }
             
             return new DisposableAction(Restore);
