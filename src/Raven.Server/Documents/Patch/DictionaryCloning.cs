@@ -20,6 +20,11 @@ namespace Raven.Server.Documents.Patch
     {
         private Dictionary<TKey, TValue> _dict;
 
+        public DictionaryCloningKey()
+        {
+            _dict = new Dictionary<TKey, TValue>();
+        }
+
         public void Dispose()
         {  
             GC.SuppressFinalize(this);
@@ -171,6 +176,11 @@ namespace Raven.Server.Documents.Patch
         where TValue : IDisposable, IClonable<TValue>
     {
         private Dictionary<TKey, TValue> _dict;
+
+        public DictionaryCloningValue()
+        {
+            _dict = new Dictionary<TKey, TValue>();
+        }
 
         public void Dispose()
         {  
