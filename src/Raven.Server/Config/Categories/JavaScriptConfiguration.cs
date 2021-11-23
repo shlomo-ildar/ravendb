@@ -20,7 +20,7 @@ namespace Raven.Server.Config.Categories
     public class JavaScriptConfiguration : ConfigurationCategory, IJavaScriptOptions
     {
         [Description("EXPERT: the type of JavaScript engine that will be used by RavenDB: 'Jint'  or 'V8'")]
-        [DefaultValue(JavaScriptEngineType.V8)]
+        [DefaultValue(JavaScriptEngineType.Jint)]
         [ConfigurationEntry("JsConfiguration.Engine", ConfigurationEntryScope.ServerWideOrPerDatabase)]
         public JavaScriptEngineType EngineType { get; set; }
 
