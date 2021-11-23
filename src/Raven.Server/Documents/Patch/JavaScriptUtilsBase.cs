@@ -153,12 +153,14 @@ namespace Raven.Server.Documents.Patch
 
         public JsHandle TranslateToJs(JsonOperationContext context, object o, bool keepAlive = false)
         {
+            if (o is JsHandle jsValue)
+                return jsValue;
+
             if (this is JavaScriptUtilsJint jsUtilsJint)
                 return new JsHandle(jsUtilsJint.TranslateToJs(context, o));
-            else if (this is JavaScriptUtilsV8 jsUtilsV8)
+            if (this is JavaScriptUtilsV8 jsUtilsV8)
                 return new JsHandle(jsUtilsV8.TranslateToJs(context, o, keepAlive));
-            else
-                throw new InvalidOperationException($"Not supported JsHandleType '{_jsEngineType}'.");
+            throw new InvalidOperationException($"Not supported JsHandleType '{_jsEngineType}'.");
         }
     }
 }
