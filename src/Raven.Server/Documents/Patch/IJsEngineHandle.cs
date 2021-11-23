@@ -16,6 +16,8 @@ namespace Raven.Server.Documents.Patch
         void Execute(string source, string sourceName = "anonymousCode.js", bool throwExceptionOnError = true);
 
         void ExecuteWithReset(string source, string sourceName = "anonymousCode.js", bool throwExceptionOnError = true);
+
+        IDisposable DisableConstraints();
     }
     
     //public delegate JsValue JintFunction(JsValue self, JsValue[] args); // TODO [shlomo] to discuss with Pawel moving and using it inside Jint
@@ -41,8 +43,6 @@ namespace Raven.Server.Documents.Patch
         void ResetCallStack();
 
         void ResetConstraints();
-
-        IDisposable DisableConstraints();
 
         JsHandle FromObjectGen(object obj, bool keepAlive = false);
 
