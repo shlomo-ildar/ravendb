@@ -2,7 +2,7 @@
   "profiles": {
     "Raven.Server": {
       "commandName": "Project",
-      "commandLineArgs": "--Security.UnsecuredAccessAllowed=\"PublicNetwork\" --Features.Availability=\"Experimental\""
+      "commandLineArgs": "-c ./RavenData/Admin/settings.json"
     }
   }
 }
