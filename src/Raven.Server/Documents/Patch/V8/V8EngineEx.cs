@@ -149,17 +149,24 @@ var process = {
         {
             ((V8Engine)this).ExecuteWithReset(source, sourceName, throwExceptionOnError);
         }
+
+
+        new public JsHandle GlobalObject
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(base.GlobalObject);
+        }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public JsHandle GetGlobalProperty(string propertyName)
         {
-            return new JsHandle(GlobalObject.GetProperty(propertyName));
+            return new JsHandle(base.GlobalObject.GetProperty(propertyName));
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetGlobalProperty(string propertyName, JsHandle value)
         {
-            GlobalObject.SetProperty(propertyName, value.V8);
+            base.GlobalObject.SetProperty(propertyName, value.V8);
         }
 
         public JsHandle FromObjectGen(object obj, bool keepAlive = false)
@@ -174,7 +181,11 @@ var process = {
 
         public void SetGlobalClrCallBack(string propertyName, (Func<JsValue, JsValue[], JsValue> Jint, JSFunction V8) funcTuple)
         {
-            SetGlobalClrCallBack(propertyName, funcTuple.V8);
+            var jsFunc = CreateClrCallBack(funcTuple.V8, true);
+            if (!base.GlobalObject.SetProperty(propertyName, jsFunc))
+            {
+                throw new InvalidOperationException($"Failed to set global property {propertyName}");
+            }            
         }
 
         public new JsHandle CreateObject()
@@ -277,49 +288,49 @@ var process = {
             TypeBinderBlittableObjectInstance = RegisterType<BlittableObjectInstanceV8>(null, true);
             TypeBinderBlittableObjectInstance.OnGetObjectBinder = (tb, obj, initializeBinder)
                 => tb.CreateObjectBinder<BlittableObjectInstanceV8.CustomBinder, BlittableObjectInstanceV8>((BlittableObjectInstanceV8)obj, initializeBinder, keepAlive: true);
-            GlobalObject.SetProperty(typeof(BlittableObjectInstanceV8));
+            base.GlobalObject.SetProperty(typeof(BlittableObjectInstanceV8));
 
             TypeBinderTask = RegisterType<Task>(null, true, ScriptMemberSecurity.ReadWrite);
             TypeBinderTask.OnGetObjectBinder = (tb, obj, initializeBinder)
                 => tb.CreateObjectBinder<TaskCustomBinder, Task>((Task)obj, initializeBinder, keepAlive: true);
-            GlobalObject.SetProperty(typeof(Task));
+            base.GlobalObject.SetProperty(typeof(Task));
 
 
             TypeBinderTimeSeriesSegmentObjectInstance = RegisterType<TimeSeriesSegmentObjectInstanceV8>(null, false);
             TypeBinderTimeSeriesSegmentObjectInstance.OnGetObjectBinder = (tb, obj, initializeBinder)
                 => tb.CreateObjectBinder<TimeSeriesSegmentObjectInstanceV8.CustomBinder, TimeSeriesSegmentObjectInstanceV8>((TimeSeriesSegmentObjectInstanceV8)obj, initializeBinder, keepAlive: true);
-            GlobalObject.SetProperty(typeof(TimeSeriesSegmentObjectInstanceV8));
+            base.GlobalObject.SetProperty(typeof(TimeSeriesSegmentObjectInstanceV8));
 
             TypeBinderDynamicTimeSeriesEntries = RegisterType<DynamicArray>(null, false);
             TypeBinderDynamicTimeSeriesEntries.OnGetObjectBinder = (tb, obj, initializeBinder)
                 => tb.CreateObjectBinder<DynamicTimeSeriesEntriesCustomBinder, DynamicArray>((DynamicArray)obj, initializeBinder, keepAlive: true);
-            GlobalObject.SetProperty(typeof(DynamicArray));
+            base.GlobalObject.SetProperty(typeof(DynamicArray));
 
             TypeBinderDynamicTimeSeriesEntry = RegisterType<DynamicTimeSeriesSegment.DynamicTimeSeriesEntry>(null, false);
             TypeBinderDynamicTimeSeriesEntry.OnGetObjectBinder = (tb, obj, initializeBinder)
                 => tb.CreateObjectBinder<DynamicTimeSeriesEntryCustomBinder, DynamicTimeSeriesSegment.DynamicTimeSeriesEntry>((DynamicTimeSeriesSegment.DynamicTimeSeriesEntry)obj, initializeBinder, keepAlive: true);
-            GlobalObject.SetProperty(typeof(DynamicTimeSeriesSegment.DynamicTimeSeriesEntry));
+            base.GlobalObject.SetProperty(typeof(DynamicTimeSeriesSegment.DynamicTimeSeriesEntry));
 
 
             TypeBinderCounterEntryObjectInstance = RegisterType<CounterEntryObjectInstanceV8>(null, false);
             TypeBinderCounterEntryObjectInstance.OnGetObjectBinder = (tb, obj, initializeBinder)
                 => tb.CreateObjectBinder<CounterEntryObjectInstanceV8.CustomBinder, CounterEntryObjectInstanceV8>((CounterEntryObjectInstanceV8)obj, initializeBinder, keepAlive: true);
-            GlobalObject.SetProperty(typeof(CounterEntryObjectInstanceV8));
+            base.GlobalObject.SetProperty(typeof(CounterEntryObjectInstanceV8));
 
             TypeBinderAttachmentNameObjectInstance = RegisterType<AttachmentNameObjectInstanceV8>(null, false);
             TypeBinderAttachmentNameObjectInstance.OnGetObjectBinder = (tb, obj, initializeBinder)
                 => tb.CreateObjectBinder<AttachmentNameObjectInstanceV8.CustomBinder, AttachmentNameObjectInstanceV8>((AttachmentNameObjectInstanceV8)obj, initializeBinder, keepAlive: true);
-            GlobalObject.SetProperty(typeof(AttachmentNameObjectInstanceV8));
+            base.GlobalObject.SetProperty(typeof(AttachmentNameObjectInstanceV8));
 
             TypeBinderAttachmentObjectInstance = RegisterType<AttachmentObjectInstanceV8>(null, false);
             TypeBinderAttachmentObjectInstance.OnGetObjectBinder = (tb, obj, initializeBinder)
                 => tb.CreateObjectBinder<AttachmentObjectInstanceV8.CustomBinder, AttachmentObjectInstanceV8>((AttachmentObjectInstanceV8)obj, initializeBinder, keepAlive: true);
-            GlobalObject.SetProperty(typeof(AttachmentObjectInstanceV8));
+            base.GlobalObject.SetProperty(typeof(AttachmentObjectInstanceV8));
 
             TypeBinderLazyNumberValue = RegisterType<LazyNumberValue>(null, false);
             TypeBinderLazyNumberValue.OnGetObjectBinder = (tb, obj, initializeBinder)
                 => tb.CreateObjectBinder<ObjectBinder, LazyNumberValue>((LazyNumberValue)obj, initializeBinder, keepAlive: true);
-            GlobalObject.SetProperty(typeof(LazyNumberValue));
+            base.GlobalObject.SetProperty(typeof(LazyNumberValue));
 
             JsonStringifyV8 = this.Execute("JSON.stringify", "JSON.stringify", true, 0);
             _jsonStringify = new JsHandle(JsonStringifyV8);
