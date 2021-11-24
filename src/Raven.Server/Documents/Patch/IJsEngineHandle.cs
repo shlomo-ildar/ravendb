@@ -9,6 +9,8 @@ namespace Raven.Server.Documents.Patch
 {
     public interface IJavaScriptEngineForParsing
     {
+        JsHandle GlobalObject { get; }
+        
         JsHandle GetGlobalProperty(string propertyName);
 
         void SetGlobalProperty(string name, JsHandle value);
