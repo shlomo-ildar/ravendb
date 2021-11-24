@@ -52,7 +52,7 @@ namespace Raven.Server.Documents.Indexes.Static.Roslyn.Rewriters
             if (path == null || path.Length <= 1)
                 return new SimpleField(name);
 
-            return new NestedField(JavaScriptEngineType.Jint, path[0], path.Skip(1).ToArray());
+            return new NestedField(path[0], path.Skip(1).ToArray());
         }
 
         private static string[] ExtractPath(MemberAccessExpressionSyntax expression)
