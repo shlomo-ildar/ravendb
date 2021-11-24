@@ -134,6 +134,12 @@ Actually, it is worth to switch off the whole file in case it does not contain m
             return new DisposableAction(() => maxDuration.Change(oldMaxDuration));
         }
         
+        public JsHandle GlobalObject
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(Global);
+        }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public JsHandle GetGlobalProperty(string propertyName)
         {
