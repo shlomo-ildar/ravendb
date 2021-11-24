@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.IO;
+using System.Threading;
 using Esprima.Ast;
 using Jint;
 using Jint.Constraints;
@@ -124,12 +125,19 @@ Actually, it is worth to switch off the whole file in case it does not contain m
 
         public IDisposable ChangeMaxDuration(int value)
         {
-            var maxDuration = FindConstraint<MaxStatements>(); // TODO [shlomo] to expose in Jint TimeConstraint2 that is now internal, add Change method to it and replace MaxStatements to TimeConstraint2
+            return ChangeMaxDuration(value == 0 ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(value));
+        }
+
+        public IDisposable ChangeMaxDuration(TimeSpan value)
+        {
+            //return new DisposableAction(() => { }); 
+                
+            var maxDuration = FindConstraint<TimeConstraint2>(); // TODO [shlomo] to expose in Jint TimeConstraint2 that is now internal, add Change method to it and replace MaxStatements to TimeConstraint2
             if (maxDuration == null)
                 return null;
 
-            var oldMaxDuration = maxDuration.Max;
-            maxDuration.Change(value == 0 ? int.MaxValue : value); // TODO [shlomo] to replace on switching to TimeConstraint2: TimeSpan.FromMilliseconds(value == 0 ? int.MaxValue : value));
+            var oldMaxDuration = maxDuration.Timeout;
+            maxDuration.Change(value); // TODO [shlomo] to replace on switching to TimeConstraint2: TimeSpan.FromMilliseconds(value == 0 ? int.MaxValue : value));
 
             return new DisposableAction(() => maxDuration.Change(oldMaxDuration));
         }

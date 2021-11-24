@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
+using System.Threading;
 using Jint;
 using Jint.Native;
 using Raven.Server.Extensions.Jint;
@@ -12,6 +13,7 @@ using JSValueType = V8.Net.JSValueType;
 using Raven.Client.Exceptions.Documents.Patching;
 using Jint.Constraints;
 using Raven.Client.Util;
+using Raven.Server.Config.Settings;
 
 namespace Raven.Server.Documents.Patch.Jint
 {
@@ -39,17 +41,21 @@ var process = {
             if (jsOptions == null)
                 options.MaxStatements(1).LimitRecursion(1);
             else
+            {
+                var maxDurationMs = jsOptions.MaxDuration.GetValue(TimeUnit.Milliseconds);
                 options.LimitRecursion(64)
                     .SetReferencesResolver(refResolver)
                     .Strict(jsOptions.StrictMode)
                     .MaxStatements(jsOptions.MaxSteps)
-                    //.TimeoutInterval(TimeSpan.FromMilliseconds(jsConfiguration.MaxDuration)) // TODO In Jint TimeConstraint2 is the internal class so the approach applied to MaxStatements doesn't work here
                     .AddObjectConverter(new JintGuidConverter())
                     .AddObjectConverter(new JintStringConverter())
                     .AddObjectConverter(new JintEnumConverter())
                     .AddObjectConverter(new JintDateTimeConverter())
                     .AddObjectConverter(new JintTimeSpanConverter())
                     .LocalTimeZone(TimeZoneInfo.Utc);
+
+                //options.TimeoutInterval(maxDurationMs == 0 ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(maxDurationMs)); // TODO [shlomo] to switch it on when tests get stable to exclude break because of operation timeout
+            }
         })
         {
             RefResolver = refResolver;
@@ -110,12 +116,17 @@ var process = {
 
         public IDisposable ChangeMaxDuration(int value)
         {
-            var maxDuration = FindConstraint<MaxStatements>(); // TODO [shlomo] to expose in Jint TimeConstraint2 that is now internal, add Change method to it and replace MaxStatements to TimeConstraint2
+            return ChangeMaxDuration(value == 0 ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(value));
+        }
+
+        public IDisposable ChangeMaxDuration(TimeSpan value)
+        {
+            var maxDuration = FindConstraint<TimeConstraint2>();
             if (maxDuration == null)
                 return null;
 
-            var oldMaxDuration = maxDuration.Max;
-            maxDuration.Change(value == 0 ? int.MaxValue : value); // TODO [shlomo] to replace on switching to TimeConstraint2: TimeSpan.FromMilliseconds(value == 0 ? int.MaxValue : value));
+            var oldMaxDuration = maxDuration.Timeout;
+            maxDuration.Change(value); 
 
             return new DisposableAction(() => maxDuration.Change(oldMaxDuration));
         }
