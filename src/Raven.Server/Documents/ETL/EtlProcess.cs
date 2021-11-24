@@ -300,115 +300,113 @@ namespace Raven.Server.Documents.ETL
 
         protected abstract EtlTransformer<TExtracted, TTransformed, TStatsScope, TEtlPerformanceOperation> GetTransformer(DocumentsOperationContext context);
 
-        public IEnumerable<TTransformed> Transform(IEnumerable<TExtracted> items, DocumentsOperationContext context, TStatsScope stats, EtlProcessState state)
+        public EtlTransformer<TExtracted, TTransformed, TStatsScope, TEtlPerformanceOperation> Transform(IEnumerable<TExtracted> items, DocumentsOperationContext context, TStatsScope stats, EtlProcessState state)
         {
-            using (var transformer = GetTransformer(context))
+            var transformer = GetTransformer(context);
+            transformer.Initialize(debugMode: _testMode != null);
+
+            var batchSize = 0;
+
+            var batchStopped = false;
+
+            foreach (var item in items)
             {
-                transformer.Initialize(debugMode: _testMode != null);
-
-                var batchSize = 0;
-
-                var batchStopped = false;
-
-                foreach (var item in items)
+                if (item.Filtered)
                 {
-                    if (item.Filtered)
+                    stats.RecordChangeVector(item.ChangeVector);
+                    stats.RecordLastFilteredOutEtag(item.Etag, item.Type);
+                    continue;
+                }
+
+                stats.RecordLastExtractedEtag(item.Etag, item.Type);
+
+                if (AlreadyLoadedByDifferentNode(item, state))
+                {
+                    stats.RecordChangeVector(item.ChangeVector);
+                    stats.RecordLastFilteredOutEtag(item.Etag, item.Type);
+
+                    continue;
+                }
+
+                if (Transformation.ApplyToAllDocuments &&
+                    item.Type == EtlItemType.Document &&
+                    CollectionName.IsHiLoCollection(item.CollectionFromMetadata) &&
+                    ShouldFilterOutHiLoDocument())
+                {
+                    stats.RecordChangeVector(item.ChangeVector);
+                    stats.RecordLastFilteredOutEtag(item.Etag, item.Type);
+
+                    continue;
+                }
+
+                using (stats.For(EtlOperations.Transform))
+                {
+                    CancellationToken.ThrowIfCancellationRequested();
+
+                    try
                     {
-                        stats.RecordChangeVector(item.ChangeVector);
-                        stats.RecordLastFilteredOutEtag(item.Etag, item.Type);
-                        continue;
-                    }
-
-                    stats.RecordLastExtractedEtag(item.Etag, item.Type);
-
-                    if (AlreadyLoadedByDifferentNode(item, state))
-                    {
-                        stats.RecordChangeVector(item.ChangeVector);
-                        stats.RecordLastFilteredOutEtag(item.Etag, item.Type);
-
-                        continue;
-                    }
-
-                    if (Transformation.ApplyToAllDocuments &&
-                        item.Type == EtlItemType.Document &&
-                        CollectionName.IsHiLoCollection(item.CollectionFromMetadata) &&
-                        ShouldFilterOutHiLoDocument())
-                    {
-                        stats.RecordChangeVector(item.ChangeVector);
-                        stats.RecordLastFilteredOutEtag(item.Etag, item.Type);
-
-                        continue;
-                    }
-
-                    using (stats.For(EtlOperations.Transform))
-                    {
-                        CancellationToken.ThrowIfCancellationRequested();
-
-                        try
+                        if (CanContinueBatch(stats, item, batchSize, context) == false)
                         {
-                            if (CanContinueBatch(stats, item, batchSize, context) == false)
-                            {
-                                batchStopped = true;
-                                break;
-                            }
-
-                            transformer.Transform(item, stats, state);
-
-                            Statistics.TransformationSuccess();
-
-                            stats.RecordTransformedItem(item.Type, item.IsDelete);
-                            stats.RecordLastTransformedEtag(item.Etag, item.Type);
-                            stats.RecordChangeVector(item.ChangeVector);
-
-                            batchSize++;
-
-                        }
-                        catch (JavaScriptParseException e)
-                        {
-                            var message = $"[{Name}] Could not parse transformation script. Stopping ETL process.";
-
-                            if (Logger.IsOperationsEnabled)
-                                Logger.Operations(message, e);
-
-                            var alert = AlertRaised.Create(
-                                Database.Name,
-                                Tag,
-                                message,
-                                AlertType.Etl_InvalidScript,
-                                NotificationSeverity.Error,
-                                key: Name,
-                                details: new ExceptionDetails(e));
-
-                            Database.NotificationCenter.Add(alert);
-
-                            stats.RecordBatchCompleteReason(message);
-                            stats.RecordTransformationError();
-
-                            Stop(reason: message);
-
+                            batchStopped = true;
                             break;
                         }
-                        catch (Exception e)
-                        {
-                            Statistics.RecordTransformationError(e, item.DocumentId);
 
-                            stats.RecordTransformationError();
+                        transformer.Transform(item, stats, state);
 
-                            if (Logger.IsOperationsEnabled)
-                                Logger.Operations($"Could not process ETL script for '{Name}', skipping document: {item.DocumentId}", e);
-                        }
+                        Statistics.TransformationSuccess();
+
+                        stats.RecordTransformedItem(item.Type, item.IsDelete);
+                        stats.RecordLastTransformedEtag(item.Etag, item.Type);
+                        stats.RecordChangeVector(item.ChangeVector);
+
+                        batchSize++;
+
+                    }
+                    catch (JavaScriptParseException e)
+                    {
+                        var message = $"[{Name}] Could not parse transformation script. Stopping ETL process.";
+
+                        if (Logger.IsOperationsEnabled)
+                            Logger.Operations(message, e);
+
+                        var alert = AlertRaised.Create(
+                            Database.Name,
+                            Tag,
+                            message,
+                            AlertType.Etl_InvalidScript,
+                            NotificationSeverity.Error,
+                            key: Name,
+                            details: new ExceptionDetails(e));
+
+                        Database.NotificationCenter.Add(alert);
+
+                        stats.RecordBatchCompleteReason(message);
+                        stats.RecordTransformationError();
+
+                        Stop(reason: message);
+
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        Statistics.RecordTransformationError(e, item.DocumentId);
+
+                        stats.RecordTransformationError();
+
+                        if (Logger.IsOperationsEnabled)
+                            Logger.Operations($"Could not process ETL script for '{Name}', skipping document: {item.DocumentId}", e);
                     }
                 }
-
-                if (batchStopped == false && stats.HasBatchCompleteReason() == false)
-                {
-                    stats.RecordBatchCompleteReason("No items to process");
-                }
-
-                _testMode?.DebugOutput.AddRange(transformer.GetDebugOutput());
-
-                return transformer.GetTransformedResults();
             }
+
+            if (batchStopped == false && stats.HasBatchCompleteReason() == false)
+            {
+                stats.RecordBatchCompleteReason("No items to process");
+            }
+
+            _testMode?.DebugOutput.AddRange(transformer.GetDebugOutput());
+
+            return transformer;
         }
 
         public bool Load(IEnumerable<TTransformed> items, DocumentsOperationContext context, TStatsScope stats)
@@ -715,9 +713,9 @@ namespace Raven.Server.Documents.ETL
                                     if (ShouldTrackTimeSeries())
                                         Extract(context, merged, nextEtag, EtlItemType.TimeSeries, stats, scope);
 
-                                    var transformations = Transform(merged, context, stats, state);
-
-                                    var noFailures = Load(transformations, context, stats);
+                                    var noFailures = true;
+                                    using (var transformer = Transform(merged, context, stats, state))
+                                        noFailures = Load(transformer.GetTransformedResults(), context, stats);
 
                                     var lastProcessed = Math.Max(stats.LastLoadedEtag, stats.LastFilteredOutEtags.Values.Max());
 
@@ -1057,13 +1055,14 @@ namespace Raven.Server.Documents.ETL
 
                             var sqlItem = testScript.IsDelete ? new ToSqlItem(tombstone, docCollection) : new ToSqlItem(document, docCollection);
 
-                            var transformed = sqlEtl.Transform(new[] { sqlItem }, context, new EtlStatsScope(new EtlRunStats()),
-                                new EtlProcessState());
+                            using (var transformer = sqlEtl.Transform(new[] { sqlItem }, context, 
+                                new EtlStatsScope(new EtlRunStats()), new EtlProcessState()))
+                            {
+                                Debug.Assert(sqlTestScript != null);
 
-                            Debug.Assert(sqlTestScript != null);
-
-                            result = sqlEtl.RunTest(context, transformed, sqlTestScript.PerformRolledBackTransaction);
-                            result.DebugOutput = debugOutput;
+                                result = sqlEtl.RunTest(context, transformer.GetTransformedResults(), sqlTestScript.PerformRolledBackTransaction);
+                                result.DebugOutput = debugOutput;
+                            }
 
                             return tx;
                         }
@@ -1078,15 +1077,18 @@ namespace Raven.Server.Documents.ETL
                                 ? new RavenEtlItem(tombstone, docCollection, EtlItemType.Document)
                                 : new RavenEtlItem(document, docCollection);
 
-                            var results = ravenEtl.Transform(new[] { ravenEtlItem }, context, new EtlStatsScope(new EtlRunStats()),
-                                new EtlProcessState { SkippedTimeSeriesDocs = new HashSet<string> { testScript.DocumentId } });
-
-                            result = new RavenEtlTestScriptResult
+                            using (var transformer = ravenEtl.Transform(new[] {ravenEtlItem}, context,
+                                new EtlStatsScope(new EtlRunStats()),
+                                new EtlProcessState {SkippedTimeSeriesDocs = new HashSet<string> {testScript.DocumentId}}))
                             {
-                                TransformationErrors = ravenEtl.Statistics.TransformationErrorsInCurrentBatch.Errors.ToList(),
-                                Commands = results.ToList(),
-                                DebugOutput = debugOutput
-                            };
+                                result = new RavenEtlTestScriptResult
+                                {
+                                    TransformationErrors = ravenEtl.Statistics.TransformationErrorsInCurrentBatch.Errors.ToList(),
+                                    Commands = transformer.GetTransformedResults().ToList(),
+                                    DebugOutput = debugOutput
+                                };
+                            }
+
                             return tx;
                         }
                     case EtlType.Olap:
@@ -1108,50 +1110,50 @@ namespace Raven.Server.Documents.ETL
 
                             var olapEtlItem = new ToOlapItem(document, docCollection);
 
-                            var results = olapElt.Transform(new[] { olapEtlItem }, context, new OlapEtlStatsScope(new EtlRunStats()),
-                                new EtlProcessState { SkippedTimeSeriesDocs = new HashSet<string> { testScript.DocumentId } });
-
-                            var itemsByPartition = new List<OlapEtlTestScriptResult.PartitionItems>();
-
-                            foreach (OlapTransformedItems olapItem in results)
+                            using (var transformer = olapElt.Transform(new[] {olapEtlItem}, context,
+                                new OlapEtlStatsScope(new EtlRunStats()), new EtlProcessState {SkippedTimeSeriesDocs = new HashSet<string> {testScript.DocumentId}}))
                             {
-                                switch (olapItem)
+                                var itemsByPartition = new List<OlapEtlTestScriptResult.PartitionItems>();
+
+                                foreach (OlapTransformedItems olapItem in transformer.GetTransformedResults())
                                 {
-                                    case ParquetTransformedItems parquetItem:
+                                    switch (olapItem)
+                                    {
+                                        case ParquetTransformedItems parquetItem:
 
-                                        parquetItem.AddMandatoryFields();
+                                            parquetItem.AddMandatoryFields();
 
-                                        var partitionItems = new OlapEtlTestScriptResult.PartitionItems();
+                                            var partitionItems = new OlapEtlTestScriptResult.PartitionItems();
 
-                                        partitionItems.Key = parquetItem.Key;
+                                            partitionItems.Key = parquetItem.Key;
 
-                                        foreach (var columnData in parquetItem.RowGroup.Data)
-                                        {
-                                            if (parquetItem.Fields.TryGetValue(columnData.Key, out var field) == false)
-                                                continue;
-
-                                            partitionItems.Columns.Add(new OlapEtlTestScriptResult.PartitionColumn
+                                            foreach (var columnData in parquetItem.RowGroup.Data)
                                             {
-                                                Name = field.Name,
-                                                Type = field.DataType.ToString(),
-                                                Values = columnData.Value
-                                            });
-                                        }
+                                                if (parquetItem.Fields.TryGetValue(columnData.Key, out var field) == false)
+                                                    continue;
 
-                                        itemsByPartition.Add(partitionItems);
+                                                partitionItems.Columns.Add(new OlapEtlTestScriptResult.PartitionColumn
+                                                {
+                                                    Name = field.Name, Type = field.DataType.ToString(), Values = columnData.Value
+                                                });
+                                            }
 
-                                        break;
-                                    default:
-                                        throw new NotSupportedException("Unknown transform type: " + olapItem.GetType());
+                                            itemsByPartition.Add(partitionItems);
+
+                                            break;
+                                        default:
+                                            throw new NotSupportedException("Unknown transform type: " + olapItem.GetType());
+                                    }
                                 }
+
+                                result = new OlapEtlTestScriptResult
+                                {
+                                    TransformationErrors = olapElt.Statistics.TransformationErrorsInCurrentBatch.Errors.ToList(),
+                                    ItemsByPartition = itemsByPartition,
+                                    DebugOutput = debugOutput
+                                };
                             }
 
-                            result = new OlapEtlTestScriptResult
-                            {
-                                TransformationErrors = olapElt.Statistics.TransformationErrorsInCurrentBatch.Errors.ToList(),
-                                ItemsByPartition = itemsByPartition,
-                                DebugOutput = debugOutput
-                            };
                             return tx;
                         }
 
@@ -1163,11 +1165,12 @@ namespace Raven.Server.Documents.ETL
 
                             var elasticSearchItem = testScript.IsDelete ? new ElasticSearchItem(tombstone, docCollection) : new ElasticSearchItem(document, docCollection);
 
-                            var results = elasticSearchEtl.Transform(new[] { elasticSearchItem }, context, new EtlStatsScope(new EtlRunStats()),
-                                new EtlProcessState());
-
-                            result = elasticSearchEtl.RunTest(results, context);
-                            result.DebugOutput = debugOutput;
+                            using (var transformer = elasticSearchEtl.Transform(new[] {elasticSearchItem}, context,
+                                new EtlStatsScope(new EtlRunStats()), new EtlProcessState()))
+                            {
+                                result = elasticSearchEtl.RunTest(transformer.GetTransformedResults(), context);
+                                result.DebugOutput = debugOutput;
+                            }
 
                             return tx;
                         }
