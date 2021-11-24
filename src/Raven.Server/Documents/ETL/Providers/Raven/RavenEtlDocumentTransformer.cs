@@ -43,7 +43,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
 
         public override void Dispose()
         {
-            _currentRun.Dispose(); 
+            //_currentRun.Dispose();  // TODO [shlomo] fixed too early disposing of _currentRun : RavenEtlScriptRun, but this should be explored in depth as adding finalizer to RavenEtlScriptRun brakes the test 
             _addAttachmentMethod.Dispose();
             _addCounterMethod.Dispose();
             _addTimeSeriesMethod.Dispose();
