@@ -35,7 +35,7 @@ namespace Raven.Server.Config.Categories
         public int MaxSteps { get; set; }
 
         [Description("EXPERT: Maximum duration in milliseconds of the JS script execution (V8)")]  // TODO In Jint TimeConstraint2 is the internal class so the approach applied to MaxStatements doesn't work here
-        [DefaultValue(100)]
+        [DefaultValue(1000)] // TODO [shlomo] may be decreased when tests get stable
         [TimeUnit(TimeUnit.Milliseconds)]
         [ConfigurationEntry("JsConfiguration.MaxDuration", ConfigurationEntryScope.ServerWideOrPerDatabase)]
         public TimeSetting MaxDuration { get; set; }

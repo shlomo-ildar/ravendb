@@ -11,7 +11,7 @@ namespace Raven.Client.Documents.Smuggler
 
         public int MaxSteps { get; set; }  = 10 * 1000;
 
-        public int MaxDuration { get; set; } = 100;
+        public int MaxDuration { get; set; } = 1000; // TODO [shlomo] may be decreased when tests get stable
 
     }
 
