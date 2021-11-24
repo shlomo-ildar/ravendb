@@ -45,13 +45,6 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
             _disposed = false;
         }
 
-        // TODO [shlomo] adding finalizer to RavenEtlScriptRun brakes the tests: 
-        // exited with code '134': Max number of concurrent tests is: 2 Ignore request for setting processor affinity. Requested cores: 3. Number of cores on the machine: 4.
-        /*~RavenEtlScriptRun()
-        {
-            Dispose(false);
-        }*/
-
         public void Dispose()
         {
             Dispose(true);
