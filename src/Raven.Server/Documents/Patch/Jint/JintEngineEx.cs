@@ -164,6 +164,12 @@ var process = {
             this.ExecuteWithReset(source, throwExceptionOnError);
         }
         
+        public JsHandle GlobalObject
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(Global);
+        }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public JsHandle GetGlobalProperty(string propertyName)
         {
