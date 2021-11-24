@@ -715,21 +715,23 @@ namespace Raven.Server.Documents.ETL
 
                                     var noFailures = true;
                                     using (var transformer = Transform(merged, context, stats, state))
+                                    {
                                         noFailures = Load(transformer.GetTransformedResults(), context, stats);
 
-                                    var lastProcessed = Math.Max(stats.LastLoadedEtag, stats.LastFilteredOutEtags.Values.Max());
+                                        var lastProcessed = Math.Max(stats.LastLoadedEtag, stats.LastFilteredOutEtags.Values.Max());
 
-                                    if (lastProcessed > Statistics.LastProcessedEtag && noFailures)
-                                    {
-                                        didWork = true;
+                                        if (lastProcessed > Statistics.LastProcessedEtag && noFailures)
+                                        {
+                                            didWork = true;
 
-                                        Statistics.LastProcessedEtag = lastProcessed;
-                                        Statistics.LastChangeVector = stats.ChangeVector;
+                                            Statistics.LastProcessedEtag = lastProcessed;
+                                            Statistics.LastChangeVector = stats.ChangeVector;
 
-                                        UpdateMetrics(startTime, stats);
+                                            UpdateMetrics(startTime, stats);
 
-                                        if (Logger.IsInfoEnabled)
-                                            LogSuccessfulBatchInfo(stats);
+                                            if (Logger.IsInfoEnabled)
+                                                LogSuccessfulBatchInfo(stats);
+                                        }
                                     }
                                 }
                             }
