@@ -58,26 +58,26 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
 
             _stats = null;
 
-            _deletes.Clear();
+            _deletes?.Clear();
             _deletes = null;
 
-            _putsByJsReference.Dispose();
-            _addAttachments.Dispose();
-            _loadedAttachments.Dispose();
-            _countersByJsReference.Dispose();
+            _putsByJsReference?.Dispose();
+            _addAttachments?.Dispose();
+            _loadedAttachments?.Dispose();
+            _countersByJsReference?.Dispose();
 
-            _countersByDocumentId.Clear();
+            _countersByDocumentId?.Clear();
             _countersByDocumentId = null;
 
-            _timeSeriesByJsReference.Dispose();
+            _timeSeriesByJsReference?.Dispose();
 
-            _timeSeriesByDocumentId.Clear();
+            _timeSeriesByDocumentId?.Clear();
             _timeSeriesByDocumentId = null;
 
-            _loadedCountersByJsReference.Dispose();
-            _loadedTimeSeriesByJsReference.Dispose();
+            _loadedCountersByJsReference?.Dispose();
+            _loadedTimeSeriesByJsReference?.Dispose();
 
-            _fullDocuments.Clear();
+            _fullDocuments?.Clear();
             _fullDocuments = null;
 
             _disposed = true;
