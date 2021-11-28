@@ -785,6 +785,20 @@ namespace Raven.Server.Documents.Patch
                 return obj.ToString();
             }
 
+            public InternalHandle ExplodeArgsV8(V8Engine engine, bool isConstructCall, InternalHandle self, InternalHandle[] args)
+            {
+                if (args.Length != 2)
+                    throw new InvalidOperationException("Raven_ExplodeArgs(this, args) - must be called with 2 arguments");
+                if (args[1].IsObject && args[1].BoundObject is BlittableObjectInstanceV8 boi)
+                {
+                    //_refResolverJint.ExplodeArgsOn(args[0], boi);
+                    return self;
+                }
+                if (args[1].IsNull || args[1].IsUndefined)
+                    return self;// noop
+                throw new InvalidOperationException("Raven_ExplodeArgs(this, args) second argument must be BlittableObjectInstance");
+            }
+
             public InternalHandle PutDocumentV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
             {
                 try
