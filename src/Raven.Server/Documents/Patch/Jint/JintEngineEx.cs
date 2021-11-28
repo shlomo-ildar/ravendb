@@ -37,7 +37,9 @@ var process = {
         public JsHandle JsonStringify => _jsonStringify;
 
         public JintEngineEx(IJavaScriptOptions jsOptions = null, JintPreventResolvingTasksReferenceResolver refResolver = null) : base(options =>
-        {            
+        {
+            throw new InvalidOperationException("Temporary just to identify JS tests"); 
+                
             if (jsOptions == null)
                 options.MaxStatements(1).LimitRecursion(1);
             else
