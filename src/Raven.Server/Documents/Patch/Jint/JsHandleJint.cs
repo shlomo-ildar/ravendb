@@ -480,6 +480,8 @@ namespace Raven.Server.Documents.Patch
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public JsHandle Call(JsHandle _this, params JsHandle[] args)
         {
+            throw new InvalidOperationException("Temporary just to identify JS tests"); 
+                
             if (_obj == null)
                 throw new NotSupportedException($"Not supported for non object value.");
 
