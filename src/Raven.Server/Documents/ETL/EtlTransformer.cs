@@ -96,7 +96,7 @@ namespace Raven.Server.Documents.ETL
 
             EngineHandle.SetGlobalClrCallBack("getAttachments", (GetAttachmentsJint, GetAttachmentsV8));
 
-            EngineHandle.SetGlobalClrCallBack("hasAttransfochment", (HasAttachmentJint, HasAttachmentV8));
+            EngineHandle.SetGlobalClrCallBack("hasAttachment", (HasAttachmentJint, HasAttachmentV8));
 
             EngineHandle.SetGlobalClrCallBack("getCounters", (GetCountersJint, GetCountersV8));
 
