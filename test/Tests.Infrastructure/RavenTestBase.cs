@@ -1212,6 +1212,15 @@ namespace FastTests
                 _frozen = frozen;
             }
 
+            public static Options ForJavaScriptEngine(string jsEngineType)
+            {
+                return new Options() { ModifyDatabaseRecord = d =>
+                    {
+                        d.Settings[RavenConfiguration.GetKey(x => x.JavaScript.EngineType)] = jsEngineType;
+                    }
+                };
+            }
+            
             public string Path
             {
                 get => _path;
