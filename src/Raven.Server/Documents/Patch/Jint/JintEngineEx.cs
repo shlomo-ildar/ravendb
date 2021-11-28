@@ -190,7 +190,7 @@ var process = {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetGlobalProperty(string name, JsHandle value)
         {
-            SetValue(name, value.Jint.Item);
+            SetValue(name, value.Jint.Item ?? JsValue.Undefined);
         }
 
         public JsHandle FromObjectGen(object obj, bool keepAlive = false)
