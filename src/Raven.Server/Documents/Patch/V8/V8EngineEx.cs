@@ -141,13 +141,13 @@ var process = {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Execute(string source, string sourceName = "anonymousCode.js", bool throwExceptionOnError = true)
         {
-            this.Execute(source, sourceName, throwExceptionOnError);
+            base.Execute(source, sourceName, throwExceptionOnError);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ExecuteWithReset(string source, string sourceName = "anonymousCode.js", bool throwExceptionOnError = true)
         {
-            ((V8Engine)this).ExecuteWithReset(source, sourceName, throwExceptionOnError);
+            base.ExecuteWithReset(source, sourceName, throwExceptionOnError);
         }
 
 
@@ -166,7 +166,7 @@ var process = {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetGlobalProperty(string propertyName, JsHandle value)
         {
-            base.GlobalObject.SetProperty(propertyName, value.V8);
+            base.GlobalObject.SetProperty(propertyName, value.V8.Item);
         }
 
         public JsHandle FromObjectGen(object obj, bool keepAlive = false)
