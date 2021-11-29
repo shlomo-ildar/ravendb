@@ -336,8 +336,6 @@ namespace Raven.Server.Documents.Patch.Jint
                 AssertAdminScriptInstance();
                 return JsValue.FromObject(engine, o);
             }
-            if (o is ObjectInstance j)
-                return j;
             if (o is bool b)
                 return b ? JsBoolean.True : JsBoolean.False;
             if (o is int integer)
