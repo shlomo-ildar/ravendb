@@ -348,7 +348,7 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents
             return engineType switch
             {
                 JavaScriptEngineType.Jint => GetValue(jsValue.Jint.Item),
-                JavaScriptEngineType.V8 => GetValue(jsValue.Jint.Item),
+                JavaScriptEngineType.V8 => GetValue(jsValue.V8.Item),
                 _ => throw new NotSupportedException($"Not supported JS engine kind '{engineType}'.")
             };
         }
