@@ -1301,7 +1301,7 @@
     " from index 'Companies/CustomAnalyzers' where Address1 = $p0 ",
     " from 'Users' select id() as Id, Name limit $p0, $p1 ",
     " from 'Users' as u select { CmpXngValue : cmpxchg(u.Name), CounterValue : counter(u, \"downloads\") } limit $p0, $p1 ",
-    " from index 'ProductsWarrenty' where Duration > $p0 select Name, IsAvailable, Category, PricePerUnit, Mode, Type, Manufacturer limit $p1, $p2 ",
+    " from index 'ProductsWarranty' where Duration > $p0 select Name, IsAvailable, Category, PricePerUnit, Mode, Type, Manufacturer limit $p1, $p2 ",
     " from index 'PropertiesSearchIndex' where Unavailabilities_StartDay >= $p0 and Unavailabilities_EndDay <= $p1 limit $p2, $p3 ",
     " from index 'CrudeJoinTask' ",
     " from index 'Index' ",
