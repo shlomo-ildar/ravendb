@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using FastTests.Server.JavaScript;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -16,10 +17,11 @@ namespace FastTests.Issues
             public decimal Value { get; set; }
         }
 
-        [Fact]
-        public void TranslateMathRound()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void TranslateMathRound(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {

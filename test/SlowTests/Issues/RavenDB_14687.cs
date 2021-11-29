@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Jint.Constraints;
 using Orders;
 using Raven.Client.Documents.Indexes;
@@ -17,12 +18,13 @@ namespace SlowTests.Issues
         {
         }
 
-        [Fact]
-        public async Task IndexSpecificSettingShouldBeRespected()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task IndexSpecificSettingShouldBeRespected(string jsEngineType)
         {
             var initialMaxStepsForScript = 10;
 
-            using (var store = GetDocumentStore(new Options { ModifyDatabaseRecord = record => record.Settings[RavenConfiguration.GetKey(x => x.Indexing.JsMaxSteps)] = initialMaxStepsForScript.ToString() }))
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType, record => record.Settings[RavenConfiguration.GetKey(x => x.Indexing.JsMaxSteps)] = initialMaxStepsForScript.ToString())))
             {
                 var index = new MyJSIndex(maxStepsForScript: null);
                 index.Execute(store);

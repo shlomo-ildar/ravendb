@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using FastTests.Server.JavaScript;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -22,12 +23,14 @@ namespace FastTests.Issues
             Value3
         }
 
-        [Fact]
-        public void TranslateEnumAsString()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void TranslateEnumAsString(string jsEngineType)
         {
             using (var store = GetDocumentStore(new Options()
             {
-                ModifyDocumentStore = a => a.Conventions.SaveEnumsAsIntegers = false
+                ModifyDocumentStore = a => a.Conventions.SaveEnumsAsIntegers = false,
+                ModifyDatabaseRecord = Options.ModifyForJavaScriptEngine(jsEngineType)
             }))
             {
                 using (var session = store.OpenSession())
@@ -59,12 +62,14 @@ namespace FastTests.Issues
             }
         }
 
-        [Fact]
-        public void TranslateEnumAsInteger()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void TranslateEnumAsInteger(string jsEngineType)
         {
             using (var store = GetDocumentStore(new Options()
             {
-                ModifyDocumentStore = a => a.Conventions.SaveEnumsAsIntegers = true
+                ModifyDocumentStore = a => a.Conventions.SaveEnumsAsIntegers = true,
+                ModifyDatabaseRecord = Options.ModifyForJavaScriptEngine(jsEngineType)
             }))
             {
                 using (var session = store.OpenSession())
