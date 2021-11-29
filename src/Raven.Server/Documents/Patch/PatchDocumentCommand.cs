@@ -116,7 +116,7 @@ namespace Raven.Server.Documents.Patch
                     };
                 }
 
-                object documentInstance = null;
+                var documentInstance = JsHandle.Empty(_jsOptions.EngineType);
                 var args = _patch.Args;
                 if (originalDocument == null)
                 {
@@ -132,126 +132,126 @@ namespace Raven.Server.Documents.Patch
                     id = originalDocument.Id; // we want to use the original Id casing
                     if (originalDocument.Data != null)
                     {
-                        using (var jsDoc = run.TranslateToJs(context, originalDocument, false))
-                        {
-                            documentInstance = jsDoc.Object;
-                        }
+                        documentInstance = run.TranslateToJs(context, originalDocument, false);
                     }
                 }
 
-                try
+                using (documentInstance)
                 {
-                    // we will to access this value, and the original document data may be changed by
-                    // the actions of the script, so we translate (which will create a clone) then use
-                    // that clone later
-
-                    JsonOperationContext patchContext = context;
-
-                    if (_debugMode && _externalContext != null)
+                    try
                     {
-                        // when running in debug mode let's use the external context so we'll be able to read blittables added to DebugActions
+                        // we will to access this value, and the original document data may be changed by
+                        // the actions of the script, so we translate (which will create a clone) then use
+                        // that clone later
 
-                        patchContext = _externalContext;
-                    }
+                        JsonOperationContext patchContext = context;
+
+                        if (_debugMode && _externalContext != null)
+                        {
+                            // when running in debug mode let's use the external context so we'll be able to read blittables added to DebugActions
+
+                            patchContext = _externalContext;
+                        }
 
 
-                    var modifiedDoc = ExecuteScript(context, id, run, patchContext, documentInstance, args);
+                        var modifiedDoc = ExecuteScript(context, id, run, patchContext, documentInstance, args);
 
-                    var result = new PatchResult
-                    {
-                        Status = PatchStatus.NotModified,
-                        OriginalDocument = _isTest == false ? null : originalDocument?.Data?.Clone(_externalContext ?? context),
-                        ModifiedDocument = ModifiedDocumentRequired == false ? null : modifiedDoc?.Clone(_externalContext ?? context)
-                    };
+                        var result = new PatchResult
+                        {
+                            Status = PatchStatus.NotModified,
+                            OriginalDocument = _isTest == false ? null : originalDocument?.Data?.Clone(_externalContext ?? context),
+                            ModifiedDocument = ModifiedDocumentRequired == false ? null : modifiedDoc?.Clone(_externalContext ?? context)
+                        };
 
-                    if (modifiedDoc == null)
-                    {
-                        result.Status = PatchStatus.Skipped;
+                        if (modifiedDoc == null)
+                        {
+                            result.Status = PatchStatus.Skipped;
+                            return result;
+                        }
+
+                        if (run?.RefreshOriginalDocument == true)
+                        {
+                            originalDocument?.Dispose();
+                            originalDocument = GetCurrentDocument(context, id);
+                        }
+
+                        var nonPersistentFlags = HandleMetadataUpdates(context, id, run);
+
+                        DocumentsStorage.PutOperationResults? putResult = null;
+                        if (originalDocument?.Data == null)
+                        {
+                            if (_isTest == false || run?.PutOrDeleteCalled == true || _createIfMissing != null)
+                                putResult = _database.DocumentsStorage.Put(context, id, null, modifiedDoc, nonPersistentFlags: nonPersistentFlags);
+
+                            result.Status = PatchStatus.Created;
+                        }
+                        else
+                        {
+                            DocumentCompareResult compareResult = default;
+                            bool shouldUpdateMetadata = nonPersistentFlags.HasFlag(NonPersistentDocumentFlags.ResolveCountersConflict) ||
+                                                        nonPersistentFlags.HasFlag(NonPersistentDocumentFlags.ResolveTimeSeriesConflict);
+
+                            if (shouldUpdateMetadata == false)
+                            {
+                                try
+                                {
+                                    compareResult = DocumentCompare.IsEqualTo(originalDocument.Data, modifiedDoc,
+                                        DocumentCompare.DocumentCompareOptions.MergeMetadataAndThrowOnAttachmentModification);
+                                }
+                                catch (InvalidOperationException ioe)
+                                {
+                                    throw new InvalidOperationException($"Could not patch document '{id}'.", ioe);
+                                }
+                            }
+
+                            if (shouldUpdateMetadata || compareResult != DocumentCompareResult.Equal)
+                            {
+                                Debug.Assert(originalDocument != null);
+                                if (_isTest == false || run.PutOrDeleteCalled)
+                                {
+                                    putResult = _database.DocumentsStorage.Put(
+                                        context,
+                                        id,
+                                        originalDocument.ChangeVector,
+                                        modifiedDoc,
+                                        lastModifiedTicks: null,
+                                        changeVector: null,
+                                        oldChangeVectorForClusterTransactionIndexCheck: null,
+                                        originalDocument.Flags.Strip(DocumentFlags.FromClusterTransaction),
+                                        nonPersistentFlags);
+                                }
+
+                                result.Status = PatchStatus.Patched;
+                            }
+                        }
+
+                        if (putResult != null)
+                        {
+                            result.ChangeVector = putResult.Value.ChangeVector;
+                            result.Collection = putResult.Value.Collection.Name;
+                            result.LastModified = putResult.Value.LastModified;
+                        }
+
+                        if (_isTest && result.Status == PatchStatus.NotModified)
+                        {
+                            using (var old = modifiedDoc)
+                            {
+                                result.ModifiedDocument = originalDocument?.Data?.Clone(_externalContext ?? context);
+                            }
+                        }
+
                         return result;
                     }
-
-                    if (run?.RefreshOriginalDocument == true)
+                    finally
                     {
+                        if (run.DebugOutput != null)
+                            DebugOutput = new List<string>(run.DebugOutput);
+
+                        if (run.DebugActions != null)
+                            DebugActions = run.DebugActions.GetDebugActions();
+
                         originalDocument?.Dispose();
-                        originalDocument = GetCurrentDocument(context, id);
                     }
-
-                    var nonPersistentFlags = HandleMetadataUpdates(context, id, run);
-
-                    DocumentsStorage.PutOperationResults? putResult = null;
-                    if (originalDocument?.Data == null)
-                    {
-                        if (_isTest == false || run?.PutOrDeleteCalled == true || _createIfMissing != null)
-                            putResult = _database.DocumentsStorage.Put(context, id, null, modifiedDoc, nonPersistentFlags: nonPersistentFlags);
-
-                        result.Status = PatchStatus.Created;
-                    }
-                    else
-                    {
-                        DocumentCompareResult compareResult = default;
-                        bool shouldUpdateMetadata = nonPersistentFlags.HasFlag(NonPersistentDocumentFlags.ResolveCountersConflict) ||
-                                                    nonPersistentFlags.HasFlag(NonPersistentDocumentFlags.ResolveTimeSeriesConflict);
-
-                        if (shouldUpdateMetadata == false)
-                        {
-                            try
-                            {
-                                compareResult = DocumentCompare.IsEqualTo(originalDocument.Data, modifiedDoc,
-                                    DocumentCompare.DocumentCompareOptions.MergeMetadataAndThrowOnAttachmentModification);
-                            }
-                            catch (InvalidOperationException ioe)
-                            {
-                                throw new InvalidOperationException($"Could not patch document '{id}'.", ioe);
-                            }
-                        }
-
-                        if (shouldUpdateMetadata || compareResult != DocumentCompareResult.Equal)
-                        {
-                            Debug.Assert(originalDocument != null);
-                            if (_isTest == false || run.PutOrDeleteCalled)
-                            {
-                                putResult = _database.DocumentsStorage.Put(
-                                    context,
-                                    id,
-                                    originalDocument.ChangeVector,
-                                    modifiedDoc,
-                                    lastModifiedTicks: null,
-                                    changeVector: null,
-                                    oldChangeVectorForClusterTransactionIndexCheck: null,
-                                    originalDocument.Flags.Strip(DocumentFlags.FromClusterTransaction),
-                                    nonPersistentFlags);
-                            }
-
-                            result.Status = PatchStatus.Patched;
-                        }
-                    }
-
-                    if (putResult != null)
-                    {
-                        result.ChangeVector = putResult.Value.ChangeVector;
-                        result.Collection = putResult.Value.Collection.Name;
-                        result.LastModified = putResult.Value.LastModified;
-                    }
-
-                    if (_isTest && result.Status == PatchStatus.NotModified)
-                    {
-                        using (var old = modifiedDoc)
-                        {
-                            result.ModifiedDocument =  originalDocument?.Data?.Clone(_externalContext ?? context);
-                        }
-                    }
-
-                    return result;
-                }
-                finally
-                {
-                    if (run.DebugOutput != null)
-                        DebugOutput = new List<string>(run.DebugOutput);
-
-                    if (run.DebugActions != null)
-                        DebugActions = run.DebugActions.GetDebugActions();
-
-                    originalDocument?.Dispose();
                 }
             }
         }
