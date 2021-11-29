@@ -12,6 +12,7 @@ using Raven.Server.Extensions.Jint;
 using Raven.Server.Documents.Indexes.Static.Utils;
 using Raven.Server.Documents.Patch;
 using Raven.Server.Documents.Patch.Jint;
+using V8.Net;
 using JintPreventResolvingTasksReferenceResolver = Raven.Server.Documents.Patch.Jint.JintPreventResolvingTasksReferenceResolver;
 using V8Exception = V8.Net.V8Exception;
 using JavaScriptException = Jint.Runtime.JavaScriptException;
@@ -178,9 +179,7 @@ namespace Raven.Server.Documents.Indexes.Static
             var res = CheckIfSimpleMapExpression(engine, theFuncAst);
             if (res != null)
             {
-                MapFuncJint = res.Value.Function;
-                if (MapFunc.EngineType == JavaScriptEngineType.Jint)
-                    MapFunc = new JsHandle(MapFuncJint);
+                MapFunc.Set(res.Value.Function);
                 theFuncAst = res.Value.FunctionAst;
             }
 
@@ -243,7 +242,7 @@ namespace Raven.Server.Documents.Indexes.Static
             }
         }
 
-        protected (FunctionInstance Function, IFunction FunctionAst)? CheckIfSimpleMapExpression(Engine engine, IFunction function)
+        protected (JsHandle Function, IFunction FunctionAst)? CheckIfSimpleMapExpression(Engine engine, IFunction function)
         {
             var field = function.TryGetFieldFromSimpleLambdaExpression();
             if (field == null)
@@ -253,6 +252,7 @@ namespace Raven.Server.Documents.Indexes.Static
                 new Property(PropertyKind.Data, new Identifier(field), false,
                     new StaticMemberExpression(new Identifier("self"), new Identifier(field)), false, false)
             };
+            var fields = new List<string> {field};
 
             if (MoreArguments != null)
             {
@@ -268,6 +268,7 @@ namespace Raven.Server.Documents.Indexes.Static
                     {
                         properties.Add(new Property(PropertyKind.Data, new Identifier(field), false,
                         new StaticMemberExpression(new Identifier("self"), new Identifier(field)), false, false));
+                        fields.Add(field);
                     }
                 }
             }
@@ -282,12 +283,33 @@ namespace Raven.Server.Documents.Indexes.Static
                 generator: false,
                 function.Strict,
                 async: false);
-            var functionObject = new ScriptFunctionInstance(
-                    engine,
-                    functionExp,
-                    LexicalEnvironment.NewDeclarativeEnvironment(engine, engine.ExecutionContext.LexicalEnvironment),
-                    function.Strict
-                );
+
+            var jsEngineType = MapFunc.EngineType;
+            var functionObject = JsHandle.Empty(jsEngineType); 
+            switch (jsEngineType)
+            {
+                case JavaScriptEngineType.Jint:
+                    functionObject = new JsHandle(new ScriptFunctionInstance(
+                        engine,
+                        functionExp,
+                        LexicalEnvironment.NewDeclarativeEnvironment(engine, engine.ExecutionContext.LexicalEnvironment),
+                        function.Strict
+                    ));
+                    break;
+                case JavaScriptEngineType.V8:
+                    var objectBody = "";
+                    foreach (var fn in fields)
+                    {
+                        if (objectBody != "")
+                            objectBody += ", ";
+                        objectBody += fn + ": d." + fn;
+                    }
+                    var newMapCode = "d => { return {" + objectBody + "}; }";
+                    functionObject = new JsHandle(((V8Engine)_engineHandle).ExecuteExprWithReset(newMapCode, "newMapCode"));
+                    break;
+                default:
+                    throw new NotSupportedException($"Not supported JS engine kind '{jsEngineType}'.");
+            }
             return (functionObject, functionExp);
         }
 
