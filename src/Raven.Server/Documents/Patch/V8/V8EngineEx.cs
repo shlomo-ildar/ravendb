@@ -54,13 +54,21 @@ var process = {
 }
 ";
 
-        public DynamicJsNullV8 ImplicitNullV8;
-        public DynamicJsNullV8 ExplicitNullV8;
+        private DynamicJsNullV8 _implicitNull;
+        private DynamicJsNullV8 _explicitNull;
+
+        public InternalHandle ImplicitNullV8 => _implicitNull.CreateHandle();
+        public InternalHandle ExplicitNullV8 => _explicitNull.CreateHandle();
+        
+        public JsHandle ImplicitNull => new(ImplicitNullV8);
+        public JsHandle ExplicitNull => new(ExplicitNullV8);
 
         private readonly JsHandle _jsonStringify;
         public JsHandle JsonStringify => _jsonStringify;
         
         public InternalHandle JsonStringifyV8;
+
+        private IJavaScriptOptions? _jsOptions;
 
         public static void DisposeJsObjectsIfNeeded(object value)
         {
@@ -102,6 +110,7 @@ var process = {
 
         public void SetOptions(IJavaScriptOptions? jsOptions)
         {
+            _jsOptions = jsOptions;
             SetBasicConfiguration();
             if (jsOptions == null)
                 return;
@@ -113,6 +122,8 @@ var process = {
 
         // ------------------------------------------ IJavaScriptEngineHandle implementation
         public JavaScriptEngineType EngineType => JavaScriptEngineType.V8;
+
+        public IJavaScriptOptions JsOptions => _jsOptions;
 
         public IDisposable DisableConstraints()
         {

@@ -33,20 +33,26 @@ var process = {
         public DynamicJsNullJint ImplicitNullJint;
         public DynamicJsNullJint ExplicitNullJint;
 
+        
+        public JsHandle ImplicitNull => new(ImplicitNullJint);
+        public JsHandle ExplicitNull => new(ExplicitNullJint);
+
         private readonly JsHandle _jsonStringify;
         public JsHandle JsonStringify => _jsonStringify;
 
-        public JintEngineEx(IJavaScriptOptions jsOptions = null, JintPreventResolvingTasksReferenceResolver refResolver = null) : base(options =>
-        {            
-            if (jsOptions == null)
+        private IJavaScriptOptions _jsOptions;
+
+        public JintEngineEx(IJavaScriptOptions jsJsOptions = null, JintPreventResolvingTasksReferenceResolver refResolver = null) : base(options =>
+        {
+            if (jsJsOptions == null)
                 options.MaxStatements(1).LimitRecursion(1);
             else
             {
-                var maxDurationMs = jsOptions.MaxDuration.GetValue(TimeUnit.Milliseconds);
+                var maxDurationMs = jsJsOptions.MaxDuration.GetValue(TimeUnit.Milliseconds);
                 options.LimitRecursion(64)
                     .SetReferencesResolver(refResolver)
-                    .Strict(jsOptions.StrictMode)
-                    .MaxStatements(jsOptions.MaxSteps)
+                    .Strict(jsJsOptions.StrictMode)
+                    .MaxStatements(jsJsOptions.MaxSteps)
                     .AddObjectConverter(new JintGuidConverter())
                     .AddObjectConverter(new JintStringConverter())
                     .AddObjectConverter(new JintEnumConverter())
@@ -58,6 +64,8 @@ var process = {
             }
         })
         {
+            _jsOptions = jsJsOptions;
+            
             RefResolver = refResolver;
 
             ExecuteWithReset(ExecEnvCodeJint, "ExecEnvCode");
@@ -87,6 +95,8 @@ var process = {
 
         // ------------------------------------------ IJavaScriptEngineHandle implementation
         public JavaScriptEngineType EngineType => JavaScriptEngineType.Jint;
+
+        public IJavaScriptOptions JsOptions => _jsOptions;
 
         public IDisposable DisableConstraints()
         {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Raven.Client.ServerWide.JavaScript;
 using Jint.Native;
+using Raven.Server.Config.Categories;
 using JSFunction = V8.Net.JSFunction;
 using JSValueType = V8.Net.JSValueType;
 
@@ -27,6 +28,12 @@ namespace Raven.Server.Documents.Patch
     public interface IJsEngineHandle : IJavaScriptEngineForParsing, IDisposable
     {
         JavaScriptEngineType EngineType { get;  }
+            
+        IJavaScriptOptions JsOptions { get;  }
+        
+        JsHandle ImplicitNull { get;  }
+        
+        JsHandle ExplicitNull { get;  }
         
         JsHandle JsonStringify { get;  }
         
