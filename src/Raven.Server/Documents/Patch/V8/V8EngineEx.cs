@@ -123,7 +123,7 @@ var process = {
         // ------------------------------------------ IJavaScriptEngineHandle implementation
         public JavaScriptEngineType EngineType => JavaScriptEngineType.V8;
 
-        public IJavaScriptOptions JsOptions => _jsOptions;
+        public IJavaScriptOptions? JsOptions => _jsOptions;
 
         public IDisposable DisableConstraints()
         {
