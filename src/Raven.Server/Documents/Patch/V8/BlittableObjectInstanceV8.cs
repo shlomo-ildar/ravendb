@@ -891,7 +891,7 @@ namespace Raven.Server.Documents.Patch.V8
                     switch (val)
                     {
                         case Client.Constants.Documents.Indexing.Fields.NullValue:
-                            jsValue = _engineEx.ExplicitNullV8.CreateHandle();
+                            jsValue = _engineEx.ExplicitNullV8;
                             return true;
 
                         case Client.Constants.Documents.Indexing.Fields.EmptyString:
@@ -947,7 +947,7 @@ namespace Raven.Server.Documents.Patch.V8
                 switch (type & BlittableJsonReaderBase.TypesMask)
                 {
                     case BlittableJsonToken.Null:
-                        return _engineEx.ExplicitNullV8.CreateHandle();
+                        return _engineEx.ExplicitNullV8;
 
                     case BlittableJsonToken.Boolean:
                         return _engine.CreateValue((bool)value);
