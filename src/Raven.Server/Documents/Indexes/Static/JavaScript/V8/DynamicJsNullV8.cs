@@ -32,9 +32,9 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript.V8
         public bool Equals(InternalHandle jsOther)
         {
             if (jsOther.IsNull)
-                return _handle.Equals(jsOther);
+                return true;
 
-            return false;
+            return _handle.Equals(jsOther);
         }
 
         public bool Equals(DynamicJsNullV8 other)
@@ -44,7 +44,7 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript.V8
                 return false;
             }
 
-            return true; // isExplicitNull == other.isExplicitNull
+            return ReferenceEquals(this, other); // TODO [shlomo] check if this way is better: isExplicitNull == other.isExplicitNull
         }
     }
 }
