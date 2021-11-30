@@ -323,7 +323,7 @@ namespace Raven.Server.Documents.Patch.V8
 
         private void WriteJsInstance(InternalHandle jsObj, bool isRoot, bool filterProperties)
         {
-            var properties = jsObj.IsBinder ? GetBoundObjectProperties(jsObj.BoundObject) : jsObj.GetOwnProperties(); // TODO [shomo] for most used bound classes (BOI, Attachment, Counter, TimeSeries) we could use the optimized GetBoundObjectProperties version with direct getting of properties without conversions to Js format and back
+            var properties = jsObj.IsBinder ? GetBoundObjectProperties(jsObj) : jsObj.GetOwnProperties(); // TODO [shomo] for most used bound classes (BOI, Attachment, Counter, TimeSeries) we could use the optimized GetBoundObjectProperties version with direct getting of properties without conversions to Js format and back
             foreach (var (propertyName, jsPropertyValue) in properties)
             {
                 using (jsPropertyValue)
@@ -341,8 +341,9 @@ namespace Raven.Server.Documents.Patch.V8
             }
         }
 
-        private IEnumerable<KeyValuePair<string, InternalHandle>> GetBoundObjectProperties(object obj)
+        private IEnumerable<KeyValuePair<string, InternalHandle>> GetBoundObjectProperties(InternalHandle jsObj)
         {
+            object obj = jsObj.BoundObject;
             if (obj == null)
                 yield break;
 
@@ -356,25 +357,22 @@ namespace Raven.Server.Documents.Patch.V8
             }
 
             var type = obj.GetType();
-            using (InternalHandle jsObj = _engine.CreateObjectBinder(obj, keepAlive: false))
+            var binder = (ObjectBinder)jsObj.Object;
+            // look for properties
+            foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
             {
-                var binder = (ObjectBinder)jsObj.Object;
-                // look for properties
-                foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
-                {
-                    if (property.CanRead == false)
-                        continue;
-        
-                    string name = property.Name;
-                    yield return new KeyValuePair<string, InternalHandle>(property.Name, binder.NamedPropertyGetter(ref name));
-                }
+                if (property.CanRead == false)
+                    continue;
+    
+                string name = property.Name;
+                yield return new KeyValuePair<string, InternalHandle>(property.Name, binder.NamedPropertyGetter(ref name));
+            }
 
-                // look for fields
-                foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public))
-                {
-                    string name = field.Name;
-                    yield return new KeyValuePair<string, InternalHandle>(field.Name, binder.NamedPropertyGetter(ref name));
-                }
+            // look for fields
+            foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public))
+            {
+                string name = field.Name;
+                yield return new KeyValuePair<string, InternalHandle>(field.Name, binder.NamedPropertyGetter(ref name));
             }
         }
 
