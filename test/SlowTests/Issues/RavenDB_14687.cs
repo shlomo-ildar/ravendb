@@ -6,6 +6,7 @@ using Jint.Constraints;
 using Orders;
 using Raven.Client.Documents.Indexes;
 using Raven.Server.Config;
+using Raven.Server.Config.Settings;
 using Raven.Server.Documents.Indexes.Static;
 using Xunit;
 using Xunit.Abstractions;
@@ -22,11 +23,19 @@ namespace SlowTests.Issues
         [JavaScriptEngineClassData]
         public async Task IndexSpecificSettingShouldBeRespected(string jsEngineType)
         {
+            var initialStrictModeForScript = false;
             var initialMaxStepsForScript = 10;
+            var initialMaxDurationForScript = new TimeSetting(20, TimeUnit.Milliseconds);
 
-            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType, record => record.Settings[RavenConfiguration.GetKey(x => x.Indexing.JsMaxSteps)] = initialMaxStepsForScript.ToString())))
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType, 
+                record =>
+                {
+                    record.Settings[RavenConfiguration.GetKey(x => x.Indexing.JsStrictMode)] = initialStrictModeForScript.ToString();
+                    record.Settings[RavenConfiguration.GetKey(x => x.Indexing.JsMaxSteps)] = initialMaxStepsForScript.ToString();
+                    record.Settings[RavenConfiguration.GetKey(x => x.Indexing.JsMaxDuration)] = initialMaxDurationForScript.GetValue(TimeUnit.Milliseconds).ToString();
+                })))
             {
-                var index = new MyJSIndex(maxStepsForScript: null);
+                var index = new MyJSIndex(null, null, null);
                 index.Execute(store);
 
                 var database = await GetDocumentDatabaseInstanceFor(store);
@@ -34,10 +43,14 @@ namespace SlowTests.Issues
                 var indexInstance1 = (MapIndex)database.IndexStore.GetIndex(index.IndexName);
                 var compiled1 = (JavaScriptIndex)indexInstance1._compiled;
 
-                Assert.Equal(initialMaxStepsForScript, compiled1.EngineJint.FindConstraint<MaxStatements>().Max);
+                Assert.Equal(initialStrictModeForScript, compiled1.EngineHandle.JsOptions.StrictMode);
+                Assert.Equal(initialMaxStepsForScript, compiled1.EngineHandle.JsOptions.MaxSteps);
+                Assert.Equal(initialMaxDurationForScript.GetValue(TimeUnit.Milliseconds), compiled1.EngineHandle.JsOptions.MaxDuration.GetValue(TimeUnit.Milliseconds));
 
-                const int maxStepsForScript = 1000;
-                index = new MyJSIndex(maxStepsForScript);
+                const bool strictModeForScript = true;
+                const int maxStepsForScript = 1001;
+                var maxDurationForScript = new TimeSetting(101, TimeUnit.Milliseconds);
+                index = new MyJSIndex(strictModeForScript, maxStepsForScript, maxDurationForScript);
                 index.Execute(store);
 
                 WaitForIndexing(store);
@@ -48,7 +61,9 @@ namespace SlowTests.Issues
                 Assert.NotEqual(indexInstance1, indexInstance2);
                 Assert.NotEqual(compiled1, compiled2);
 
-                Assert.Equal(maxStepsForScript, compiled2.EngineJint.FindConstraint<MaxStatements>().Max);
+                Assert.Equal(strictModeForScript, compiled2.EngineHandle.JsOptions.StrictMode);
+                Assert.Equal(maxStepsForScript, compiled2.EngineHandle.JsOptions.MaxSteps);
+                Assert.Equal(maxDurationForScript.GetValue(TimeUnit.Milliseconds), compiled2.EngineHandle.JsOptions.MaxDuration.GetValue(TimeUnit.Milliseconds));
 
                 using (var session = store.OpenSession())
                 {
@@ -65,7 +80,7 @@ namespace SlowTests.Issues
 
         private class MyJSIndex : AbstractJavaScriptIndexCreationTask
         {
-            public MyJSIndex(int? maxStepsForScript)
+            public MyJSIndex(bool? strictModeForScript, int? maxStepsForScript, TimeSetting? maxDurationForScript)
             {
                 Maps = new HashSet<string>()
                 {
@@ -85,13 +100,12 @@ map('Companies', (company) => {
 })"
                 };
 
+                if (strictModeForScript.HasValue)
+                    Configuration[RavenConfiguration.GetKey(x => x.Indexing.JsStrictMode)] = strictModeForScript.ToString();
                 if (maxStepsForScript.HasValue)
-                {
-                    Configuration = new IndexConfiguration
-                    {
-                        { RavenConfiguration.GetKey(x => x.Indexing.JsMaxSteps), maxStepsForScript.ToString() }
-                    };
-                }
+                    Configuration[RavenConfiguration.GetKey(x => x.Indexing.JsMaxSteps)] = maxStepsForScript.ToString();
+                if (maxDurationForScript.HasValue)
+                    Configuration[RavenConfiguration.GetKey(x => x.Indexing.JsMaxDuration)] = maxDurationForScript?.GetValue(TimeUnit.Milliseconds).ToString();
             }
         }
     }
