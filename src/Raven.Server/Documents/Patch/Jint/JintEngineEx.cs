@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using System.Threading;
+using JetBrains.Annotations;
 using Jint;
 using Jint.Native;
 using Raven.Server.Extensions.Jint;
@@ -40,6 +41,7 @@ var process = {
         private readonly JsHandle _jsonStringify;
         public JsHandle JsonStringify => _jsonStringify;
 
+        [CanBeNull]
         private IJavaScriptOptions _jsOptions;
 
         public JintEngineEx(IJavaScriptOptions jsJsOptions = null, JintPreventResolvingTasksReferenceResolver refResolver = null) : base(options =>
@@ -96,6 +98,7 @@ var process = {
         // ------------------------------------------ IJavaScriptEngineHandle implementation
         public JavaScriptEngineType EngineType => JavaScriptEngineType.Jint;
 
+        [CanBeNull]
         public IJavaScriptOptions JsOptions => _jsOptions;
 
         public IDisposable DisableConstraints()

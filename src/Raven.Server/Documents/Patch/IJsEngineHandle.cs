@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Raven.Client.ServerWide.JavaScript;
 using Jint.Native;
 using Raven.Server.Config.Categories;
@@ -29,6 +30,7 @@ namespace Raven.Server.Documents.Patch
     {
         JavaScriptEngineType EngineType { get;  }
             
+        [CanBeNull]
         IJavaScriptOptions JsOptions { get;  }
         
         JsHandle ImplicitNull { get;  }
