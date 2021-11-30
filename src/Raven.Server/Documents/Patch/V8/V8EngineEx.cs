@@ -291,8 +291,8 @@ var process = {
         {
             SetOptions(jsOptions);
             
-            ImplicitNullV8 = new DynamicJsNullV8(this, isExplicitNull: false);
-            ExplicitNullV8 = new DynamicJsNullV8(this, isExplicitNull: true);
+            _implicitNull = new DynamicJsNullV8(this, isExplicitNull: false);
+            _explicitNull = new DynamicJsNullV8(this, isExplicitNull: true);
 
             ExecuteWithReset(ExecEnvCodeV8, "ExecEnvCode");
 
