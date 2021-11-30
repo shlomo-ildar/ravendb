@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FastTests;
 using FastTests.Server.JavaScript;
@@ -35,7 +36,7 @@ namespace SlowTests.Issues
                     record.Settings[RavenConfiguration.GetKey(x => x.Indexing.JsMaxDuration)] = initialMaxDurationForScript.GetValue(TimeUnit.Milliseconds).ToString();
                 })))
             {
-                var index = new MyJSIndex(null, null, null);
+                var index = new MyJSIndex(jsEngineType, null, null, null);
                 index.Execute(store);
 
                 var database = await GetDocumentDatabaseInstanceFor(store);
@@ -50,7 +51,7 @@ namespace SlowTests.Issues
                 const bool strictModeForScript = true;
                 const int maxStepsForScript = 1001;
                 var maxDurationForScript = new TimeSetting(101, TimeUnit.Milliseconds);
-                index = new MyJSIndex(strictModeForScript, maxStepsForScript, maxDurationForScript);
+                index = new MyJSIndex(jsEngineType, strictModeForScript, maxStepsForScript, maxDurationForScript);
                 index.Execute(store);
 
                 WaitForIndexing(store);
@@ -80,24 +81,38 @@ namespace SlowTests.Issues
 
         private class MyJSIndex : AbstractJavaScriptIndexCreationTask
         {
-            public MyJSIndex(bool? strictModeForScript, int? maxStepsForScript, TimeSetting? maxDurationForScript)
+            public MyJSIndex(string jsEngineType, bool? strictModeForScript, int? maxStepsForScript, TimeSetting? maxDurationForScript)
             {
-                Maps = new HashSet<string>()
+                var optionalChaining = jsEngineType switch
                 {
-                    @"
+                    "Jint" => "",
+                    "V8" => "?",
+                    _ => throw new NotSupportedException($"Not supported jsEngineType '{jsEngineType}'.")
+                };
+
+                var mapCode = @"
 map('Companies', (company) => {
+/*JINT_START*/
+//})
+/*JINT_END*/
     var x = [];
     for (var i = 0; i < 50; i++) {
         x.push(i);
     }
-    if (company.Address.Country === 'USA') {
+    if (company.Address{optionalChaining}.Country === 'USA') {
         return {
             Name: company.Name,
             Phone: company.Phone,
             City: company.Address.City
         };
     }
-})"
+})";
+
+                mapCode = mapCode.Replace("{optionalChaining}", optionalChaining);
+                
+                Maps = new HashSet<string>()
+                {
+                    mapCode
                 };
 
                 if (strictModeForScript.HasValue)
