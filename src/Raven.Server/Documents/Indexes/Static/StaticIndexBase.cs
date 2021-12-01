@@ -546,7 +546,7 @@ namespace Raven.Server.Documents.Indexes.Static
 
         public JavaScriptReduceOperation ReduceOperation { get; protected set; }
         
-        protected AbstractJavaScriptIndexBase(IndexDefinition definition, RavenConfiguration configuration, Action<List<string>> modifyMappingFunctions, string mapCode)
+        protected AbstractJavaScriptIndexBase(IndexDefinition definition, RavenConfiguration configuration, string mapCode)
         {
             Definition = definition;
             MapCode = mapCode;

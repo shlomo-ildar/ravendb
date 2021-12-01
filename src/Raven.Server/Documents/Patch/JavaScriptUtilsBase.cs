@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Raven.Client.ServerWide.JavaScript;
 using Sparrow.Json;
@@ -10,6 +11,8 @@ using Raven.Server.Documents.Indexes.Static.TimeSeries.V8;
 using Raven.Server.Documents.Indexes.Static.Counters;
 using Raven.Server.Documents.Indexes.Static.Counters.Jint;
 using Raven.Server.Documents.Indexes.Static.Counters.V8;
+using Raven.Client.Documents.Queries.TimeSeries;
+using Raven.Server.Documents.Queries.Results.TimeSeries;
 using Raven.Server.Documents.Patch.Jint;
 using Raven.Server.Documents.Patch.V8;
 

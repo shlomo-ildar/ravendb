@@ -4,12 +4,15 @@ using V8.Net;
 using Lucene.Net.Store;
 using Raven.Client;
 using Raven.Client.Documents.Operations.Attachments;
+using Raven.Client.Documents.Queries.TimeSeries;
 using Raven.Server.Documents.Indexes;
 using Raven.Server.Documents.Indexes.Static;
 using Raven.Server.Documents.Indexes.Static.JavaScript.V8;
 using Raven.Server.Documents.Queries.Results;
+using Raven.Server.Documents.Queries.Results.TimeSeries;
 using Sparrow.Json;
 using Raven.Server.Extensions.V8;
+using Sparrow.Json.Parsing;
 
 namespace Raven.Server.Documents.Patch.V8
 {
@@ -283,10 +286,25 @@ namespace Raven.Server.Documents.Patch.V8
 
         public InternalHandle TranslateToJs(JsonOperationContext context, object o, bool keepAlive = false, BlittableObjectInstanceV8 parent = null)
         {
+            if (o is TimeSeriesRetriever.TimeSeriesStreamingRetrieverResult tsrr)
+            {
+                // we are passing a streaming value to the JS engine, so we need
+                // to materialize all the results
+                
+                
+                var results = new DynamicJsonArray(tsrr.Stream);
+                var djv = new DynamicJsonValue
+                {
+                    [nameof(TimeSeriesAggregationResult.Count)] = results.Count,
+                    [nameof(TimeSeriesAggregationResult.Results)] = results
+                };
+                var boi = new BlittableObjectInstanceV8(this, null, context.ReadObject(djv, "MaterializedStreamResults"), null, null, null);
+                return boi.CreateObjectBinder(keepAlive);
+            }
             if (o is Tuple<Document, Lucene.Net.Documents.Document, IState, Dictionary<string, IndexField>, bool?, ProjectionOptions> t)
             {
                 var d = t.Item1;
-                BlittableObjectInstanceV8 boi = new BlittableObjectInstanceV8(this, parent, Clone(d.Data, context), d)
+                var boi = new BlittableObjectInstanceV8(this, parent, Clone(d.Data, context), d)
                 {
                     LuceneDocument = t.Item2,
                     LuceneState = t.Item3,

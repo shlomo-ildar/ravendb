@@ -18,32 +18,59 @@ using Raven.Server.ServerWide;
 using Sparrow;
 using Sparrow.Json;
 using Sparrow.Server;
+using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Documents.Indexes.Static.Utils;
+using JintPreventResolvingTasksReferenceResolver = Raven.Server.Documents.Patch.Jint.JintPreventResolvingTasksReferenceResolver;
+using V8Exception = V8.Net.V8Exception;
+using JavaScriptException = Jint.Runtime.JavaScriptException;
 
 namespace Raven.Server.Documents.Indexes.Static
 {
     public class JavaScriptReduceOperation
     {
-        public JavaScriptReduceOperation(ScriptFunctionInstance reduce, ScriptFunctionInstance key, Engine engine, JintPreventResolvingTasksReferenceResolver resolver, long indexVersion)
-        {
-            Reduce = reduce ?? throw new ArgumentNullException(nameof(reduce));
-            Key = key ?? throw new ArgumentNullException(nameof(key));
-            Engine = engine;
-            _resolver = resolver;
-            GetReduceFieldsNames();
+        private JavaScriptIndexUtils _jsIndexUtils { get; }
+        private IJavaScriptUtils _jsUtils { get; }
+        private IJsEngineHandle EngineHandle { get; }
+        private IJavaScriptEngineForParsing EngineForParsing { get; }
+        public ScriptFunctionInstance KeyJint { get; }
 
-            _groupedItems = null;
-            _indexVersion = indexVersion;
-        }
+        public JsHandle Reduce { get; }
+        public JsHandle Key { get; }
+
+        protected Dictionary<BlittableJsonReaderObject, List<BlittableJsonReaderObject>> _groupedItems;
 
         private readonly long _indexVersion;
+        
+        public JavaScriptReduceOperation(JavaScriptIndexUtils jsIndexUtils, ScriptFunctionInstance keyJint, IJavaScriptEngineForParsing engineForParsing,
+            JsHandle reduce, JsHandle key, long indexVersion)
+        {
+            _indexVersion = indexVersion;
+            EngineHandle = jsIndexUtils.EngineHandle;
+            _groupedItems = null;
 
-        private readonly JsValue[] _oneItemArray = new JsValue[1];
+            KeyJint = keyJint ?? throw new ArgumentNullException(nameof(keyJint));
+            EngineForParsing = engineForParsing;
+            GetReduceFieldsNames();
 
-        private readonly JintPreventResolvingTasksReferenceResolver _resolver;
+            if (reduce.IsUndefined || reduce.IsNull)
+                throw new ArgumentNullException(nameof(reduce));
+            Reduce = new JsHandle(ref reduce);
 
-        private Dictionary<BlittableJsonReaderObject, List<BlittableJsonReaderObject>> _groupedItems;
+            if (key.IsUndefined || key.IsNull)
+                throw new ArgumentNullException(nameof(key));
+            Key = new JsHandle(ref key);
 
-        private struct GroupByKeyComparer : IEqualityComparer<BlittableJsonReaderObject>
+            _jsIndexUtils = jsIndexUtils;
+            _jsUtils = _jsIndexUtils.JsUtils;
+        }
+
+        ~JavaScriptReduceOperation()
+        {
+            Reduce.Dispose();
+            Key.Dispose();
+        }
+
+        protected struct GroupByKeyComparer : IEqualityComparer<BlittableJsonReaderObject>
         {
             private readonly JavaScriptReduceOperation _parent;
             private readonly ReduceKeyProcessor _xKey;
@@ -159,16 +186,25 @@ namespace Raven.Server.Documents.Indexes.Static
                 }
                 foreach (var item in _groupedItems.Values)
                 {
-                    Engine.ResetCallStack();
-                    Engine.ResetConstraints();
+                    EngineHandle.ResetCallStack();
+                    EngineHandle.ResetConstraints();
 
-                    _oneItemArray[0] = ConstructGrouping(item);
-                    JsValue jsItem;
+                    JsHandle jsRes = JsHandle.Empty(EngineHandle.EngineType);
                     try
                     {
-                        jsItem = Reduce.Call(JsValue.Null, _oneItemArray).AsObject();
+                        using (var jsGrouping = ConstructGrouping(item))
+                        {
+#if DEBUG
+                            EngineHandle.MakeSnapshot("reduce");
+#endif
+
+                            jsRes = Reduce.StaticCall(jsGrouping);
+                            jsRes.ThrowOnError();
+                            if (jsRes.IsObject == false)
+                                throw new JavaScriptIndexFuncException($"Failed to execute {ReduceString}", new Exception($"Reduce result is not object: {jsRes.ToString()}"));
+                        }
                     }
-                    catch (JavaScriptException jse)
+                    catch (V8Exception jse)
                     {
                         var (message, success) = JavaScriptIndexFuncException.PrepareErrorMessageForJavaScriptIndexFuncException(ReduceString, jse);
                         if (success == false)
@@ -177,21 +213,24 @@ namespace Raven.Server.Documents.Indexes.Static
                     }
                     catch (Exception e)
                     {
+                        jsRes.Dispose();
                         throw new JavaScriptIndexFuncException($"Failed to execute {ReduceString}", e);
                     }
-                    yield return jsItem;
-                    _resolver.ExplodeArgsOn(null, null);
+                    finally
+                    {
+                        EngineHandle.ForceGarbageCollection();
+                    }
+                    yield return jsRes;
                 }
             }
             finally
             {
-                _oneItemArray[0] = null;
                 _groupedItems.Clear();
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void EnsureGroupItemCreated()
+        protected void EnsureGroupItemCreated()
         {
             if (_groupedItems == null)
             {
@@ -209,19 +248,15 @@ namespace Raven.Server.Documents.Indexes.Static
             }
         }
 
-        private JsValue ConstructGrouping(List<BlittableJsonReaderObject> values)
+        private JsHandle ConstructGrouping(List<BlittableJsonReaderObject> values)
         {
-            var jsValues = ConstructValues();
-            var jsKey = ConstructKey();
-
-            var result = new ObjectInstance(Engine);
-
-            result.Set("values", jsValues, false);
-            result.Set("key", jsKey, false);
+            var result = EngineHandle.CreateObject();
+            result.SetProperty("values", ConstructValues());
+            result.SetProperty("key", ConstructKey());
 
             return result;
 
-            JsValue ConstructKey()
+            JsHandle ConstructKey()
             {
                 if (_singleField)
                 {
@@ -231,14 +266,14 @@ namespace Raven.Server.Documents.Indexes.Static
                         BlittableJsonReaderObject.PropertyDetails prop = default;
                         values[0].GetPropertyByIndex(index, ref prop);
 
-                        return JsValue.FromObject(Engine, prop.Value);
+                        return EngineHandle.FromObjectGen(prop.Value);
                     }
 
-                    return JsValue.Null;
+                    return EngineHandle.CreateNullValue();
                 }
 
-                var key = new ObjectInstance(Engine);
-
+                JsHandle jsRes = JsHandle.Empty(EngineHandle.EngineType);
+                jsRes = EngineHandle.CreateObject();
                 foreach (var groupByField in _groupByFields)
                 {
                     var index = values[0].GetPropertyIndex(groupByField.Name);
@@ -252,53 +287,51 @@ namespace Raven.Server.Documents.Indexes.Static
                             propertyName = jsnf.PropertyName;
 
                         var value = groupByField.GetValue(null, prop.Value);
-
-                        JsValue jsValue = value switch
+                        var jsValue = value switch
                         {
-                            BlittableJsonReaderObject bjro => new BlittableObjectInstance(Engine, null, bjro, null, null, null),
-                            Document doc => new BlittableObjectInstance(Engine, null, doc.Data, doc),
-                            LazyStringValue lsv => new JsString(lsv.ToString()),
-                            LazyCompressedStringValue lcsv => new JsString(lcsv.ToString()),
-                            LazyNumberValue lnv => new JsNumber(lnv.ToDouble(CultureInfo.InvariantCulture)),
-                            _ => JsValue.FromObject(Engine, value)
+                            BlittableJsonReaderObject bjro => ((Func<BlittableJsonReaderObject, JsHandle>)((BlittableJsonReaderObject bjro) =>
+                            {
+                                var boi = _jsUtils.CreateBlittableObjectInstanceFromScratch(_jsUtils, null, bjro, null, null, null);
+                                return boi.CreateJsHandle(true);
+                            }))(bjro),
+                            Document doc => ((Func<Document, JsHandle>)((Document doc) =>
+                            {
+                                var boi = _jsUtils.CreateBlittableObjectInstanceFromDoc(_jsUtils, null, doc.Data, doc);
+                                return boi.CreateJsHandle(true);
+                            }))(doc),
+                            LazyNumberValue lnv => EngineHandle.CreateValue(lnv.ToDouble(CultureInfo.InvariantCulture)),
+                            _ => EngineHandle.FromObjectGen(value)
                         };
 
-                        key.Set(propertyName, jsValue, throwOnError: false);
+                        jsRes.SetProperty(propertyName, jsValue);
                     }
                 }
 
-                return key;
+                return jsRes;
             }
 
-            ArrayInstance ConstructValues()
+            JsHandle ConstructValues()
             {
-                var items = new PropertyDescriptor[values.Count];
-                for (var i = 0; i < values.Count; i++)
+                int arrayLength = values.Count;
+                var jsItems = new JsHandle[arrayLength];
+                for (int i = 0; i < arrayLength; ++i)
                 {
                     var val = values[i];
 
-                    if (JavaScriptIndexUtils.GetValue(Engine, val, out var jsValue, isMapReduce: true) == false)
+                    if (_jsIndexUtils.GetValue(val, out JsHandle jsValueHandle, isMapReduce: true) == false)
                         continue;
 
-                    items[i] = new PropertyDescriptor(jsValue, true, true, true);
+                    jsItems[i] = jsValueHandle;
                 }
 
-                var jsArray = new ArrayInstance(Engine, items);
-                jsArray.SetPrototypeOf(Engine.Array.PrototypeObject);
-                jsArray.PreventExtensions();
-
-                return jsArray;
+                return EngineHandle.CreateArray(jsItems);
             }
         }
-
-        public Engine Engine { get; }
-
-        public ScriptFunctionInstance Reduce { get; }
-        public ScriptFunctionInstance Key { get; }
+        
         public string ReduceString { get; internal set; }
 
-        private CompiledIndexField[] _groupByFields;
-        private bool _singleField;
+        protected CompiledIndexField[] _groupByFields;
+        protected bool _singleField;
         private UnmanagedBuffersPoolWithLowMemoryHandling _bufferPool;
         private ByteStringContext _byteStringContext;
 
@@ -307,7 +340,7 @@ namespace Raven.Server.Documents.Indexes.Static
             if (_groupByFields != null)
                 return _groupByFields;
 
-            var ast = Key.FunctionDeclaration;
+            var ast = KeyJint.FunctionDeclaration;
             var body = ast.ChildNodes.ToList();
 
             if (body.Count != 2)
@@ -379,7 +412,7 @@ namespace Raven.Server.Documents.Indexes.Static
                         if (property.Value is MemberExpression me)
                             path = GetPropertyPath(me).ToArray();
 
-                        var propertyName = property.GetKey(Engine);
+                        var propertyName = property.GetKey((Engine)EngineForParsing);
                         cur.Add(CreateField(propertyName.AsString(), path));
                     }
                 }
