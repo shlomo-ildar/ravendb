@@ -641,8 +641,8 @@ namespace Raven.Server.Documents.Patch
         {
             return Kind switch
             {
-                JsHandleType.V8 => V8.SetProperty(name, value),
-                JsHandleType.Jint => Jint.SetProperty(name, value),
+                JsHandleType.V8 => V8.SetProperty(name, value, throwOnError: throwOnError),
+                JsHandleType.Jint => Jint.SetProperty(name, value, throwOnError: throwOnError),
                 _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
