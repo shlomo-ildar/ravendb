@@ -294,7 +294,7 @@ function map(name, lambda) {
             var loadFunc = EngineHandle.CreateClrCallBack(JavaScriptIndex.Load, (LoadDocumentJint, LoadDocumentV8));
 
             var noTrackingObject = EngineHandle.CreateObject();
-            noTrackingObject.FastAddProperty(JavaScriptIndex.Load, loadFunc, false, false, false);
+            noTrackingObject.FastAddProperty(JavaScriptIndex.Load, loadFunc.Clone(), false, false, false);
             EngineHandle.SetGlobalProperty(JavaScriptIndex.NoTracking, noTrackingObject);
 
             EngineHandle.SetGlobalProperty(JavaScriptIndex.Load, loadFunc);
