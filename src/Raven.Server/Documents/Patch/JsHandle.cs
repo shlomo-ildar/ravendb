@@ -64,7 +64,7 @@ namespace Raven.Server.Documents.Patch
                     Kind = JsHandleType.Jint;
                     V8 = default;
                     JintError = default;
-                    Jint = new JsHandleJint(JsValue.Undefined);
+                    Jint = new JsHandleJint(null);
                     break;
                 default:
                     throw new NotSupportedException($"Not supported JavaScriptEngineType '{engineType}'.");
