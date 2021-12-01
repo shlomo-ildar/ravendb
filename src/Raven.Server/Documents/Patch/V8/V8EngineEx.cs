@@ -286,7 +286,9 @@ var process = {
         public readonly TypeBinder TypeBinderAttachmentNameObjectInstance;
         public readonly TypeBinder TypeBinderAttachmentObjectInstance;
         public readonly TypeBinder TypeBinderLazyNumberValue;
-
+        public readonly TypeBinder TypeBinderRavenServer;
+        public readonly TypeBinder TypeBinderDocumentDatabase;
+        
         public V8EngineEx(IJavaScriptOptions? jsOptions = null, bool autoCreateGlobalContext = true) : base(autoCreateGlobalContext, jsConverter: new JsConverter())
         {
             SetOptions(jsOptions);
@@ -305,8 +307,7 @@ var process = {
             TypeBinderTask.OnGetObjectBinder = (tb, obj, initializeBinder)
                 => tb.CreateObjectBinder<TaskCustomBinder, Task>((Task)obj, initializeBinder, keepAlive: true);
             base.GlobalObject.SetProperty(typeof(Task));
-
-
+            
             TypeBinderTimeSeriesSegmentObjectInstance = RegisterType<TimeSeriesSegmentObjectInstanceV8>(null, false);
             TypeBinderTimeSeriesSegmentObjectInstance.OnGetObjectBinder = (tb, obj, initializeBinder)
                 => tb.CreateObjectBinder<TimeSeriesSegmentObjectInstanceV8.CustomBinder, TimeSeriesSegmentObjectInstanceV8>((TimeSeriesSegmentObjectInstanceV8)obj, initializeBinder, keepAlive: true);
@@ -321,8 +322,7 @@ var process = {
             TypeBinderDynamicTimeSeriesEntry.OnGetObjectBinder = (tb, obj, initializeBinder)
                 => tb.CreateObjectBinder<DynamicTimeSeriesEntryCustomBinder, DynamicTimeSeriesSegment.DynamicTimeSeriesEntry>((DynamicTimeSeriesSegment.DynamicTimeSeriesEntry)obj, initializeBinder, keepAlive: true);
             base.GlobalObject.SetProperty(typeof(DynamicTimeSeriesSegment.DynamicTimeSeriesEntry));
-
-
+            
             TypeBinderCounterEntryObjectInstance = RegisterType<CounterEntryObjectInstanceV8>(null, false);
             TypeBinderCounterEntryObjectInstance.OnGetObjectBinder = (tb, obj, initializeBinder)
                 => tb.CreateObjectBinder<CounterEntryObjectInstanceV8.CustomBinder, CounterEntryObjectInstanceV8>((CounterEntryObjectInstanceV8)obj, initializeBinder, keepAlive: true);
@@ -342,6 +342,16 @@ var process = {
             TypeBinderLazyNumberValue.OnGetObjectBinder = (tb, obj, initializeBinder)
                 => tb.CreateObjectBinder<ObjectBinder, LazyNumberValue>((LazyNumberValue)obj, initializeBinder, keepAlive: true);
             base.GlobalObject.SetProperty(typeof(LazyNumberValue));
+
+            TypeBinderRavenServer = RegisterType<RavenServer>(null, true, ScriptMemberSecurity.ReadWrite);
+            TypeBinderRavenServer.OnGetObjectBinder = (tb, obj, initializeBinder)
+                => tb.CreateObjectBinder<ObjectBinder, RavenServer>((RavenServer)obj, initializeBinder, keepAlive: true);
+            base.GlobalObject.SetProperty(typeof(RavenServer));
+                
+            TypeBinderDocumentDatabase = RegisterType<DocumentDatabase>(null, true, ScriptMemberSecurity.ReadWrite);
+            TypeBinderDocumentDatabase.OnGetObjectBinder = (tb, obj, initializeBinder)
+                => tb.CreateObjectBinder<ObjectBinder, DocumentDatabase>((DocumentDatabase)obj, initializeBinder, keepAlive: true);
+            base.GlobalObject.SetProperty(typeof(DocumentDatabase));
 
             JsonStringifyV8 = this.Execute("JSON.stringify", "JSON.stringify", true, 0);
             _jsonStringify = new JsHandle(JsonStringifyV8);
