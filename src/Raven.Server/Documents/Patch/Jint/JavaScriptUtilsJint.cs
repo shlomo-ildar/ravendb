@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Jint;
 using Jint.Native;
@@ -59,7 +58,7 @@ namespace Raven.Server.Documents.Patch.Jint
             //using (var old = metadata)
             {
                 metadata = Context.ReadObject(metadata, boi.DocumentId);
-                JsValue metadataJs = TranslateToJs(Engine, Context, metadata);
+                JsValue metadataJs = TranslateToJs(Context, metadata);
                 boi.Set(new JsString(Constants.Documents.Metadata.Key), metadataJs);
 
                 return metadataJs;
@@ -251,12 +250,13 @@ namespace Raven.Server.Documents.Patch.Jint
             return value;
         }
 
-        internal JsValue TranslateToJs(Engine engine, JsonOperationContext context, object o)
+        internal JsValue TranslateToJs(JsonOperationContext context, object o)
         {
+            var engine = EngineEx;
             if (o is TimeSeriesRetriever.TimeSeriesStreamingRetrieverResult tsrr)
             {
-				// we are passing a streaming value to the JS engine, so we need
-				// to materialize all the results
+                // we are passing a streaming value to the JS engine, so we need
+                // to materialize all the results
                 
                 
                 var results = new DynamicJsonArray(tsrr.Stream);
@@ -265,7 +265,7 @@ namespace Raven.Server.Documents.Patch.Jint
                     [nameof(TimeSeriesAggregationResult.Count)] = results.Count,
                     [nameof(TimeSeriesAggregationResult.Results)] = results
                 };
-                return new BlittableObjectInstance(engine, null, context.ReadObject(djv, "MaterializedStreamResults"), null, null, null);
+                return new BlittableObjectInstanceJint(engine, null, context.ReadObject(djv, "MaterializedStreamResults"), null, null, null);
             }
             if (o is Tuple<Document, Lucene.Net.Documents.Document, IState, Dictionary<string, IndexField>, bool?, ProjectionOptions> t)
             {
@@ -303,7 +303,7 @@ namespace Raven.Server.Documents.Patch.Jint
                 var args = new JsValue[1];
                 for (var i = 0; i < bjra.Length; i++)
                 {
-                    args[0] = TranslateToJs(engine, context, bjra[i]);
+                    args[0] = TranslateToJs(context, bjra[i]);
                     engine.Array.PrototypeObject.Push(jsArray, args);
                 }
                 return jsArray;
@@ -314,7 +314,7 @@ namespace Raven.Server.Documents.Patch.Jint
                 var args = new JsValue[1];
                 for (var i = 0; i < list.Count; i++)
                 {
-                    args[0] = TranslateToJs(engine, context, list[i]);
+                    args[0] = TranslateToJs(context, list[i]);
                     engine.Array.PrototypeObject.Push(jsArray, args);
                 }
                 return jsArray;

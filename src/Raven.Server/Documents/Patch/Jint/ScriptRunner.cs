@@ -268,7 +268,7 @@ namespace Raven.Server.Documents.Patch
                         CollectionName.GetCollectionName(doc),
                         timeSeries,
                         new[] { toAppend }, 
-                        addNewNameToMetadata: false);
+                        AppendOptionsForScript);
 
                     if (DebugMode)
                     {
