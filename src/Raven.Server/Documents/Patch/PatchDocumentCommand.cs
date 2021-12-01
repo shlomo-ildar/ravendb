@@ -275,7 +275,7 @@ namespace Raven.Server.Documents.Patch
         private BlittableJsonReaderObject ExecuteScript(DocumentsOperationContext context, string id, ScriptRunner.SingleRun run, JsonOperationContext patchContext,
             object documentInstance, BlittableJsonReaderObject args)
         {
-            if (documentInstance == null)
+            if (documentInstance == null || (documentInstance is JsHandle jsDoc && jsDoc.IsEmpty))
             {
                 return _createIfMissing;
             }
