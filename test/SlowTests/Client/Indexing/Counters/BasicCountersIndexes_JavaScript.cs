@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Indexes;
 using Raven.Client.Documents.Indexes.Counters;
@@ -214,10 +215,11 @@ return ({
             }
         }
 
-        [Fact]
-        public void BasicMapIndex()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void BasicMapIndex(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -420,10 +422,11 @@ return ({
             }
         }
 
-        [Fact]
-        public async Task BasicMapIndexWithLoad()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task BasicMapIndexWithLoad(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -578,10 +581,11 @@ return ({
             }
         }
 
-        [Fact]
-        public void BasicMapReduceIndex()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void BasicMapReduceIndex(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -737,10 +741,11 @@ return ({
             }
         }
 
-        [Fact]
-        public async Task BasicMapReduceIndexWithLoad()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task BasicMapReduceIndexWithLoad(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -883,10 +888,11 @@ return ({
             }
         }
 
-        [Fact]
-        public void CanMapAllCountersFromCollection()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanMapAllCountersFromCollection(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1048,10 +1054,11 @@ return ({
             }
         }
 
-        [Fact]
-        public void CanMapAllCounters()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanMapAllCounters(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1147,10 +1154,11 @@ return ({
             }
         }
 
-        [Fact]
-        public async Task BasicMultiMapIndex()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task BasicMultiMapIndex(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var timeSeriesIndex = new MyMultiMapCounterIndex();
                 await timeSeriesIndex.ExecuteAsync(store);
@@ -1206,10 +1214,11 @@ return ({
             }
         }
 
-        [Fact]
-        public void CounterNamesFor()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CounterNamesFor(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var index = new Companies_ByCounterNames();
                 index.Execute(store);
