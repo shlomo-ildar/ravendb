@@ -140,14 +140,20 @@ function map(name, lambda) {
                                 }
 
                                 operation.Analyze((Engine)_engineForParsing);
-                                if (ReferencedCollections.TryGetValue(mapCollection, out var collectionNames) == false)
+                                
+                                var referencedCollections = mapReferencedCollections[i].ReferencedCollections;
+                                if (referencedCollections.Count > 0)
                                 {
-                                    collectionNames = new HashSet<CollectionName>();
-                                    ReferencedCollections.Add(mapCollection, collectionNames);
+                                    if (ReferencedCollections.TryGetValue(mapCollection, out var collectionNames) == false)
+                                    {
+                                        collectionNames = new HashSet<CollectionName>();
+                                        ReferencedCollections.Add(mapCollection, collectionNames);
+                                    }
+
+                                    collectionNames.UnionWith(mapReferencedCollections[i].ReferencedCollections);
+                                    collectionNames.UnionWith(referencedCollections);
                                 }
-
-                                collectionNames.UnionWith(mapReferencedCollections[i].ReferencedCollections);
-
+                                
                                 if (mapReferencedCollections[i].HasCompareExchangeReferences)
                                     CollectionsWithCompareExchangeReferences.Add(mapCollection);
 
