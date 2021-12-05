@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents.Operations;
 using Raven.Tests.Core.Utils.Entities;
 using Xunit;
@@ -14,10 +15,11 @@ namespace SlowTests.Bugs
         {
         }
 
-        [Fact]
-        public void CanSuccessfullyPatchInBatches()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanSuccessfullyPatchInBatches(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 const int count = 512;
                 using (var s = store.OpenSession())
