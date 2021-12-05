@@ -180,7 +180,7 @@ namespace Raven.Server.Documents.Subscriptions.SubscriptionProcessor
                     {
                         using (var jsMetadataNew = engine.CreateObject())
                             jsMetadata.Set(jsMetadataNew);
-                        json.SetProperty(Constants.Documents.Metadata.Key, jsMetadata, throwOnError:false);
+                        json.SetProperty(Constants.Documents.Metadata.Key, jsMetadata.Clone(), throwOnError:false);
                     }
 
                     jsMetadata.SetProperty(Constants.Documents.Metadata.Projection, engine.CreateValue(true), throwOnError:false);
