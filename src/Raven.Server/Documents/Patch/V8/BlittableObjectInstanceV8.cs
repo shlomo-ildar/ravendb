@@ -393,9 +393,9 @@ namespace Raven.Server.Documents.Patch.V8
                 return val;
             }
 
-            if (propertyName == Constants.Documents.Metadata.Key && IsRoot)
+            var scope = CurrentIndexingScope.Current;
+            if (scope != null && propertyName == Constants.Documents.Metadata.Key && IsRoot)
             {
-                var scope = CurrentIndexingScope.Current;
                 scope.RegisterJavaScriptUtils(_javaScriptUtils);
                 GetMetadata();
                 _ownValues?.TryGetValue(propertyName, out val);
