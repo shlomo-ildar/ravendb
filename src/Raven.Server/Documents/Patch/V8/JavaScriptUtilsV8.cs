@@ -332,7 +332,7 @@ namespace Raven.Server.Documents.Patch.V8
             }
 
             if (o == null)
-                return InternalHandle.Empty;
+                return Engine.CreateNullValue();
             if (o is long lng)
                 return Engine.CreateValue(lng);
             if (o is BlittableJsonReaderArray bjra)
