@@ -273,25 +273,14 @@ namespace Raven.Server.Documents.Patch
         }
 
         private BlittableJsonReaderObject ExecuteScript(DocumentsOperationContext context, string id, ScriptRunner.SingleRun run, JsonOperationContext patchContext,
-            JsHandle jsDoc, BlittableJsonReaderObject args)
+            JsHandle documentInstance, BlittableJsonReaderObject args)
         {
-            if (jsDoc.IsEmpty)
+            if (documentInstance.IsEmpty)
             {
                 return _createIfMissing;
             }
 
-            return ExecuteScript(context, id, run, patchContext, jsDoc.Object, args);
-        }
-
-        private BlittableJsonReaderObject ExecuteScript(DocumentsOperationContext context, string id, ScriptRunner.SingleRun run, JsonOperationContext patchContext,
-            object documentInstance, BlittableJsonReaderObject args)
-        {
-            if (documentInstance == null)
-            {
-                return _createIfMissing;
-            }
-
-            using (var scriptResult = run.Run(patchContext, context, "execute", id, new[] {documentInstance, args}))
+            using (var scriptResult = run.Run(patchContext, context, "execute", id, new[] {(object)documentInstance, args}))
             {
                 return scriptResult.TranslateToObject(context, usageMode: BlittableJsonDocumentBuilder.UsageMode.ToDisk);
             }
