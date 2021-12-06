@@ -44,7 +44,6 @@ namespace Raven.Server.Documents.Patch
                 DocumentsOperationContext docsCtx = null;
                 IJavaScriptOptions jsOptions = _database?.JsOptions ?? _server?.Configuration.JavaScript ?? 
                     (IJavaScriptOptions)(new JavaScriptOptions(JavaScriptEngineType.Jint, true, 10000, new TimeSetting(100, TimeUnit.Milliseconds)));
-                jsOptions.EngineType = JavaScriptEngineType.Jint; // TODO [shlomo] temporary until V8.Net gets fixed for chaining C# objects
                 using (_server.AdminScripts.GetScriptRunner(jsOptions, new AdminJsScriptKey(script.Script), false, out var run))
                 using (_server.ServerStore.ContextPool.AllocateOperationContext(out JsonOperationContext ctx))
                 using (_database?.DocumentsStorage.ContextPool.AllocateOperationContext(out docsCtx))
