@@ -16,6 +16,7 @@ using V8.Net;
 using JintPreventResolvingTasksReferenceResolver = Raven.Server.Documents.Patch.Jint.JintPreventResolvingTasksReferenceResolver;
 using V8Exception = V8.Net.V8Exception;
 using JavaScriptException = Jint.Runtime.JavaScriptException;
+using Raven.Server.Documents.Patch.V8;
 
 namespace Raven.Server.Documents.Indexes.Static
 {
@@ -305,7 +306,7 @@ namespace Raven.Server.Documents.Indexes.Static
                         objectBody += fn + ": d." + fn;
                     }
                     var newMapCode = "d => { return {" + objectBody + "}; }";
-                    functionObject = new JsHandle(((V8Engine)_engineHandle).ExecuteExprWithReset(newMapCode, "newMapCode"));
+                    functionObject = new JsHandle(((V8EngineEx)_engineHandle).ExecuteExprWithReset(newMapCode, "newMapCode"));
                     break;
                 default:
                     throw new NotSupportedException($"Not supported JS engine kind '{jsEngineType}'.");

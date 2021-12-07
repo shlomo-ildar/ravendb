@@ -16,6 +16,7 @@ using Sparrow;
 using Sparrow.Json;
 using Raven.Client.Util;
 using Jint.Native;
+using Microsoft.CodeAnalysis;
 using Raven.Client.Exceptions.Documents.Patching;
 using Raven.Server.Config.Settings;
 
@@ -23,6 +24,53 @@ namespace Raven.Server.Documents.Patch.V8
 {
     public class V8EngineEx : V8Engine, IJsEngineHandle
     {
+        private static V8EngineEx Instance = new V8EngineEx();
+        
+        public class ContextEx
+        {
+            private Context _contextNative;
+            
+            public ContextEx(V8Engine engine, ObjectTemplate globalTemplate = null)
+            {
+                _contextNative = engine.CreateContext(globalTemplate);
+            }
+
+            public Context ContextNative
+            {
+                get => _contextNative;
+            }
+            
+            private IJavaScriptOptions? _jsOptions;
+
+            public IJavaScriptOptions? JsOptions => _jsOptions;
+
+        
+            public void SetBasicConfiguration()
+            {
+                //.LocalTimeZone(TimeZoneInfo.Utc);  // TODO -> ??? maybe these V8 args: harmony_intl_locale_info, harmony_intl_more_timezone
+            }
+
+            public void SetOptions(V8Engine engine, IJavaScriptOptions? jsOptions)
+            {
+                _jsOptions = jsOptions;
+                SetBasicConfiguration();
+                if (jsOptions == null)
+                    return;
+                string strictModeFlag = jsOptions.StrictMode ? "--use_strict" : "--no-use_strict";
+                string[] optionsCmd = {strictModeFlag};
+                engine.SetFlagsFromCommandLine(optionsCmd);
+                MaxDuration = (int)jsOptions.MaxDuration.GetValue(TimeUnit.Milliseconds);
+            }
+            
+            public int MaxDuration = 0;
+
+            public int RefineMaxDuration(int timeout)
+            {
+                return timeout > 0 ? timeout : MaxDuration;
+            }
+        
+        }
+        
         
         public class JsConverter : IJsConverter
         {
@@ -54,38 +102,6 @@ var process = {
 }
 ";
 
-        private DynamicJsNullV8 _implicitNull;
-        private DynamicJsNullV8 _explicitNull;
-
-        public InternalHandle ImplicitNullV8 => _implicitNull.CreateHandle();
-        public InternalHandle ExplicitNullV8 => _explicitNull.CreateHandle();
-        
-        public JsHandle ImplicitNull => new(ImplicitNullV8);
-        public JsHandle ExplicitNull => new(ExplicitNullV8);
-
-        private readonly JsHandle _jsonStringify;
-        public JsHandle JsonStringify => _jsonStringify;
-        
-        public InternalHandle JsonStringifyV8;
-
-        private IJavaScriptOptions? _jsOptions;
-
-        public static void DisposeJsObjectsIfNeeded(object value)
-        {
-            if (value is InternalHandle jsValue)
-            {
-                jsValue.Dispose();
-            }
-            else if (value is object[] arr)
-            {
-                for(int i=0; i < arr.Length; i++)
-                {
-                    if (arr[i] is InternalHandle jsItem)
-                        jsItem.Dispose();       
-                }
-            }
-        }
-        
         public static void DisposeAndCollectGarbage(List<object> items, string? snapshotName)
         {
             V8Engine? engine = null;
@@ -102,28 +118,40 @@ var process = {
                 engine?.CheckForMemoryLeaks(snapshotName);
 
         }
-        
-        public void SetBasicConfiguration()
+
+        private ContextEx? _contextEx;
+
+        public InternalHandle SetContext(ContextEx ctx)
         {
-            //.LocalTimeZone(TimeZoneInfo.Utc);  // TODO -> ??? maybe these V8 args: harmony_intl_locale_info, harmony_intl_more_timezone
+            _contextEx = ctx;
+            return SetContext(ctx.ContextNative);
         }
 
-        public void SetOptions(IJavaScriptOptions? jsOptions)
+        public static void DisposeJsObjectsIfNeeded(object value)
         {
-            _jsOptions = jsOptions;
-            SetBasicConfiguration();
-            if (jsOptions == null)
-                return;
-            string strictModeFlag = jsOptions.StrictMode ? "--use_strict" : "--no-use_strict";
-            string[] optionsCmd = {strictModeFlag};
-            SetFlagsFromCommandLine(optionsCmd);
-            SetMaxDuration((int)jsOptions.MaxDuration.GetValue(TimeUnit.Milliseconds));
+            if (value is InternalHandle jsValue)
+            {
+                jsValue.Dispose();
+            }
+            else if (value is object[] arr)
+            {
+                for(int i=0; i < arr.Length; i++)
+                {
+                    if (arr[i] is InternalHandle jsItem)
+                        jsItem.Dispose();       
+                }
+            }
         }
 
         // ------------------------------------------ IJavaScriptEngineHandle implementation
         public JavaScriptEngineType EngineType => JavaScriptEngineType.V8;
 
-        public IJavaScriptOptions? JsOptions => _jsOptions;
+        public IJavaScriptOptions? JsOptions => _contextEx?.JsOptions;
+
+        public void SetOptions(IJavaScriptOptions? jsOptions)
+        {
+            _contextEx?.SetOptions(this, jsOptions);
+        }
 
         public IDisposable DisableConstraints()
         {
@@ -158,9 +186,42 @@ var process = {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ExecuteWithReset(string source, string sourceName = "anonymousCode.js", bool throwExceptionOnError = true)
         {
-            base.ExecuteWithReset(source, sourceName, throwExceptionOnError);
+            ExecuteWithResetBase(source, sourceName, throwExceptionOnError);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ExecuteWithResetBase(string source, string sourceName = "anonymousCode.js", bool throwExceptionOnError = true, int timeout = 0)
+        {
+            using (ExecuteExprWithReset(source, sourceName, throwExceptionOnError, timeout))
+            {}
+        }
+
+        public void ExecuteWithReset(InternalHandle script, bool throwExceptionOnError = true, int timeout = 0)
+        {
+            using (ExecuteExprWithReset(script, throwExceptionOnError, timeout))
+            {}
+        }
+
+        public InternalHandle ExecuteExprWithReset(string source, string sourceName = "anonymousCode.js", bool throwExceptionOnError = true, int timeout = 0)
+        {
+            using (var script = Compile(source, sourceName, throwExceptionOnError))
+            {
+                return ExecuteExprWithReset(script, throwExceptionOnError, timeout);
+            }
+        }
+
+        public InternalHandle ExecuteExprWithReset(InternalHandle script, bool throwExceptionOnError = true, int timeout = 0)
+        {
+            try
+            {
+                return base.Execute(script, throwExceptionOnError, _contextEx?.RefineMaxDuration(timeout) ?? 0);
+            }
+            finally
+            {
+                ResetCallStack();
+                ResetConstraints();
+            }
+        }
 
         new public JsHandle GlobalObject
         {
@@ -277,20 +338,43 @@ var process = {
         }
 
         // ------------------------------------------ internal implementation
-        public readonly TypeBinder TypeBinderBlittableObjectInstance;
-        public readonly TypeBinder TypeBinderTask;
-        public readonly TypeBinder TypeBinderTimeSeriesSegmentObjectInstance;
-        public readonly TypeBinder TypeBinderDynamicTimeSeriesEntries;
-        public readonly TypeBinder TypeBinderDynamicTimeSeriesEntry;
-        public readonly TypeBinder TypeBinderCounterEntryObjectInstance;
-        public readonly TypeBinder TypeBinderAttachmentNameObjectInstance;
-        public readonly TypeBinder TypeBinderAttachmentObjectInstance;
-        public readonly TypeBinder TypeBinderLazyNumberValue;
-        public readonly TypeBinder TypeBinderRavenServer;
-        public readonly TypeBinder TypeBinderDocumentDatabase;
+        private DynamicJsNullV8? _implicitNull;
+        private DynamicJsNullV8? _explicitNull;
+
+        public InternalHandle ImplicitNullV8 => _implicitNull?.CreateHandle() ?? InternalHandle.Empty;
+        public InternalHandle ExplicitNullV8 => _explicitNull?.CreateHandle() ?? InternalHandle.Empty;
         
-        public V8EngineEx(IJavaScriptOptions? jsOptions = null, bool autoCreateGlobalContext = true) : base(autoCreateGlobalContext, jsConverter: new JsConverter())
+        public JsHandle ImplicitNull => new(ImplicitNullV8);
+        public JsHandle ExplicitNull => new(ExplicitNullV8);
+
+        private JsHandle _jsonStringify;
+        public JsHandle JsonStringify => _jsonStringify;
+        
+        public InternalHandle JsonStringifyV8;
+
+        public TypeBinder? TypeBinderBlittableObjectInstance;
+        public TypeBinder? TypeBinderTask;
+        public TypeBinder? TypeBinderTimeSeriesSegmentObjectInstance;
+        public TypeBinder? TypeBinderDynamicTimeSeriesEntries;
+        public TypeBinder? TypeBinderDynamicTimeSeriesEntry;
+        public TypeBinder? TypeBinderCounterEntryObjectInstance;
+        public TypeBinder? TypeBinderAttachmentNameObjectInstance;
+        public TypeBinder? TypeBinderAttachmentObjectInstance;
+        public TypeBinder? TypeBinderLazyNumberValue;
+        public TypeBinder? TypeBinderRavenServer;
+        public TypeBinder? TypeBinderDocumentDatabase;
+
+        public V8EngineEx(IJavaScriptOptions? jsOptions = null) : base(false, jsConverter: new JsConverter())
         {
+            if (jsOptions != null)
+                CreateContextEx(jsOptions);
+        }
+
+        public ContextEx CreateContextEx(IJavaScriptOptions jsOptions)
+        {
+            var contextEx = new ContextEx(this);
+            SetContext(contextEx);
+
             SetOptions(jsOptions);
             
             _implicitNull = new DynamicJsNullV8(this, isExplicitNull: false);
@@ -355,6 +439,8 @@ var process = {
 
             JsonStringifyV8 = this.Execute("JSON.stringify", "JSON.stringify", true, 0);
             _jsonStringify = new JsHandle(JsonStringifyV8);
+
+            return contextEx;
         }
 
         public override void Dispose() 
@@ -373,5 +459,39 @@ var process = {
             return new DisposableAction(RestoreMaxStatements);
             
         }
+        
+        public IDisposable ChangeMaxDuration(int maxDurationNew)
+        {
+            if (_contextEx == null)
+                return new DisposableAction(() => { });
+
+            int maxDurationPrev = _contextEx.MaxDuration;
+
+            void RestoreMaxDuration()
+            {
+                _contextEx.MaxDuration = maxDurationPrev;
+            }
+
+            _contextEx.MaxDuration = maxDurationNew;
+            return new DisposableAction(RestoreMaxDuration);
+        }
+
+        public IDisposable DisableMaxDuration()
+        {
+            return ChangeMaxDuration(0);
+        }
+        
+        public void ResetCallStack()
+        {
+            //engine?.ForceV8GarbageCollection();
+
+            // there is no need to do something as V8 doesn't have intermediate state of callstack
+        }
+
+        public void ResetConstraints()
+        {
+            // there is no need to do something as V8 doesn't have intermediate state of timer
+        }
+
     }
 }
