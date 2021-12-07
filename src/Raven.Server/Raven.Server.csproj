@@ -147,7 +147,7 @@
     <PackageReference Include="Google.Api.Gax.Rest" Version="3.6.0" />
     <PackageReference Include="Google.Cloud.Storage.V1" Version="3.7.0" />
     <PackageReference Include="Jint" Version="3.0.31-ravendb" />
-    <PackageReference Include="v8.net" Version="1.1.10" />
+    <PackageReference Include="v8.net" Version="1.1.11" />
     <PackageReference Include="Google.Api.Gax.Rest" Version="3.5.0" />
     <PackageReference Include="Google.Cloud.Storage.V1" Version="3.6.0" />
     <PackageReference Include="Lextm.SharpSnmpLib.Engine" Version="11.3.102" />
@@ -182,6 +182,8 @@
     <PackageReference Include="System.Reflection.Metadata" Version="6.0.0" />
     <PackageReference Include="System.Security.Cryptography.Cng" Version="5.0.0" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="6.0.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="5.0.0" />
+    <!--PackageReference Include="Esprima" Version="2.0.4" /-->
   </ItemGroup>
   <ItemGroup>
     <None Update="Properties\Settings\settings_posix.json">
