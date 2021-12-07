@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Indexes;
 using Raven.Client.Documents.Indexes.TimeSeries;
@@ -220,10 +221,11 @@ return ({
             }
         }
 
-        [Fact]
-        public void BasicMapIndex()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void BasicMapIndex(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var now1 = RavenTestHelper.UtcToday;
                 var now2 = now1.AddSeconds(1);
@@ -377,10 +379,11 @@ return ({
             }
         }
 
-        [Fact]
-        public async Task BasicMapIndexWithLoad()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task BasicMapIndexWithLoad(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var now1 = DateTime.Now;
                 var now2 = now1.AddSeconds(1);
@@ -537,10 +540,11 @@ return ({
             }
         }
 
-        [Fact]
-        public void BasicMapReduceIndex()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void BasicMapReduceIndex(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var today = RavenTestHelper.UtcToday;
                 var tomorrow = today.AddDays(1);
@@ -716,11 +720,12 @@ return ({
             }
         }
 
-        [Fact]
-        public async Task BasicMapReduceIndexWithLoad()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task BasicMapReduceIndexWithLoad(string jsEngineType)
         {
             {
-                using (var store = GetDocumentStore())
+                using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
                 {
                     var today = RavenTestHelper.UtcToday;
 
@@ -863,10 +868,11 @@ return ({
             }
         }
 
-        [Fact]
-        public void CanMapAllTimeSeriesFromCollection()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanMapAllTimeSeriesFromCollection(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var now1 = DateTime.Now;
                 var now2 = now1.AddSeconds(1);
@@ -1009,10 +1015,11 @@ return ({
             }
         }
 
-        [Fact]
-        public void CanMapAllTimeSeries()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanMapAllTimeSeries(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var now1 = DateTime.Now;
                 var now2 = now1.AddSeconds(1);
@@ -1200,12 +1207,13 @@ return ({
             }
         }
 
-        [Fact]
-        public async Task BasicMultiMapIndex()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task BasicMultiMapIndex(string jsEngineType)
         {
             var now = DateTime.UtcNow.Date;
 
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var timeSeriesIndex = new MyMultiMapTsIndex();
                 await timeSeriesIndex.ExecuteAsync(store);
@@ -1261,12 +1269,13 @@ return ({
             }
         }
 
-        [Fact]
-        public void TimeSeriesNamesFor()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void TimeSeriesNamesFor(string jsEngineType)
         {
             var now = DateTime.UtcNow.Date;
 
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var index = new Companies_ByTimeSeriesNames();
                 index.Execute(store);
