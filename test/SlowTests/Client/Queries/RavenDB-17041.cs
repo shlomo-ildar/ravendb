@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Indexes;
 using Xunit;
@@ -42,10 +43,11 @@ namespace SlowTests.Client.Queries
             public List<RoleData> Roles;
         }
 
-        [Fact]
-        public async Task Can_Include_Secondary_Level_With_Alias()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Can_Include_Secondary_Level_With_Alias(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var userIndex = new UserIndex();
                 await userIndex.ExecuteAsync(store);
