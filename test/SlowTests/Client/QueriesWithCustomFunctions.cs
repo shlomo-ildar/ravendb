@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Newtonsoft.Json;
 using Raven.Client;
 using Raven.Client.Documents;
@@ -86,10 +87,11 @@ namespace SlowTests.Client
             }
         }
 
-        [Fact]
-        public void Custom_Functions_With_Timespan()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_With_Timespan(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -116,10 +118,11 @@ namespace SlowTests.Client
             }
         }
 
-        [Fact]
-        public async Task Custom_Functions_With_Timespan_Async()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Custom_Functions_With_Timespan_Async(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
@@ -146,10 +149,11 @@ namespace SlowTests.Client
             }
         }
 
-        [Fact]
-        public void Custom_Functions_With_DateTime_Properties()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_With_DateTime_Properties(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -183,10 +187,11 @@ namespace SlowTests.Client
             }
         }
 
-        [Fact]
-        public async Task Custom_Functions_With_DateTime_Properties_Async()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Custom_Functions_With_DateTime_Properties_Async(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
@@ -220,10 +225,11 @@ namespace SlowTests.Client
             }
         }
 
-        [Fact]
-        public void Custom_Functions_With_Numbers_And_Booleans()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_With_Numbers_And_Booleans(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -255,10 +261,11 @@ namespace SlowTests.Client
             }
         }
 
-        [Fact]
-        public async Task Custom_Functions_With_Numbers_And_Booleans_Async()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Custom_Functions_With_Numbers_And_Booleans_Async(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
@@ -290,10 +297,11 @@ namespace SlowTests.Client
             }
         }
 
-        [Fact]
-        public void Custom_Functions_Inside_Select_Nested()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_Inside_Select_Nested(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -327,10 +335,11 @@ namespace SlowTests.Client
             }
         }
 
-        [Fact]
-        public async Task Custom_Functions_Inside_Select_Nested_Async()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Custom_Functions_Inside_Select_Nested_Async(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
@@ -364,10 +373,11 @@ namespace SlowTests.Client
             }
         }
 
-        [Fact]
-        public void Custom_Functions_With_Simple_Let()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_With_Simple_Let(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -387,8 +397,8 @@ namespace SlowTests.Client
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(u) {
-	var lastName = u.LastName;
-	return { FullName : u.Name+"" ""+lastName };
+    var lastName = u.LastName;
+    return { FullName : u.Name+"" ""+lastName };
 }
 from 'Users' as u select output(u)", query.ToString());
 
@@ -401,10 +411,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public async Task Custom_Functions_With_Simple_Let_Async()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Custom_Functions_With_Simple_Let_Async(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
@@ -424,8 +435,8 @@ from 'Users' as u select output(u)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
                         @"declare function output(u) {
-	var lastName = u.LastName;
-	return { FullName : u.Name+"" ""+lastName };
+    var lastName = u.LastName;
+    return { FullName : u.Name+"" ""+lastName };
 }
 from 'Users' as u select output(u)", query.ToString());
 
@@ -438,10 +449,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Custom_Functions_With_Let()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_With_Let(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -461,8 +473,8 @@ from 'Users' as u select output(u)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
  @"declare function output(u) {
-	var format = function(p){return p.Name+"" ""+p.LastName;};
-	return { FullName : format(u) };
+    var format = function(p){return p.Name+"" ""+p.LastName;};
+    return { FullName : format(u) };
 }
 from 'Users' as u select output(u)", query.ToString());
 
@@ -475,10 +487,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public async Task Custom_Functions_With_Let_Async()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Custom_Functions_With_Let_Async(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
@@ -498,8 +511,8 @@ from 'Users' as u select output(u)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
                         @"declare function output(u) {
-	var format = function(p){return p.Name+"" ""+p.LastName;};
-	return { FullName : format(u) };
+    var format = function(p){return p.Name+"" ""+p.LastName;};
+    return { FullName : format(u) };
 }
 from 'Users' as u select output(u)", query.ToString());
 
@@ -512,10 +525,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Custom_Functions_With_Multiple_Lets()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_With_Multiple_Lets(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -537,10 +551,10 @@ from 'Users' as u select output(u)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(u) {
-	var space = "" "";
-	var last = u.LastName;
-	var format = function(p){return p.Name+space+last;};
-	return { FullName : format(u) };
+    var space = "" "";
+    var last = u.LastName;
+    var format = function(p){return p.Name+space+last;};
+    return { FullName : format(u) };
 }
 from 'Users' as u select output(u)", query.ToString());
 
@@ -553,10 +567,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public async Task Custom_Functions_With_Multiple_Lets_Async()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Custom_Functions_With_Multiple_Lets_Async(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
@@ -578,10 +593,10 @@ from 'Users' as u select output(u)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
                         @"declare function output(u) {
-	var space = "" "";
-	var last = u.LastName;
-	var format = function(p){return p.Name+space+last;};
-	return { FullName : format(u) };
+    var space = "" "";
+    var last = u.LastName;
+    var format = function(p){return p.Name+space+last;};
+    return { FullName : format(u) };
 }
 from 'Users' as u select output(u)", query.ToString());
 
@@ -594,10 +609,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Should_Throw_When_Let_Is_Before_Where()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Should_Throw_When_Let_Is_Before_Where(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -620,10 +636,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public async Task Should_Throw_When_Let_Is_Before_Where_Async()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Should_Throw_When_Let_Is_Before_Where_Async(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
@@ -646,10 +663,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Custom_Function_With_Where_and_Load()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Function_With_Where_and_Load(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -687,10 +705,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public async Task Custom_Function_With_Where_and_Load_Async()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Custom_Function_With_Where_and_Load_Async(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
@@ -725,10 +744,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Custom_Function_With_Multiple_Loads()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Function_With_Multiple_Loads(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -757,10 +777,10 @@ from 'Users' as u select output(u)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(u) {
-	var format = function(user){return user.Name+"" ""+user.LastName;};
-	var detail = load(u.DetailId);
-	var friend = load(u.FriendId);
-	return { FullName : format(u), Friend : format(friend), Detail : detail.Number };
+    var format = function(user){return user.Name+"" ""+user.LastName;};
+    var detail = load(u.DetailId);
+    var friend = load(u.FriendId);
+    return { FullName : format(u), Friend : format(friend), Detail : detail.Number };
 }
 from 'Users' as u where u.Name != $p0 select output(u) include timings()",
                         query.ToString());
@@ -777,10 +797,11 @@ from 'Users' as u where u.Name != $p0 select output(u) include timings()",
             }
         }
 
-        [Fact]
-        public async Task Custom_Function_With_Multiple_Loads_Async()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Custom_Function_With_Multiple_Loads_Async(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
@@ -809,10 +830,10 @@ from 'Users' as u where u.Name != $p0 select output(u) include timings()",
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(u) {
-	var format = function(user){return user.Name+"" ""+user.LastName;};
-	var detail = load(u.DetailId);
-	var friend = load(u.FriendId);
-	return { FullName : format(u), Friend : format(friend), Detail : detail.Number };
+    var format = function(user){return user.Name+"" ""+user.LastName;};
+    var detail = load(u.DetailId);
+    var friend = load(u.FriendId);
+    return { FullName : format(u), Friend : format(friend), Detail : detail.Number };
 }
 from 'Users' as u where u.Name != $p0 select output(u) include timings()",
                         query.ToString());
@@ -829,10 +850,11 @@ from 'Users' as u where u.Name != $p0 select output(u) include timings()",
             }
         }
 
-        [Fact]
-        public void Custom_Functions_With_Let_And_Load()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_With_Let_And_Load(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -857,9 +879,9 @@ from 'Users' as u where u.Name != $p0 select output(u) include timings()",
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(u) {
-	var format = function(user){return user.Name+"" ""+u.LastName;};
-	var detail = load(u.DetailId);
-	return { FullName : format(u), DetailNumber : detail.Number };
+    var format = function(user){return user.Name+"" ""+u.LastName;};
+    var detail = load(u.DetailId);
+    return { FullName : format(u), DetailNumber : detail.Number };
 }
 from 'Users' as u select output(u)", query.ToString());
 
@@ -876,10 +898,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public async Task Custom_Functions_With_Let_And_Load_Async()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Custom_Functions_With_Let_And_Load_Async(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
@@ -904,9 +927,9 @@ from 'Users' as u select output(u)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(u) {
-	var format = function(user){return user.Name+"" ""+u.LastName;};
-	var detail = load(u.DetailId);
-	return { FullName : format(u), DetailNumber : detail.Number };
+    var format = function(user){return user.Name+"" ""+u.LastName;};
+    var detail = load(u.DetailId);
+    return { FullName : format(u), DetailNumber : detail.Number };
 }
 from 'Users' as u select output(u)", query.ToString());
 
@@ -923,10 +946,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Custom_Function_With_Where_and_Load_Array()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Function_With_Where_and_Load_Array(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -968,10 +992,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public async Task Custom_Function_With_Where_and_Load_Array_Async()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Custom_Function_With_Where_and_Load_Array_Async(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
@@ -1013,10 +1038,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Custom_Function_With_Where_and_Load_List()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Function_With_Where_and_Load_List(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1058,10 +1084,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public async Task Custom_Function_With_Where_and_Load_List_Async()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Custom_Function_With_Where_and_Load_List_Async(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
@@ -1103,10 +1130,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Custom_Functions_With_Multiple_Where_And_Let()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_With_Multiple_Where_And_Let(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1135,10 +1163,10 @@ from 'Users' as u select output(u)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(u) {
-	var last = u.LastName;
-	var format = function(user){return user.Name+"" ""+last;};
-	var detail = load(u.DetailId);
-	return { FullName : format(u), DetailNumber : detail.Number };
+    var last = u.LastName;
+    var format = function(user){return user.Name+"" ""+last;};
+    var detail = load(u.DetailId);
+    return { FullName : format(u), DetailNumber : detail.Number };
 }
 from 'Users' as u where (u.Name = $p0) and (u.IsActive = $p1) order by LastName desc select output(u)", query.ToString());
 
@@ -1151,10 +1179,11 @@ from 'Users' as u where (u.Name = $p0) and (u.IsActive = $p1) order by LastName 
             }
         }
 
-        [Fact]
-        public async Task Custom_Functions_With_Multiple_Where_And_Let_Async()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Custom_Functions_With_Multiple_Where_And_Let_Async(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
@@ -1183,10 +1212,10 @@ from 'Users' as u where (u.Name = $p0) and (u.IsActive = $p1) order by LastName 
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(u) {
-	var last = u.LastName;
-	var format = function(user){return user.Name+"" ""+last;};
-	var detail = load(u.DetailId);
-	return { FullName : format(u), DetailNumber : detail.Number };
+    var last = u.LastName;
+    var format = function(user){return user.Name+"" ""+last;};
+    var detail = load(u.DetailId);
+    return { FullName : format(u), DetailNumber : detail.Number };
 }
 from 'Users' as u where (u.Name = $p0) and (u.IsActive = $p1) order by LastName desc select output(u)", query.ToString());
 
@@ -1199,10 +1228,11 @@ from 'Users' as u where (u.Name = $p0) and (u.IsActive = $p1) order by LastName 
             }
         }
 
-        [Fact]
-        public void Custom_Functions_Math_Support()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_Math_Support(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1231,10 +1261,11 @@ from 'Users' as u where (u.Name = $p0) and (u.IsActive = $p1) order by LastName 
             }
         }
 
-        [Fact]
-        public void Can_Project_Into_Class()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Project_Into_Class(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1262,10 +1293,11 @@ from 'Users' as u where (u.Name = $p0) and (u.IsActive = $p1) order by LastName 
             }
         }
 
-        [Fact]
-        public void Can_Project_Into_Class_With_Let()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Project_Into_Class_With_Let(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1287,10 +1319,10 @@ from 'Users' as u where (u.Name = $p0) and (u.IsActive = $p1) order by LastName 
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(user) {
-	var first = user.Name;
-	var last = user.LastName;
-	var format = function(){return first+"" ""+last;};
-	return { FullName : format() };
+    var first = user.Name;
+    var last = user.LastName;
+    var format = function(){return first+"" ""+last;};
+    return { FullName : format() };
 }
 from 'Users' as user select output(user)", query.ToString());
 
@@ -1303,10 +1335,11 @@ from 'Users' as user select output(user)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Custom_Functions_With_DateTime_Object()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_With_DateTime_Object(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1326,8 +1359,8 @@ from 'Users' as user select output(user)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
                         @"declare function output(u) {
-	var date = new Date(1960, 0, 1);
-	return { Bday : u.Birthday, Date : date };
+    var date = new Date(1960, 0, 1);
+    return { Bday : u.Birthday, Date : date };
 }
 from 'Users' as u select output(u)", query.ToString());
 
@@ -1340,10 +1373,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Custom_Functions_With_Escape_Hatch()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_With_Escape_Hatch(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1372,10 +1406,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Custom_Functions_With_Escape_Hatch_Inside_Let()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_With_Escape_Hatch_Inside_Let(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1397,8 +1432,8 @@ from 'Users' as u select output(u)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(u) {
-	var days = Math.ceil((Date.now() - Date.parse(u.Birthday)) / (1000*60*60*24));
-	return { Days : days };
+    var days = Math.ceil((Date.now() - Date.parse(u.Birthday)) / (1000*60*60*24));
+    return { Days : days };
 }
 from 'Users' as u select output(u)", query.ToString());
 
@@ -1410,10 +1445,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Custom_Functions_Escape_Hatch_With_Path()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_Escape_Hatch_With_Path(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1441,10 +1477,11 @@ from 'Users' as u select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Custom_Function_With_Complex_Loads()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Function_With_Complex_Loads(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1473,9 +1510,9 @@ from 'Users' as u select output(u)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(u, _doc_0) {
-	var friend = _doc_0.Name;
-	var details = load(u.DetailIds).map(function(x){return x.Number;});
-	return { FullName : u.Name+"" ""+u.LastName, Friend : friend, Details : details };
+    var friend = _doc_0.Name;
+    var details = load(u.DetailIds).map(function(x){return x.Number;});
+    return { FullName : u.Name+"" ""+u.LastName, Friend : friend, Details : details };
 }
 from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToString());
 
@@ -1503,10 +1540,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void Should_Throw_With_Proper_Message_When_Using_Wrong_Load()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Should_Throw_With_Proper_Message_When_Using_Wrong_Load(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1534,10 +1572,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void Custom_Functions_With_ToList_And_ToArray()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_With_ToList_And_ToArray(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1579,10 +1618,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void Custom_Functions_Null_Coalescing_Support()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_Null_Coalescing_Support(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1620,10 +1660,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void Custom_Functions_ValueTypeParse_Support()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_ValueTypeParse_Support(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1683,10 +1724,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void Custom_Functions_Nested_Conditional_Support()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_Nested_Conditional_Support(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1734,10 +1776,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void Custom_Functions_String_Support()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_String_Support(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1837,10 +1880,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void Custom_Function_ToDictionary_Support()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Function_ToDictionary_Support(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1899,10 +1943,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void Custom_Function_First_And_FirstOrDefault_Support()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Function_First_And_FirstOrDefault_Support(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -1952,10 +1997,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void Custom_Function_With_Nested_Query()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Function_With_Nested_Query(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -2010,10 +2056,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void Query_On_Index_With_Load()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Query_On_Index_With_Load(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var definition = new IndexDefinitionBuilder<User>("UsersByNameAndFriendId")
                 {
@@ -2063,10 +2110,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void Query_On_Index_With_Load_Into_Class()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Query_On_Index_With_Load_Into_Class(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var definition = new IndexDefinitionBuilder<User>("UsersByNameAndFriendId")
                 {
@@ -2116,10 +2164,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void Custom_Function_With_GetMetadataFor()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Function_With_GetMetadataFor(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -2159,10 +2208,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public async Task Custom_Function_With_GetMetadataFor_Async()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Custom_Function_With_GetMetadataFor_Async(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
@@ -2202,10 +2252,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void Can_Load_Static_Value()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Load_Static_Value(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -2246,10 +2297,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void Custom_Function_With_RavenQueryMetadata()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Function_With_RavenQueryMetadata(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -2289,10 +2341,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public async Task QueryCompareExchangeValue()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task QueryCompareExchangeValue(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 await store.Operations.SendAsync(new PutCompareExchangeValueOperation<string>("users/1", "Karmel", 0));
                 var result = await store.Operations.SendAsync(new GetCompareExchangeValueOperation<string>("users/1"));
@@ -2323,10 +2376,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public async Task SingleProjectionQueryCompareExchange()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task SingleProjectionQueryCompareExchange(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 await store.Operations.SendAsync(new PutCompareExchangeValueOperation<string>("users/1", "Karmel", 0));
                 var result = await store.Operations.SendAsync(new GetCompareExchangeValueOperation<string>("users/1"));
@@ -2351,10 +2405,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public async Task QueryCompareExchangeInnerValue()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task QueryCompareExchangeInnerValue(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 await store.Operations.SendAsync(new PutCompareExchangeValueOperation<User>("users/1", new User
                 {
@@ -2389,10 +2444,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void QueryCompareExchangeWithNullValue()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void QueryCompareExchangeWithNullValue(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -2538,10 +2594,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void Should_Add_An_Alias_To_Where_Tokens()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Should_Add_An_Alias_To_Where_Tokens(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -2595,10 +2652,11 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
             }
         }
 
-        [Fact]
-        public void Custom_Function_With_Sum()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Function_With_Sum(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var o1 = new Order
                 {
@@ -2674,8 +2732,8 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(o) {
-	var TotalSpentOnOrder = function(order){return order.Lines.map(function(l){return l.PricePerUnit*l.Quantity-l.Discount;}).reduce(function(a, b) { return a + b; }, 0);};
-	return { Id : id(o), TotalMoneySpent : TotalSpentOnOrder(o) };
+    var TotalSpentOnOrder = function(order){return order.Lines.map(function(l){return l.PricePerUnit*l.Quantity-l.Discount;}).reduce(function(a, b) { return a + b; }, 0);};
+    return { Id : id(o), TotalMoneySpent : TotalSpentOnOrder(o) };
 }
 from 'Orders' as o select output(o)", complexLinqQuery.ToString());
 
@@ -2698,12 +2756,13 @@ from 'Orders' as o select output(o)", complexLinqQuery.ToString());
             }
         }
 
-        [Fact]
-        public void Can_project_id_property_to_any_name()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_project_id_property_to_any_name(string jsEngineType)
         {
             //https://issues.hibernatingrhinos.com/issue/RavenDB-9260
 
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -2735,8 +2794,8 @@ from 'Orders' as o select output(o)", complexLinqQuery.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(o, employee) {
-	var employeeId = id(employee);
-	return { OrderId : id(o), EmployeeId1 : employeeId, EmployeeId2 : id(employee) };
+    var employeeId = id(employee);
+    return { OrderId : id(o), EmployeeId1 : employeeId, EmployeeId2 : id(employee) };
 }
 from 'Orders' as o load o.Employee as employee select output(o, employee)", query.ToString());
 
@@ -2750,10 +2809,11 @@ from 'Orders' as o load o.Employee as employee select output(o, employee)", quer
             }
         }
 
-        [Fact]
-        public void Should_quote_alias_if_its_a_reserved_word()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Should_quote_alias_if_its_a_reserved_word(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -2790,10 +2850,11 @@ from 'Orders' as o load o.Employee as employee select output(o, employee)", quer
             }
         }
 
-        [Fact]
-        public void Custom_Function_With_ToString()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Function_With_ToString(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -2832,10 +2893,11 @@ from 'Orders' as o load o.Employee as employee select output(o, employee)", quer
             }
         }
 
-        [Fact]
-        public void Custom_Functions_Linq_Methods_Support()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_Linq_Methods_Support(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var user = new User
                 {
@@ -2912,10 +2974,11 @@ from 'Orders' as o load o.Employee as employee select output(o, employee)", quer
             }
         }
 
-        [Fact]
-        public void Can_Load_With_Argument_That_Has_Computation()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Load_With_Argument_That_Has_Computation(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -2945,8 +3008,8 @@ from 'Orders' as o load o.Employee as employee select output(o, employee)", quer
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(u) {
-	var detail = load((""details/""+u.DetailShortId));
-	return { Name : u.Name, Detail : detail };
+    var detail = load((""details/""+u.DetailShortId));
+    return { Name : u.Name, Detail : detail };
 }
 from 'Users' as u where u.LastName = $p0 select output(u)", query.ToString());
 
@@ -2983,10 +3046,11 @@ from 'Users' as u where u.LastName = $p0 select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Can_Project_With_Json_Property_Rename()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Project_With_Json_Property_Rename(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             using (var session = store.OpenSession())
             {
                 session.Store(new Document
@@ -3031,10 +3095,11 @@ from 'Users' as u where u.LastName = $p0 select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Can_Use_DefaultIfEmpty()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Use_DefaultIfEmpty(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var lists = new Lists
                 {
@@ -3083,10 +3148,11 @@ from 'Users' as u where u.LastName = $p0 select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Custom_Functions_With_SelectMany()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_With_SelectMany(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var nestedNode = new Node
                 {
@@ -3142,10 +3208,11 @@ from 'Users' as u where u.LastName = $p0 select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public async Task Can_SelectMany_From_Dictionary()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Can_SelectMany_From_Dictionary(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
@@ -3198,10 +3265,11 @@ from 'Users' as u where u.LastName = $p0 select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Custom_Functions_With_Nested_Loads_Simple()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_With_Nested_Loads_Simple(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -3249,10 +3317,11 @@ from 'Users' as u where u.LastName = $p0 select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Custom_Functions_With_Nested_Loads_Complex()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_With_Nested_Loads_Complex(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -3299,9 +3368,9 @@ from 'Users' as u where u.LastName = $p0 select output(u)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(o, company) {
-	var employee = load(company.EmployeesIds)[0];
-	var manager = load(employee.ReportsTo);
-	return { Company : company.Name, Employee : employee.FirstName+"" ""+employee.LastName, Manager : manager.FirstName+"" ""+manager.LastName };
+    var employee = load(company.EmployeesIds)[0];
+    var manager = load(employee.ReportsTo);
+    return { Company : company.Name, Employee : employee.FirstName+"" ""+employee.LastName, Manager : manager.FirstName+"" ""+manager.LastName };
 }
 from 'Orders' as o load o.Company as company select output(o, company)", query.ToString());
 
@@ -3316,11 +3385,12 @@ from 'Orders' as o load o.Company as company select output(o, company)", query.T
             }
         }
 
-        [Fact]
-        public void Can_Load_SingleDocument_When_Declare()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Load_SingleDocument_When_Declare(string jsEngineType)
         {
             //RavenDB-9637
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -3356,12 +3426,13 @@ from 'Orders' as o load o.Company as company select output(o, company)", query.T
             }
         }
 
-        [Fact]
-        public void Can_Load_Old_Document_With_Undefined_Member()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Load_Old_Document_With_Undefined_Member(string jsEngineType)
         {
             //RavenDB-9638
 
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -3395,10 +3466,11 @@ from 'Orders' as o load o.Company as company select output(o, company)", query.T
             }
         }
 
-        [Fact]
-        public void Can_Do_Null_Comparison_On_Undefined_Member()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Do_Null_Comparison_On_Undefined_Member(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -3429,10 +3501,11 @@ from 'Orders' as o load o.Company as company select output(o, company)", query.T
             }
         }
 
-        [Fact]
-        public void IsNullOrEmptySupport()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void IsNullOrEmptySupport(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -3464,10 +3537,11 @@ from 'Orders' as o load o.Company as company select output(o, company)", query.T
             }
         }
 
-        [Fact]
-        public void IsNullOrWhitespaceSupport()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void IsNullOrWhitespaceSupport(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -3533,10 +3607,11 @@ from 'Orders' as o load o.Company as company select output(o, company)", query.T
             }
         }
 
-        [Fact]
-        public void WrappedConstantSupportShouldKnowHowToHandleCallExpressionsOnWrappedConstantObject()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void WrappedConstantSupportShouldKnowHowToHandleCallExpressionsOnWrappedConstantObject(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -3651,10 +3726,11 @@ from 'Orders' as o load o.Company as company select output(o, company)", query.T
                 }
             }
 
-            [Fact]
-            public void CanProjectWithArrayParameters()
+            [Theory]
+            [JavaScriptEngineClassData]
+            public void CanProjectWithArrayParameters(string jsEngineType)
             {
-                using (var store = GetDocumentStore())
+                using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
                 {
                     SetUp(store);
 
@@ -3703,10 +3779,11 @@ from 'Orders' as o load o.Company as company select output(o, company)", query.T
                 }
             }
 
-            [Fact]
-            public void CanProjectWithListParameters()
+            [Theory]
+            [JavaScriptEngineClassData]
+            public void CanProjectWithListParameters(string jsEngineType)
             {
-                using (var store = GetDocumentStore())
+                using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
                 {
                     SetUp(store);
 
@@ -3756,10 +3833,11 @@ from 'Orders' as o load o.Company as company select output(o, company)", query.T
                 }
             }
 
-            [Fact]
-            public void CanProjectWithStringParameter()
+            [Theory]
+            [JavaScriptEngineClassData]
+            public void CanProjectWithStringParameter(string jsEngineType)
             {
-                using (var store = GetDocumentStore())
+                using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
                 {
                     SetUp(store);
 
