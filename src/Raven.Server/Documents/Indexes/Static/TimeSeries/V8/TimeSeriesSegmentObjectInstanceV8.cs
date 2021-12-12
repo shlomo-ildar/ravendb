@@ -33,7 +33,16 @@ namespace Raven.Server.Documents.Indexes.Static.TimeSeries.V8
         {
             var engine = (V8Engine)engineEx;
             if (propertyName == nameof(DynamicTimeSeriesSegment.Entries))
-                return engine.CreateObjectBinder<DynamicTimeSeriesEntriesCustomBinder>(_segment.Entries, engineEx.TypeBinderDynamicTimeSeriesEntries);
+            {
+                var jsItems = new InternalHandle[_segment._segmentEntry.Segment.NumberOfLiveEntries];
+                var i = 0;
+                foreach (DynamicTimeSeriesSegment.DynamicTimeSeriesEntry entry in _segment.Entries)
+                {
+                    jsItems[i] = ((V8EngineEx)engine).CreateObjectBinder<DynamicTimeSeriesEntryCustomBinder>(entry);
+                    i++;
+                }
+                return ((V8EngineEx)engine).CreateArrayWithDisposal(jsItems);
+            }
 
             if (propertyName == nameof(TimeSeriesSegment.DocumentId))
                 return engine.CreateValue(_segment._segmentEntry.DocId.ToString());
@@ -53,53 +62,13 @@ namespace Raven.Server.Documents.Indexes.Static.TimeSeries.V8
             return InternalHandle.Empty;
         }
 
-        public class CustomBinder : ObjectInstanceBaseV8.CustomBinder<TimeSeriesSegmentObjectInstanceV8>
+        public class CustomBinder : CustomBinder<TimeSeriesSegmentObjectInstanceV8>
         {
-            public CustomBinder() : base()
-            {}
-
-        }
-    }
-
-    public class DynamicTimeSeriesEntriesCustomBinder : ObjectBinderEx<DynamicArray>
-    {
-
-        public DynamicTimeSeriesEntriesCustomBinder() : base()
-        {}
-
-        public override InternalHandle IndexedPropertyGetter(int index)
-        {
-            InternalHandle jsRes = InternalHandle.Empty;
-            if (index < ObjClr.Count()) 
-            {
-                object elem = ObjClr.Get(index);
-                return ((V8EngineEx)Engine).CreateObjectBinder<DynamicTimeSeriesEntryCustomBinder>(elem);
-            }
-
-            return InternalHandle.Empty;
-        }
-
-        public override V8PropertyAttributes? IndexedPropertyQuery(int index)
-        {
-            if (index < ObjClr.Count())
-                return V8PropertyAttributes.Locked;
-
-            return null;
-        }
-        public override InternalHandle IndexedPropertyEnumerator()
-        {
-            int arrayLength = ObjClr.Count();
-            var jsItems = Enumerable.Range(0, arrayLength).Select(x => Engine.CreateValue(x)).ToArray();
-
-            return ((V8EngineEx)Engine).CreateArrayWithDisposal(jsItems);
         }
     }
 
     public class DynamicTimeSeriesEntryCustomBinder : ObjectBinderEx<DynamicTimeSeriesSegment.DynamicTimeSeriesEntry>
     {
-        public DynamicTimeSeriesEntryCustomBinder() : base()
-        {}
-
         public override InternalHandle NamedPropertyGetter(ref string propertyName)
         {
             var timeSeriesEntry = Object as DynamicTimeSeriesSegment.DynamicTimeSeriesEntry;
