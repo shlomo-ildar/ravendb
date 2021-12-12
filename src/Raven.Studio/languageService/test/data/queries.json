@@ -1889,7 +1889,7 @@
     " from 'Items' where (Active != $p0 and Active = $p1) ",
     " from 'Orders' group by Company select sum(Lines.Count) as LinesLength ",
     " from index 'TransportsIndex' ",
-    " from 'Orders' as a select { Date : (function (date) { return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds(), date.getUTCMilliseconds());})(new Date()) } ",
+    " from 'Orders' as a select { Date : (function (date) { return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds(), date.getUTCMilliseconds()));})(new Date()) } ",
     " from index 'Students/WithFriends' ",
     " from 'People' as p select timeseries(from p.HeartRate group by '1 Hours'   select slope() scale 1000) as __timeSeriesQueryFunction0 limit $p0, $p1 ",
     " from index 'ItemsOrders/All' where (Items in ($p0)) and (At >= $p1) select facet(At >= $p2, At >= $p3 and At < $p4, At >= $p5 and At < $p6) ",

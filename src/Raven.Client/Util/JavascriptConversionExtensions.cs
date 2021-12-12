@@ -1548,7 +1548,7 @@ namespace Raven.Client.Util
 
                             case "UtcNow":
                                 writer.Write(
-                                    @"(function (date) { return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds(), date.getUTCMilliseconds());})(new Date())");
+                                    @"(function (date) { return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds(), date.getUTCMilliseconds()));})(new Date())");
                                 break;
 
                             case "Today":
