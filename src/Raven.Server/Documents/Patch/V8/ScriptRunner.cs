@@ -1454,25 +1454,19 @@ namespace Raven.Server.Documents.Patch
                         date2 = GetDateArg(args[1], signature, "date2");
                     }
 
-                    switch (binaryOperationType)
-                    {
-                        case ExpressionType.Subtract:
-                            return (date1 - date2).ToString();
-                        case ExpressionType.GreaterThan:
-                            return date1 > date2;
-                        case ExpressionType.GreaterThanOrEqual:
-                            return date1 >= date2;
-                        case ExpressionType.LessThan:
-                            return date1 < date2;
-                        case ExpressionType.LessThanOrEqual:
-                            return date1 <= date2;
-                        case ExpressionType.Equal:
-                            return date1 == date2;
-                        case ExpressionType.NotEqual:
-                            return date1 != date2;
-                        default:
-                            throw new InvalidOperationException($"compareDates(date1, date2, binaryOp) : unsupported binary operation '{binaryOperationType}'");
-                    }
+                    return engine.CreateValue(
+                        binaryOperationType switch
+                        {
+                            ExpressionType.Subtract => (date1 - date2).ToString(),
+                            ExpressionType.GreaterThan => date1 > date2,
+                            ExpressionType.GreaterThanOrEqual => date1 >= date2,
+                            ExpressionType.LessThan => date1 < date2,
+                            ExpressionType.LessThanOrEqual => date1 <= date2,
+                            ExpressionType.Equal => date1 == date2,
+                            ExpressionType.NotEqual => date1 != date2,
+                            _ => throw new InvalidOperationException($"compareDates(date1, date2, binaryOp) : unsupported binary operation '{binaryOperationType}'")
+                        }
+                    );
                 }
                 catch (Exception e) 
                 {
