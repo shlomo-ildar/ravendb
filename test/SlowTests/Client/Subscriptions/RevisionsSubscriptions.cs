@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents.Conventions;
 using Raven.Client.Documents.Operations.Revisions;
 using Raven.Client.Documents.Session;
@@ -195,10 +196,11 @@ namespace SlowTests.Client.Subscriptions
             public int Age;
         }
 
-        [Fact]
-        public async Task RevisionsSubscriptionsWithCustomScript()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task RevisionsSubscriptionsWithCustomScript(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var subscriptionId = await store.Subscriptions.CreateAsync(new SubscriptionCreationOptions
                 {
@@ -284,10 +286,11 @@ select { Id: id(d.Current), Age: d.Current.Age }
             }
         }
 
-        [Fact]
-        public async Task RevisionsSubscriptionsWithCustomScriptCompareDocs()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task RevisionsSubscriptionsWithCustomScriptCompareDocs(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
 
                 var subscriptionId = await store.Subscriptions.CreateAsync(new SubscriptionCreationOptions
