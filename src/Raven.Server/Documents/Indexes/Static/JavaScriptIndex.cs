@@ -231,8 +231,8 @@ function map(name, lambda) {
 
         ~AbstractJavaScriptIndex()
         {
-            EngineHandle.Dispose();
-            _definitions.Dispose(); 
+            EngineHandle?.Dispose();
+            _definitions.Dispose();
         }
 
         protected void InitializeEngineSpecific()
