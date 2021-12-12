@@ -17,9 +17,10 @@ namespace Raven.Server.Documents.Patch
 {
     public enum JsHandleType : byte
     {
-        V8,
-        Jint,
-        JintError
+        Empty = 0,
+        V8 = 1,
+        Jint = 2,
+        JintError = 3
     }
 
     public interface IJsHandle<THost> : IDisposable, IClonable<THost>

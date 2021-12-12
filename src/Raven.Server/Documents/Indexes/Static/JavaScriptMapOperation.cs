@@ -80,7 +80,7 @@ namespace Raven.Server.Documents.Indexes.Static
                 {
                     using (jsItem)
                     {
-                        JsHandle jsRes = JsHandle.Empty(_engineHandle.EngineType);
+                        JsHandle jsRes = JsHandle.Empty;
                         try
                         {
                             if (!MapFunc.IsFunction)
@@ -286,7 +286,7 @@ namespace Raven.Server.Documents.Indexes.Static
                 async: false);
 
             var jsEngineType = MapFunc.EngineType;
-            var functionObject = JsHandle.Empty(jsEngineType); 
+            JsHandle functionObject; 
             switch (jsEngineType)
             {
                 case JavaScriptEngineType.Jint:

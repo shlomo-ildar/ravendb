@@ -112,7 +112,7 @@ namespace Raven.Server.Documents.Indexes.Static.Utils
 
         public bool GetValue(object item, out JsHandle jsItem, bool isMapReduce = false, bool keepAlive = false)
         {
-            jsItem = JsHandle.Empty(EngineHandle.EngineType);
+            jsItem = JsHandle.Empty;
             string changeVector = null;
             DateTime? lastModified = null;
 

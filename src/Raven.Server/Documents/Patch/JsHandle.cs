@@ -38,7 +38,7 @@ namespace Raven.Server.Documents.Patch
     public struct JsHandle : IJsHandle<JsHandle>
     {
 
-        public static JsHandle Empty(JavaScriptEngineType engineType) => new JsHandle(engineType);
+        public static JsHandle Empty;
         
         public JsHandleType Kind;
 
@@ -76,6 +76,11 @@ namespace Raven.Server.Documents.Patch
             Kind = value.Kind;
             switch (Kind)
             {
+                case JsHandleType.Empty:
+                    V8 = default;
+                    Jint = default;
+                    JintError = default;
+                    break;
                 case JsHandleType.V8:
                     Jint = default;
                     JintError = default;
@@ -134,6 +139,8 @@ namespace Raven.Server.Documents.Patch
         {
             switch (Kind)
             {
+                case JsHandleType.Empty:
+                    break;
                 case JsHandleType.V8:
                     V8.Dispose();
                     break;
@@ -154,8 +161,16 @@ namespace Raven.Server.Documents.Patch
 
         public JsHandle Set(JsHandle value)
         {
-            return Kind switch
+            JsHandle setEmpty(JsHandle v)
             {
+                v.Kind = JsHandleType.Empty;
+                return v;
+            };
+                
+            Dispose();
+            return value.Kind switch
+            {
+                JsHandleType.Empty => setEmpty(this),
                 JsHandleType.V8 => V8.Set(value),
                 JsHandleType.Jint => Jint.Set(value),
                 JsHandleType.JintError => JintError.Set(value),
@@ -220,6 +235,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => null,
                     JsHandleType.V8 => V8.NativeObject,
                     JsHandleType.Jint => Jint.NativeObject,
                     _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
@@ -233,6 +249,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => true,
                     JsHandleType.V8 => V8.IsEmpty,
                     JsHandleType.Jint => Jint.IsEmpty,
                     JsHandleType.JintError => false,
@@ -247,6 +264,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => false,
                     JsHandleType.V8 => V8.IsUndefined,
                     JsHandleType.Jint => Jint.IsUndefined,
                     JsHandleType.JintError => false,
@@ -261,6 +279,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => false,
                     JsHandleType.V8 => V8.IsNull,
                     JsHandleType.Jint => Jint.IsNull,
                     JsHandleType.JintError => false,
@@ -276,6 +295,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => false,
                     JsHandleType.V8 => V8.IsNumberEx,
                     JsHandleType.Jint => Jint.IsNumberEx,
                     JsHandleType.JintError => false,
@@ -290,6 +310,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => false,
                     JsHandleType.V8 => V8.IsNumberOrIntEx,
                     JsHandleType.Jint => Jint.IsNumberOrIntEx,
                     JsHandleType.JintError => false,
@@ -304,6 +325,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => false,
                     JsHandleType.V8 => V8.IsStringEx,
                     JsHandleType.Jint => Jint.IsStringEx,
                     JsHandleType.JintError => false,
@@ -318,6 +340,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => false,
                     JsHandleType.V8 => V8.IsBoolean,
                     JsHandleType.Jint => Jint.IsBoolean,
                     JsHandleType.JintError => false,
@@ -332,6 +355,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => false,
                     JsHandleType.V8 => V8.IsInt32,
                     JsHandleType.Jint => Jint.IsInt32,
                     JsHandleType.JintError => false,
@@ -346,6 +370,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => false,
                     JsHandleType.V8 => V8.IsNumber,
                     JsHandleType.Jint => Jint.IsNumber,
                     JsHandleType.JintError => false,
@@ -360,6 +385,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => false,
                     JsHandleType.V8 => V8.IsString,
                     JsHandleType.Jint => Jint.IsString,
                     JsHandleType.JintError => false,
@@ -374,6 +400,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => false,
                     JsHandleType.V8 => V8.IsObject,
                     JsHandleType.Jint => Jint.IsObject,
                     JsHandleType.JintError => false,
@@ -388,6 +415,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => false,
                     JsHandleType.V8 => V8.IsFunction,
                     JsHandleType.Jint => Jint.IsFunction,
                     JsHandleType.JintError => false,
@@ -402,6 +430,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => false,
                     JsHandleType.V8 => V8.IsDate,
                     JsHandleType.Jint => Jint.IsDate,
                     JsHandleType.JintError => false,
@@ -416,6 +445,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => false,
                     JsHandleType.V8 => V8.IsArray,
                     JsHandleType.Jint => Jint.IsArray,
                     JsHandleType.JintError => false,
@@ -430,6 +460,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => false,
                     JsHandleType.V8 => V8.IsRegExp,
                     JsHandleType.Jint => Jint.IsRegExp,
                     JsHandleType.JintError => false,
@@ -444,6 +475,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => false,
                     JsHandleType.V8 => V8.IsObjectType,
                     JsHandleType.Jint => Jint.IsObjectType,
                     JsHandleType.JintError => false,
@@ -458,6 +490,7 @@ namespace Raven.Server.Documents.Patch
             {
                 return Kind switch
                 {
+                    JsHandleType.Empty => false,
                     JsHandleType.V8 => V8.IsError,
                     JsHandleType.Jint => Jint.IsError,
                     JsHandleType.JintError => true,
@@ -588,6 +621,8 @@ namespace Raven.Server.Documents.Patch
         {
             switch (Kind)
             {
+                case JsHandleType.Empty:
+                    break;
                 case JsHandleType.V8:
                     V8.ThrowOnError();
                     break;

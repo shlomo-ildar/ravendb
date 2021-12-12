@@ -189,7 +189,7 @@ namespace Raven.Server.Documents.Indexes.Static
                     EngineHandle.ResetCallStack();
                     EngineHandle.ResetConstraints();
 
-                    JsHandle jsRes = JsHandle.Empty(EngineHandle.EngineType);
+                    JsHandle jsRes = JsHandle.Empty;
                     try
                     {
                         using (var jsGrouping = ConstructGrouping(item))
@@ -272,7 +272,7 @@ namespace Raven.Server.Documents.Indexes.Static
                     return EngineHandle.CreateNullValue();
                 }
 
-                JsHandle jsRes = JsHandle.Empty(EngineHandle.EngineType);
+                JsHandle jsRes;
                 jsRes = EngineHandle.CreateObject();
                 foreach (var groupByField in _groupByFields)
                 {

@@ -70,7 +70,7 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
 
             var customPartitionValue = _config.CustomPartitionValue != null
                 ? EngineHandle.CreateValue(_config.CustomPartitionValue)
-                : JsHandle.Empty(EngineHandle.EngineType);
+                : JsHandle.Empty;
 
             EngineHandle.SetGlobalProperty(CustomPartition, customPartitionValue);
         }

@@ -116,7 +116,7 @@ namespace Raven.Server.Documents.Patch
                     };
                 }
 
-                var documentInstance = JsHandle.Empty(_jsOptions.EngineType);
+                JsHandle documentInstance = JsHandle.Empty;
                 var args = _patch.Args;
                 if (originalDocument == null)
                 {
