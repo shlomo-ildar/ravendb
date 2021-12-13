@@ -499,6 +499,8 @@ namespace Raven.Server.Documents.Patch
                         break;
                     case JSValueType.Bool:
                     case JSValueType.Number:
+                    case JSValueType.NumberObject:
+                    case JSValueType.Int32:
                         var a = V8EngineEx.ToNumber(args[0]);
                         var b = V8EngineEx.ToNumber(args[1]);
                         if (a > b)
@@ -514,6 +516,8 @@ namespace Raven.Server.Documents.Patch
                                 break;
                             case JSValueType.Bool:
                             case JSValueType.Number:
+                            case JSValueType.NumberObject:
+                            case JSValueType.Int32:
                                 // if the string value is a number that is smaller than
                                 // the numeric value, because Math.min(true, "-2") works :-(
                                 if (double.TryParse(args[0].AsString, out double d) == false ||
