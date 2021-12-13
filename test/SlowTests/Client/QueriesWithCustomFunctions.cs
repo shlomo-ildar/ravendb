@@ -1390,11 +1390,11 @@ from 'Users' as u select output(u)", query.ToString());
                     var query = from user in session.Query<User>()
                                 select new
                                 {
-                                    Date = RavenQuery.Raw<DateTime>("new Date(Date.parse(user.Birthday))"),
+                                    Date = RavenQuery.Raw<DateTime>("user.Birthday"),
                                     Name = RavenQuery.Raw<string>("user.Name.substr(0,3)"),
                                 };
 
-                    Assert.Equal("from 'Users' as user select { Date : new Date(Date.parse(user.Birthday)), Name : user.Name.substr(0,3) }",
+                    Assert.Equal("from 'Users' as user select { Date : user.Birthday, Name : user.Name.substr(0,3) }",
                         query.ToString());
 
                     var queryResult = query.ToList();
