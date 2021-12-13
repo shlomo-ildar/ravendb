@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Org.BouncyCastle.Asn1.X509.Qualified;
 using Raven.Client.Documents.Indexes;
 using Raven.Client.ServerWide.JavaScript;
@@ -14,6 +15,7 @@ namespace FastTests.Server.JavaScript
         OnlyV8,
         AllEngines
     }
+    
     public class JavaScriptEngineClassDataAttribute : ClassDataAttribute
     {
         public JavaScriptEngineClassDataAttribute() : base(typeof(JavaScriptEngineMode.AllJavaScriptEngines))
@@ -34,6 +36,11 @@ namespace FastTests.Server.JavaScript
 
     public class JavaScriptEngineMode
     {
+        public static JavaScriptEngineType Parse(string value)
+        {
+            return ((IEnumerable<JavaScriptEngineType>)Enum.Parse(typeof(JavaScriptEngineType), value)).First();
+        }
+    
         public class AllJavaScriptEngines : JavaScriptEngineTypeData
         {
             public AllJavaScriptEngines()
