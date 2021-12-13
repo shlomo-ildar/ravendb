@@ -1359,7 +1359,7 @@ from 'Users' as user select output(user)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
                         @"declare function output(u) {
-    var date = new Date(1960, 0, 1);
+    var date = new Date(Date.UTC(1960, 0, 1));
     return { Bday : u.Birthday, Date : date };
 }
 from 'Users' as u select output(u)", query.ToString());
