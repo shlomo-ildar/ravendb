@@ -1470,7 +1470,7 @@ namespace Raven.Client.Util
                     var writer = context.GetWriter();
                     using (writer.Operation(newExp))
                     {
-                        writer.Write("new Date(");
+                        writer.Write("new Date(Date.UTC(");
 
                         for (int i = 0; i < newExp.Arguments.Count; i++)
                         {
@@ -1489,7 +1489,7 @@ namespace Raven.Client.Util
                                 writer.Write(", ");
                             }
                         }
-                        writer.Write(")");
+                        writer.Write("))");
                     }
 
                     return;
