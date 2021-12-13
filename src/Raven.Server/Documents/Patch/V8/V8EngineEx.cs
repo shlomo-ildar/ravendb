@@ -24,8 +24,6 @@ namespace Raven.Server.Documents.Patch.V8
 {
     public class V8EngineEx : V8Engine, IJsEngineHandle
     {
-        private static V8EngineEx Instance = new V8EngineEx();
-        
         public class ContextEx
         {
             private Context _contextNative;
@@ -57,7 +55,7 @@ namespace Raven.Server.Documents.Patch.V8
                 if (jsOptions == null)
                     return;
                 string strictModeFlag = jsOptions.StrictMode ? "--use_strict" : "--no-use_strict";
-                string[] optionsCmd = {strictModeFlag};
+                string[] optionsCmd = {strictModeFlag}; //, "--max_old_space_size=1024"};
                 engine.SetFlagsFromCommandLine(optionsCmd);
                 MaxDuration = (int)jsOptions.MaxDuration.GetValue(TimeUnit.Milliseconds);
             }
@@ -74,6 +72,8 @@ namespace Raven.Server.Documents.Patch.V8
         
         public class JsConverter : IJsConverter
         {
+            public static JsConverter Instance = new();
+            
             public InternalHandle ConvertToJs(V8Engine engine, object obj, bool keepAlive = false)
             {
                 return obj switch 
@@ -355,7 +355,6 @@ var process = {
         public TypeBinder? TypeBinderBlittableObjectInstance;
         public TypeBinder? TypeBinderTask;
         public TypeBinder? TypeBinderTimeSeriesSegmentObjectInstance;
-        public TypeBinder? TypeBinderDynamicTimeSeriesEntries;
         public TypeBinder? TypeBinderDynamicTimeSeriesEntry;
         public TypeBinder? TypeBinderCounterEntryObjectInstance;
         public TypeBinder? TypeBinderAttachmentNameObjectInstance;
@@ -364,7 +363,7 @@ var process = {
         public TypeBinder? TypeBinderRavenServer;
         public TypeBinder? TypeBinderDocumentDatabase;
 
-        public V8EngineEx(IJavaScriptOptions? jsOptions = null) : base(false, jsConverter: new JsConverter())
+        public V8EngineEx(IJavaScriptOptions? jsOptions = null) : base(false, jsConverter: JsConverter.Instance)
         {
             if (jsOptions != null)
                 CreateContextEx(jsOptions);
@@ -396,11 +395,6 @@ var process = {
             TypeBinderTimeSeriesSegmentObjectInstance.OnGetObjectBinder = (tb, obj, initializeBinder)
                 => tb.CreateObjectBinder<TimeSeriesSegmentObjectInstanceV8.CustomBinder, TimeSeriesSegmentObjectInstanceV8>((TimeSeriesSegmentObjectInstanceV8)obj, initializeBinder, keepAlive: true);
             base.GlobalObject.SetProperty(typeof(TimeSeriesSegmentObjectInstanceV8));
-
-            TypeBinderDynamicTimeSeriesEntries = RegisterType<DynamicArray>(null, false);
-            TypeBinderDynamicTimeSeriesEntries.OnGetObjectBinder = (tb, obj, initializeBinder)
-                => tb.CreateObjectBinder<DynamicTimeSeriesEntriesCustomBinder, DynamicArray>((DynamicArray)obj, initializeBinder, keepAlive: true);
-            base.GlobalObject.SetProperty(typeof(DynamicArray));
 
             TypeBinderDynamicTimeSeriesEntry = RegisterType<DynamicTimeSeriesSegment.DynamicTimeSeriesEntry>(null, false);
             TypeBinderDynamicTimeSeriesEntry.OnGetObjectBinder = (tb, obj, initializeBinder)
