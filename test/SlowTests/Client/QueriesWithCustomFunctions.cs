@@ -1801,7 +1801,7 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
                                     EndsWith = u.Name.EndsWith("b"),
                                     Substr = u.Name.Substring(0, 2),
                                     Join = string.Join(", ", u.Name, u.LastName, u.IdNumber),
-                                    ArrayJoin = string.Join("-", u.Roles),
+                                    ArrayJoin = u.Roles != null ? string.Join("-", u.Roles) : null,
                                     Trim = u.Name.Trim(),
                                     ToUpper = u.Name.ToUpper(),
                                     ToLower = u.Name.ToLower(),
@@ -1825,7 +1825,7 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
                         "EndsWith : u.Name.endsWith(\"b\"), " +
                         "Substr : u.Name.substr(0, 2), " +
                         "Join : [u.Name,u.LastName,u.IdNumber].join(\", \"), " +
-                        "ArrayJoin : u.Roles.join(\"-\"), " +
+                        "ArrayJoin : u.Roles!=null?u.Roles.join(\"-\"):null, " +
                         "Trim : u.Name.trim(), " +
                         "ToUpper : u.Name.toUpperCase(), " +
                         "ToLower : u.Name.toLowerCase(), " +
