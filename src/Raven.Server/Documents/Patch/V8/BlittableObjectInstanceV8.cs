@@ -959,7 +959,7 @@ namespace Raven.Server.Documents.Patch.V8
 
                     case BlittableJsonToken.LazyNumber:
                         owner?.RecordNumericFieldType(key, BlittableJsonToken.LazyNumber);
-                        return GetJsValueForLazyNumber(owner?._engineEx, (LazyNumberValue)value);
+                        return GetJsValueForLazyNumber(_engineEx, (LazyNumberValue)value);
 
                     case BlittableJsonToken.String:
                         return _engine.CreateValue(value.ToString());
@@ -976,7 +976,7 @@ namespace Raven.Server.Documents.Patch.V8
                         switch (obj)
                         {
                             case BlittableJsonReaderArray blittableArray:
-                                return GetArrayInstanceFromBlittableArray(owner._engine, blittableArray, owner);
+                                return GetArrayInstanceFromBlittableArray(_engineEx, blittableArray, owner);
 
                             case LazyStringValue asLazyStringValue:
                                 return _engine.CreateValue(asLazyStringValue.ToString());
@@ -986,7 +986,7 @@ namespace Raven.Server.Documents.Patch.V8
 
                             default:
                                 blittable.NoCache = true;
-                                var boi = new BlittableObjectInstanceV8(owner._javaScriptUtils,
+                                var boi = new BlittableObjectInstanceV8(_javaScriptUtils,
                                     owner,
                                     blittable, null, null, null
                                 );
@@ -997,7 +997,7 @@ namespace Raven.Server.Documents.Patch.V8
                         _changed = true;
                         _parent.MarkChanged();
                         var array = (BlittableJsonReaderArray)value;
-                        return GetArrayInstanceFromBlittableArray(owner._engine, array, owner);
+                        return GetArrayInstanceFromBlittableArray(_engineEx, array, owner);
 
                     default:
                         throw new ArgumentOutOfRangeException(type.ToString());
