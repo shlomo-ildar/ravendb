@@ -15,6 +15,7 @@ using Raven.Client.Documents.Operations.Indexes;
 using Raven.Client.Documents.Queries;
 using Raven.Client.Documents.Queries.Timings;
 using Raven.Client.Documents.Session;
+using Raven.Client.ServerWide.JavaScript;
 using Raven.Server.Documents.Queries.Timings;
 using Raven.Tests.Core.Utils.Entities;
 using Tests.Infrastructure.Entities;
@@ -1795,6 +1796,8 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
                     var query = from u in session.Query<User>()
                                 select new
                                 {
+                                    //ArrayJoin = string.Join("-", u.Roles),
+
                                     PadLeft = u.Name.PadLeft(10, 'z'),
                                     PadRight = u.Name.PadRight(10, 'z'),
                                     StartsWith = u.Name.StartsWith("J"),
@@ -1841,10 +1844,13 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
                         "ReplaceArguments : u.Name.replace(new RegExp(u.Name, \"g\"), u.LastName), " +
                         "ReplaceArgumentsComplex : u.Name.replace(new RegExp((u.Name+\"a\"), \"g\"), (u.LastName+\"a\")) }", query.ToString());
 
+                    //var queryStr = query.ToString();
                     var queryResult = query.ToList();
 
                     Assert.Equal(3, queryResult.Count);
 
+                    //Assert.Equal("The-Grateful-Dead", queryResult[0].ArrayJoin);
+                    
                     Assert.Equal("Jerry".PadLeft(10, 'z'), queryResult[0].PadLeft);
                     Assert.Equal("Jerry".PadRight(10, 'z'), queryResult[0].PadRight);
                     Assert.True(queryResult[0].StartsWith);
