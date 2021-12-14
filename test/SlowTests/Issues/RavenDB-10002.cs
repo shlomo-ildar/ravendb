@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -17,10 +18,11 @@ namespace SlowTests.Issues
             public List<string> Properties;
         }
                         
-        [Fact]
-        public void CanHaveArrayInMetadata()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanHaveArrayInMetadata(string jsEngineType)
         {             
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {             
                 using (var session = store.OpenSession())
                 {
