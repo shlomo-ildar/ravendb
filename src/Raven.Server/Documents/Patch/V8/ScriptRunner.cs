@@ -169,7 +169,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -194,7 +194,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -304,7 +304,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -374,7 +374,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -470,7 +470,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -546,7 +546,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -559,7 +559,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -603,7 +603,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -649,7 +649,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -681,7 +681,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -721,7 +721,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -740,7 +740,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -868,7 +868,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -906,7 +906,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -985,7 +985,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -1002,7 +1002,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -1047,7 +1047,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -1059,7 +1059,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -1071,7 +1071,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -1222,7 +1222,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -1284,7 +1284,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -1307,7 +1307,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -1319,7 +1319,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -1331,7 +1331,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -1350,7 +1350,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -1418,7 +1418,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -1474,7 +1474,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -1552,7 +1552,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -1567,7 +1567,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -1582,7 +1582,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 
@@ -1599,7 +1599,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 catch (Exception e) 
                 {
-                    return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
                 }
             }
 

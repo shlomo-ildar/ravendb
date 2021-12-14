@@ -88,7 +88,7 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript.V8
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 

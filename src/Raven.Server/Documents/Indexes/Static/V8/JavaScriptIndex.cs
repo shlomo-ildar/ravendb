@@ -20,7 +20,7 @@ namespace Raven.Server.Documents.Indexes.Static
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 
@@ -35,7 +35,7 @@ namespace Raven.Server.Documents.Indexes.Static
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 
@@ -50,7 +50,7 @@ namespace Raven.Server.Documents.Indexes.Static
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 
@@ -65,7 +65,7 @@ namespace Raven.Server.Documents.Indexes.Static
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 
@@ -80,7 +80,7 @@ namespace Raven.Server.Documents.Indexes.Static
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 
@@ -95,7 +95,7 @@ namespace Raven.Server.Documents.Indexes.Static
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 
@@ -110,7 +110,7 @@ namespace Raven.Server.Documents.Indexes.Static
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
     }
@@ -155,7 +155,7 @@ namespace Raven.Server.Documents.Indexes.Static
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 
@@ -202,7 +202,7 @@ namespace Raven.Server.Documents.Indexes.Static
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 
@@ -231,7 +231,7 @@ namespace Raven.Server.Documents.Indexes.Static
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 
@@ -290,7 +290,7 @@ namespace Raven.Server.Documents.Indexes.Static
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
 
             InternalHandle ConvertToJsValueV8(object value)

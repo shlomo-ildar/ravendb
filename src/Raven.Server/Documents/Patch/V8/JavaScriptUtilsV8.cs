@@ -40,7 +40,7 @@ namespace Raven.Server.Documents.Patch.V8
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 
@@ -75,7 +75,7 @@ namespace Raven.Server.Documents.Patch.V8
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 
@@ -116,7 +116,7 @@ namespace Raven.Server.Documents.Patch.V8
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
 
             void ThrowInvalidFirstParameter()
@@ -164,7 +164,7 @@ namespace Raven.Server.Documents.Patch.V8
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
 
             void ThrowInvalidParameter()
@@ -204,7 +204,7 @@ namespace Raven.Server.Documents.Patch.V8
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 
@@ -216,7 +216,7 @@ namespace Raven.Server.Documents.Patch.V8
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 
@@ -280,7 +280,7 @@ namespace Raven.Server.Documents.Patch.V8
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 

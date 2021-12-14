@@ -48,7 +48,7 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 
@@ -157,7 +157,7 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 
@@ -179,7 +179,7 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
             }
             catch (Exception e) 
             {
-                return engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
     }

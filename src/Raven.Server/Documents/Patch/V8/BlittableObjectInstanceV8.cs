@@ -561,7 +561,7 @@ namespace Raven.Server.Documents.Patch.V8
             }
             catch (Exception e) 
             {
-                return _engine.CreateError(e.Message, JSValueType.ExecutionError);
+                return _engine.CreateError(e.ToString(), JSValueType.ExecutionError);
             }
         }
 
