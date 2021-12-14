@@ -16,7 +16,7 @@ namespace Raven.Server.Documents.Patch
         public ScriptRunnerResult(ScriptRunner.SingleRun parent, JsHandle instance)
         {
             _parent = parent;
-            Instance = new JsHandle(ref instance);
+            Instance = instance.Clone();
             _jsEngineType = Instance.EngineType;
         }
 
