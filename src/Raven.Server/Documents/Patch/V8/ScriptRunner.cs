@@ -772,7 +772,7 @@ namespace Raven.Server.Documents.Patch
                         return boi.Blittable.ToString();
                     }
 
-                    using (var blittable =  JsBlittableBridgeV8.Translate(_jsonCtx, ScriptEngineV8, obj.Object, isRoot: !recursive))
+                    using (var blittable =  JsBlittableBridgeV8.Translate(_jsonCtx, ScriptEngineV8, obj, isRoot: !recursive))
                     {
                         return blittable.ToString();
                     }
@@ -835,7 +835,7 @@ namespace Raven.Server.Documents.Patch
                     BlittableJsonReaderObject reader = null;
                     try
                     {
-                        reader = JsBlittableBridgeV8.Translate(_jsonCtx, ScriptEngineV8, args[1].Object, usageMode: BlittableJsonDocumentBuilder.UsageMode.ToDisk);
+                        reader = JsBlittableBridgeV8.Translate(_jsonCtx, ScriptEngineV8, args[1], usageMode: BlittableJsonDocumentBuilder.UsageMode.ToDisk);
 
                         var put = _database.DocumentsStorage.Put(
                             _docsCtx,
