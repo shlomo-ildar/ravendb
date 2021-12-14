@@ -407,6 +407,10 @@ namespace Raven.Server.Documents.Patch.V8
                     IBlittableObjectProperty modifiedValue = default;
                     var key = prop.Name;
                     var existInObject = obj.TryGetValue(key, out modifiedValue, out bool isDeleted);
+
+                    if (isDeleted)
+                        continue;
+
                     if (existInObject)
                     {
                         modifiedProperties ??= new HashSet<string>();
