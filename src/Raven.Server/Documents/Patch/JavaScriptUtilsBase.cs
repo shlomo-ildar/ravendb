@@ -157,7 +157,7 @@ namespace Raven.Server.Documents.Patch
         public JsHandle TranslateToJs(JsonOperationContext context, object o, bool keepAlive = false)
         {
             if (o is JsHandle jsValue)
-                return jsValue;
+                return jsValue.Clone();
 
             if (this is JavaScriptUtilsJint jsUtilsJint)
                 return new JsHandle(jsUtilsJint.TranslateToJs(context, o));
