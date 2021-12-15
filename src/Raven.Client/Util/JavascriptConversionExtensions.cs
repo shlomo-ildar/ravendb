@@ -19,16 +19,69 @@ using Sparrow.Extensions;
 
 namespace Raven.Client.Util
 {
+    public delegate void WriterAction(JavascriptWriter writer);
+    public delegate void ContextAction(JavascriptConversionContext context);
+
     internal class JavascriptConversionExtensions
     {
         internal const string TransparentIdentifier = "<>h__TransparentIdentifier";
         private const string DefaultAliasPrefix = "__rvn";
 
+        public static void WriteObjectPropertyAccess(JavascriptConversionContext context, ContextAction obj, WriterAction access,
+            ContextAction objWrapper = null)
+        {
+            ContextAction accessCtx = context =>
+            {
+                var writer = context.GetWriter();
+                access(writer);
+            };
+            WriteObjectPropertyAccess(context, obj, accessCtx,  objWrapper);
+        }
+
+        public static void WriteObjectPropertyAccess(JavascriptConversionContext context, ContextAction obj, ContextAction access, ContextAction objWrapper = null)
+        {
+            var writer = context.GetWriter();
+            
+            objWrapper ??= obj;
+            
+            bool canUseOptionalChaining = false;
+            if (canUseOptionalChaining)
+            {
+                objWrapper(context);
+                writer.Write("?");
+                access(context);
+            }
+            
+            var res = writer.ToString();
+            bool isNullCheckNeeded = !(res.EndsWith("]") || res.EndsWith("\""));
+            bool isNullCheckNeeded2 = isNullCheckNeeded;
+            if (isNullCheckNeeded)
+            {
+                writer.Write("(");
+                obj(context);
+                var res2 = writer.ToString();
+                isNullCheckNeeded2 = (objWrapper != obj) || !(res2.EndsWith("]") || res2.EndsWith("\""));
+                if (!isNullCheckNeeded2)
+                {
+                    access(context);
+                    writer.Write(")");
+                    return;
+                }
+
+                writer.Write($"!=null?");
+            }
+
+            objWrapper(context);
+            access(context);
+
+            if (isNullCheckNeeded)
+                writer.Write(":null)");
+        }
+        
         public class CustomMethods : JavascriptConversionExtension
         {
             public readonly Dictionary<string, object> Parameters = new Dictionary<string, object>();
             public int Suffix { get; set; }
-
             public override void ConvertToJavascript(JavascriptConversionContext context)
             {
                 var methodCallExpression = context.Node as MethodCallExpression;
@@ -235,32 +288,46 @@ namespace Raven.Client.Util
                     var writer = context.GetWriter();
                     using (writer.Operation(context.Node))
                     {
-                        writer.Write("Object.keys(");
-                        context.Visitor.Visit(context.Node);
-                        writer.Write(")");
-
-                        // Do not translate Key (we already have the keys here!)
-                        if (currentCall != DictionaryInnerCall.Key)
+                        ContextAction obj = context =>
                         {
-                            writer.Write(".map(function(a){");
+                            context.Visitor.Visit(context.Node);
+                        };
 
-                            switch (currentCall)
+                        ContextAction objWrapper = context =>
+                        {
+                            var writer = context.GetWriter();
+                            writer.Write("Object.keys(");
+                            obj(context);
+                            writer.Write(")");
+                        };
+
+                        WriterAction access = writer =>
+                        {
+                            // Do not translate Key (we already have the keys here!)
+                            if (currentCall != DictionaryInnerCall.Key)
                             {
-                                case DictionaryInnerCall.Value:
-                                    writer.Write("return ");
-                                    context.Visitor.Visit(context.Node);
-                                    writer.Write("[a];");
-                                    break;
+                                writer.Write(".map(function(a){");
 
-                                case DictionaryInnerCall.KeyValue:
-                                    writer.Write("return{Key: a,Value:");
-                                    context.Visitor.Visit(context.Node);
-                                    writer.Write("[a]};");
-                                    break;
+                                switch (currentCall)
+                                {
+                                    case DictionaryInnerCall.Value:
+                                        writer.Write("return ");
+                                        context.Visitor.Visit(context.Node);
+                                        writer.Write("[a];");
+                                        break;
+
+                                    case DictionaryInnerCall.KeyValue:
+                                        writer.Write("return{Key: a,Value:");
+                                        context.Visitor.Visit(context.Node);
+                                        writer.Write("[a]};");
+                                        break;
+                                }
+
+                                writer.Write("})");
                             }
+                        };
 
-                            writer.Write("})");
-                        }
+                        WriteObjectPropertyAccess(context, obj, access, objWrapper);
                     }
                 }
 
@@ -333,13 +400,24 @@ namespace Raven.Client.Util
                             }
 
                             context.PreventDefault();
-                            context.Visitor.Visit(methodCallExpression.Arguments[0]);
-                            var writer = context.GetWriter();
-                            using (writer.Operation(methodCallExpression))
+                            ContextAction obj = context =>
                             {
-                                writer.Write(".length > 0");
-                                return;
-                            }
+                                context.Visitor.Visit(methodCallExpression.Arguments[0]);
+                            };
+                                
+                            var writer = context.GetWriter();
+
+                            WriterAction access = writer =>
+                            {
+                                using (writer.Operation(methodCallExpression))
+                                {
+                                    writer.Write(".length");
+                                }
+                            };
+                            
+                            WriteObjectPropertyAccess(context, obj, access);
+                            writer.Write(" > 0");
+                            return;
                         }
                     case "All":
                         newName = "every";
@@ -2295,6 +2373,8 @@ namespace Raven.Client.Util
                 var writer = context.GetWriter();
                 context.PreventDefault();
 
+                ContextAction obj;
+                WriterAction access;
                 using (writer.Operation(mce))
                 {
                     switch (newName)
@@ -2306,14 +2386,22 @@ namespace Raven.Client.Util
                                 WriteArguments(context, mce.Arguments, writer, 1);
                                 writer.Write("]");
                             }
-                            else
+
+                            obj = context =>
                             {
                                 context.Visitor.Visit(mce.Arguments[1]);
-                            }
+                            };
+                            access = writer =>
+                            {
+                                writer.Write($".{newName}(");
+                                context.Visitor.Visit(mce.Arguments[0]);
+                                writer.Write(")");
+                            };
 
-                            writer.Write($".{newName}(");
-                            context.Visitor.Visit(mce.Arguments[0]);
-                            writer.Write(")");
+                            if (mce.Arguments.Count > 2)
+                                access(writer);
+                            else
+                                WriteObjectPropertyAccess(context, obj, access);
                             break;
 
                         case "nullOrEmpty":
@@ -2333,99 +2421,125 @@ namespace Raven.Client.Util
                             break;
 
                         case "toCharArray":
-                            context.Visitor.Visit(mce.Object);
-                            if (mce.Arguments.Count > 0)
+                            obj = context =>
                             {
-                                writer.Write(".substr(");
-                                context.Visitor.Visit(mce.Arguments[0]);
-                                writer.Write(", ");
-                                context.Visitor.Visit(mce.Arguments[1]);
-                                writer.Write(")");
-                            }
-                            writer.Write(".split('')");
+                                context.Visitor.Visit(mce.Object);
+                            };
+                            access = writer =>
+                            {
+                                if (mce.Arguments.Count > 0)
+                                {
+                                    writer.Write(".substr(");
+                                    context.Visitor.Visit(mce.Arguments[0]);
+                                    writer.Write(", ");
+                                    context.Visitor.Visit(mce.Arguments[1]);
+                                    writer.Write(")");
+                                }
+
+                                writer.Write(".split('')");
+                            };
+                            
+                            WriteObjectPropertyAccess(context, obj, access);
                             break;
 
                         case "format":
-                            context.Visitor.Visit(mce.Arguments[0]);
-                            writer.Write(".format(");
-                            if (mce.Arguments.Count == 2 && mce.Arguments[1] is NewArrayExpression nae)
+                            obj = context =>
                             {
-                                WriteArguments(context, nae.Expressions, writer);
-                            }
-                            else
+                                context.Visitor.Visit(mce.Arguments[0]);
+                            };
+                            access = writer =>
                             {
-                                WriteArguments(context, mce.Arguments, writer, 1);
-                            }
-                            writer.Write(")");
-                            break;
-
-                        default:
-                            context.Visitor.Visit(mce.Object);
-                            writer.Write($".{newName}(");
-
-                            if (newName == "split")
-                            {
-                                writer.Write("new RegExp(");
-                                if (mce.Arguments[0] is NewArrayExpression arrayExpression)
+                                writer.Write(".format(");
+                                if (mce.Arguments.Count == 2 && mce.Arguments[1] is NewArrayExpression nae)
                                 {
-                                    for (var i = 0; i < arrayExpression.Expressions.Count; i++)
-                                    {
-                                        if (i != 0)
-                                        {
-                                            writer.Write("+\"|\"+");
-                                        }
-
-                                        context.Visitor.Visit(arrayExpression.Expressions[i]);
-                                    }
-                                }
-                                else if (mce.Arguments[0] is MethodCallExpression mce2)
-                                {
-                                    var value = Expression.Lambda(mce2).Compile().DynamicInvoke();
-                                    switch (value)
-                                    {
-                                        case string s:
-                                            writer.WriteLiteral(s);
-                                            break;
-
-                                        case Array items:
-                                            for (var i = 0; i < items.Length; i++)
-                                            {
-                                                if (i != 0)
-                                                {
-                                                    writer.Write("+\"|\"+");
-                                                }
-
-                                                var str = items.GetValue(i).ToInvariantString();
-
-                                                writer.WriteLiteral(str);
-                                            }
-                                            break;
-
-                                        default:
-                                            throw new InvalidOperationException("Unable to understand how to convert " + value + " to RQL (" + value?.GetType() ?? "null" + ")");
-                                    }
+                                    WriteArguments(context, nae.Expressions, writer);
                                 }
                                 else
                                 {
-                                    context.Visitor.Visit(mce.Arguments[0]);
+                                    WriteArguments(context, mce.Arguments, writer, 1);
                                 }
 
-                                writer.Write(", \"g\")");
-                            }
-                            else if (newName == "replace")
-                            {
-                                writer.Write("new RegExp(");
-                                context.Visitor.Visit(mce.Arguments[0]);
-                                writer.Write(", \"g\"), ");
+                                writer.Write(")");
+                            };
+                            WriteObjectPropertyAccess(context, obj, access);
+                            break;
 
-                                context.Visitor.Visit(mce.Arguments[1]);
-                            }
-                            else
+                        default:
+                            obj = context =>
                             {
-                                WriteArguments(context, mce.Arguments, writer);
-                            }
+                                context.Visitor.Visit(mce.Object);
+                            };
+                            access = writer =>
+                            {
+                                writer.Write($".{newName}(");
 
-                            writer.Write(")");
+                                if (newName == "split")
+                                {
+                                    writer.Write("new RegExp(");
+                                    if (mce.Arguments[0] is NewArrayExpression arrayExpression)
+                                    {
+                                        for (var i = 0; i < arrayExpression.Expressions.Count; i++)
+                                        {
+                                            if (i != 0)
+                                            {
+                                                writer.Write("+\"|\"+");
+                                            }
+
+                                            context.Visitor.Visit(arrayExpression.Expressions[i]);
+                                        }
+                                    }
+                                    else if (mce.Arguments[0] is MethodCallExpression mce2)
+                                    {
+                                        var value = Expression.Lambda(mce2).Compile().DynamicInvoke();
+                                        switch (value)
+                                        {
+                                            case string s:
+                                                writer.WriteLiteral(s);
+                                                break;
+
+                                            case Array items:
+                                                for (var i = 0; i < items.Length; i++)
+                                                {
+                                                    if (i != 0)
+                                                    {
+                                                        writer.Write("+\"|\"+");
+                                                    }
+
+                                                    var str = items.GetValue(i).ToInvariantString();
+
+                                                    writer.WriteLiteral(str);
+                                                }
+
+                                                break;
+
+                                            default:
+                                                throw new InvalidOperationException("Unable to understand how to convert " + value + " to RQL (" + value?.GetType() ??
+                                                                                    "null" + ")");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        context.Visitor.Visit(mce.Arguments[0]);
+                                    }
+
+                                    writer.Write(", \"g\")");
+                                }
+                                else if (newName == "replace")
+                                {
+                                    writer.Write("new RegExp(");
+                                    context.Visitor.Visit(mce.Arguments[0]);
+                                    writer.Write(", \"g\"), ");
+
+                                    context.Visitor.Visit(mce.Arguments[1]);
+                                }
+                                else
+                                {
+                                    WriteArguments(context, mce.Arguments, writer);
+                                }
+
+                                writer.Write(")");
+                            };
+                            WriteObjectPropertyAccess(context, obj, access);
 
                             if (mce.Method.Name == "Contains")
                             {
