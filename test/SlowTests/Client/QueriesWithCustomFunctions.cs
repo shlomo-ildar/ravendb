@@ -1796,15 +1796,13 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
                     var query = from u in session.Query<User>()
                                 select new
                                 {
-                                    //ArrayJoin = string.Join("-", u.Roles),
-
                                     PadLeft = u.Name.PadLeft(10, 'z'),
                                     PadRight = u.Name.PadRight(10, 'z'),
                                     StartsWith = u.Name.StartsWith("J"),
                                     EndsWith = u.Name.EndsWith("b"),
                                     Substr = u.Name.Substring(0, 2),
                                     Join = string.Join(", ", u.Name, u.LastName, u.IdNumber),
-                                    ArrayJoin = u.Roles != null ? string.Join("-", u.Roles) : null,
+                                    ArrayJoin = string.Join("-", u.Roles),
                                     Trim = u.Name.Trim(),
                                     ToUpper = u.Name.ToUpper(),
                                     ToLower = u.Name.ToLower(),
@@ -1822,35 +1820,32 @@ from 'Users' as u load u.FriendId as _doc_0 select output(u, _doc_0)", query.ToS
                                     ReplaceArgumentsComplex = u.Name.Replace(u.Name + "a", u.LastName + "a")
                                 };
                     Assert.Equal("from 'Users' as u select { " +
-                        "PadLeft : u.Name.padStart(10, \"z\"), " +
-                        "PadRight : u.Name.padEnd(10, \"z\"), " +
-                        "StartsWith : u.Name.startsWith(\"J\"), " +
-                        "EndsWith : u.Name.endsWith(\"b\"), " +
-                        "Substr : u.Name.substr(0, 2), " +
-                        "Join : [u.Name,u.LastName,u.IdNumber].join(\", \"), " +
-                        "ArrayJoin : u.Roles!=null?u.Roles.join(\"-\"):null, " +
-                        "Trim : u.Name.trim(), " +
-                        "ToUpper : u.Name.toUpperCase(), " +
-                        "ToLower : u.Name.toLowerCase(), " +
-                        "Contains : u.Name.indexOf(\"e\") !== -1, " +
+                        "PadLeft : (u.Name!=null?u.Name.padStart(10, \"z\"):null), " +
+                        "PadRight : (u.Name!=null?u.Name.padEnd(10, \"z\"):null), " +
+                        "StartsWith : (u.Name!=null?u.Name.startsWith(\"J\"):null), " +
+                        "EndsWith : (u.Name!=null?u.Name.endsWith(\"b\"):null), " +
+                        "Substr : (u.Name!=null?u.Name.substr(0, 2):null), " +
+                        "Join : ([u.Name,u.LastName,u.IdNumber].join(\", \")), " +
+                        "ArrayJoin : (u.Roles!=null?u.Roles.join(\"-\"):null), " +
+                        "Trim : (u.Name!=null?u.Name.trim():null), " +
+                        "ToUpper : (u.Name!=null?u.Name.toUpperCase():null), " +
+                        "ToLower : (u.Name!=null?u.Name.toLowerCase():null), " +
+                        "Contains : (u.Name!=null?u.Name.indexOf(\"e\"):null) !== -1, " +
                         "Format : \"Name: \"+u.Name+\", LastName : \"+u.LastName, " +
-                        "Split : u.Name.split(new RegExp(\"r\", \"g\")), " +
-                        "SplitLimit : u.Name.split(new RegExp(\"r\", \"g\")), " +
-                        "SplitArray : u.Name.split(new RegExp(\"r\"+\"|\"+\"e\", \"g\")), " +
-                        "SplitArgument : u.Name.split(new RegExp(u.Roles, \"g\")), " +
-                        "SplitStringArray : u.Name.split(new RegExp(\"er\"+\"|\"+\"rr\", \"g\")), " +
-                        "Replace : u.Name.replace(new RegExp(\"r\", \"g\"), \"d\"), " +
-                        "ReplaceString : u.Name.replace(new RegExp(\"Jerry\", \"g\"), \"Charly\"), " +
-                        "ReplaceArguments : u.Name.replace(new RegExp(u.Name, \"g\"), u.LastName), " +
-                        "ReplaceArgumentsComplex : u.Name.replace(new RegExp((u.Name+\"a\"), \"g\"), (u.LastName+\"a\")) }", query.ToString());
+                        "Split : (u.Name!=null?u.Name.split(new RegExp(\"r\", \"g\")):null), " +
+                        "SplitLimit : (u.Name!=null?u.Name.split(new RegExp(\"r\", \"g\")):null), " +
+                        "SplitArray : (u.Name!=null?u.Name.split(new RegExp(\"r\"+\"|\"+\"e\", \"g\")):null), " +
+                        "SplitArgument : (u.Name!=null?u.Name.split(new RegExp(u.Roles, \"g\")):null), " +
+                        "SplitStringArray : (u.Name!=null?u.Name.split(new RegExp(\"er\"+\"|\"+\"rr\", \"g\")):null), " +
+                        "Replace : (u.Name!=null?u.Name.replace(new RegExp(\"r\", \"g\"), \"d\"):null), " +
+                        "ReplaceString : (u.Name!=null?u.Name.replace(new RegExp(\"Jerry\", \"g\"), \"Charly\"):null), " +
+                        "ReplaceArguments : (u.Name!=null?u.Name.replace(new RegExp(u.Name, \"g\"), u.LastName):null), " +
+                        "ReplaceArgumentsComplex : (u.Name!=null?u.Name.replace(new RegExp((u.Name+\"a\"), \"g\"), (u.LastName+\"a\")):null) }", query.ToString());
 
-                    //var queryStr = query.ToString();
                     var queryResult = query.ToList();
 
                     Assert.Equal(3, queryResult.Count);
 
-                    //Assert.Equal("The-Grateful-Dead", queryResult[0].ArrayJoin);
-                    
                     Assert.Equal("Jerry".PadLeft(10, 'z'), queryResult[0].PadLeft);
                     Assert.Equal("Jerry".PadRight(10, 'z'), queryResult[0].PadRight);
                     Assert.True(queryResult[0].StartsWith);
