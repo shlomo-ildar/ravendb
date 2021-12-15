@@ -11,7 +11,6 @@ using Tests.Infrastructure.Entities;
 using Xunit;
 using Xunit.Abstractions;
 
-
 namespace SlowTests.Client.Counters
 {
     public class QueryOnCounters : RavenTestBase
