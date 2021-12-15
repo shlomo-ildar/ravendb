@@ -194,7 +194,7 @@ namespace SlowTests.Issues
     var sum = order.Lines.map(function(l){return l.PricePerUnit*l.Quantity;}).reduce(function(a, b) { return a + b; }, 0);
     return { Sum : sum };
 }
-from 'Orders' as __alias0 where __alias0.Company = $p0 select output(__alias0)".Replace("    ", "\t"), query.ToString());
+from 'Orders' as __alias0 where __alias0.Company = $p0 select output(__alias0)", query.ToString());
 
                     var result = query.ToList();
 
@@ -275,7 +275,7 @@ from 'Orders' as __alias0 where __alias0.Company = $p0 select output(__alias0)".
     var sum = order.Lines.map(function(l){return l.PricePerUnit*l.Quantity*_load.AccountsReceivable;}).reduce(function(a, b) { return a + b; }, 0);
     return { Comapny : _load, Sum : sum, Employees : update.map(function(e){return e.FirstName;}) };
 }
-from 'Orders' as __alias0 select output(__alias0)".Replace("    ", "\t"), query.ToString());
+from 'Orders' as __alias0 select output(__alias0)", query.ToString());
 
                     var result = query.ToList();
 
@@ -323,7 +323,7 @@ from 'Orders' as __alias0 select output(__alias0)".Replace("    ", "\t"), query.
     var update = __alias0;
     return { Company : update.Name };
 }
-from 'Orders' as o load o.Company as __alias0 select output(o, __alias0)".Replace("    ", "\t"), query.ToString());
+from 'Orders' as o load o.Company as __alias0 select output(o, __alias0)", query.ToString());
 
                     var result = query.ToList();
 
@@ -438,7 +438,7 @@ from 'Orders' as o load o.Company as __alias0 select output(o, __alias0)".Replac
     var employees = load(update.EmployeesIds);
     return { Company : update.Name, Employees : employees.map(function(e){return e.FirstName;}) };
 }
-from 'Orders' as o load o.Company as __alias0 select output(o, __alias0)".Replace("    ", "\t"), query.ToString());
+from 'Orders' as o load o.Company as __alias0 select output(o, __alias0)", query.ToString());
 
                     var result = query.ToList();
 
@@ -494,7 +494,7 @@ from 'Orders' as o load o.Company as __alias0 select output(o, __alias0)".Replac
     var _function = o.Lines.map(function(l){return l.PricePerUnit*l.Quantity;}).reduce(function(a, b) { return a + b; }, 0);
     return { Sum : _function };
 }
-from 'Orders' as o select output(o)".Replace("    ", "\t"), query.ToString());
+from 'Orders' as o select output(o)", query.ToString());
 
                     var result = query.ToList();
 
@@ -554,7 +554,7 @@ from 'Orders' as o select output(o)".Replace("    ", "\t"), query.ToString());
     var _var = load(_function.EmployeesIds);
     return { Company : _function, Number : _super, Employees : _var.map(function(e){return e.FirstName;}) };
 }
-from 'Orders' as o load o.Company as _function select output(o, _function)".Replace("    ", "\t"), query.ToString());
+from 'Orders' as o load o.Company as _function select output(o, _function)", query.ToString());
 
                     var result = query.ToList();
 
