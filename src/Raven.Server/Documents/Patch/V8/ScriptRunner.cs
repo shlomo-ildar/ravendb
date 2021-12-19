@@ -146,22 +146,10 @@ namespace Raven.Server.Documents.Patch
                         throw new ArgumentException($"{_timeSeriesSignature}: This method requires 2 arguments but was called with {args.Length}");
 
                     var obj = ScriptEngineV8.CreateObject();
-                    using (var jsFuncAppend = ScriptEngineV8.CreateClrCallBack(AppendTimeSeries, true))
-                    {
-                        obj.SetProperty("append", jsFuncAppend);
-                    }
-                    using (var jsFuncDelete = ScriptEngineV8.CreateClrCallBack(DeleteRangeTimeSeries, true))
-                    {
-                        obj.SetProperty("delete", jsFuncDelete);
-                    }
-                    using (var jsFuncGetRange = ScriptEngineV8.CreateClrCallBack(GetRangeTimeSeries, true))
-                    {
-                        obj.SetProperty("get", jsFuncGetRange);
-                    }
-                    using (var jsFuncGetStats = ScriptEngineV8.CreateClrCallBack(GetStatsTimeSeries, true))
-                    {
-                        obj.SetProperty("getStats", jsFuncGetStats);
-                    }
+                    obj.SetProperty("append", AppendTimeSeries.V8.Item.Clone());
+                    obj.SetProperty("delete", DeleteRangeTimeSeries.V8.Item.Clone());
+                    obj.SetProperty("get", GetRangeTimeSeries.V8.Item.Clone());
+                    obj.SetProperty("getStats", GetStatsTimeSeries.V8.Item.Clone());
                     obj.SetProperty("doc", args[0]);
                     obj.SetProperty("name", args[1]);
 
@@ -173,7 +161,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle GetStatsTimeSeries(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+            private InternalHandle GetStatsTimeSeriesV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
             {
                 try
                 {
@@ -198,7 +186,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle AppendTimeSeries(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+            private InternalHandle AppendTimeSeriesV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
             {
                 try
                 {
@@ -308,7 +296,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle DeleteRangeTimeSeries(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+            private InternalHandle DeleteRangeTimeSeriesV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
             {
                 try
                 {
@@ -378,7 +366,7 @@ namespace Raven.Server.Documents.Patch
                 }
             }
 
-            private InternalHandle GetRangeTimeSeries(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+            private InternalHandle GetRangeTimeSeriesV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
             {
                 try
                 {
@@ -420,28 +408,19 @@ namespace Raven.Server.Documents.Patch
                             {
                                 jsSpanItems[i] = ScriptEngineV8.CreateValue(valuesSpan[i]);
                             }
-                            using (var jsValues = ScriptEngineV8.CreateArray(Array.Empty<InternalHandle>()))
+
+                            using (var entry = ScriptEngineV8.CreateObject())
                             {
-                                //jsValues.FastAddProperty("length", ScriptEngineV8.CreateValue(0), true, false, false);
+                                entry.SetProperty(nameof(TimeSeriesEntry.Timestamp), engine.CreateValue(singleResult.Timestamp.GetDefaultRavenFormat(isUtc: true)));
+                                entry.SetProperty(nameof(TimeSeriesEntry.Tag), singleResult.Tag == null ? engine.CreateNullValue() : engine.CreateValue(singleResult.Tag.ToString()));
+                                entry.SetProperty(nameof(TimeSeriesEntry.Values), ScriptEngineV8.CreateArrayWithDisposal(jsSpanItems));
+                                entry.SetProperty(nameof(TimeSeriesEntry.IsRollup), engine.CreateValue(singleResult.Type == SingleResultType.RolledUp));
                                 
-                                using (var jsResPush = jsValues.Call("push", InternalHandle.Empty, jsSpanItems)) // KeepAlive to each item has been done earlier (upper)
-                                    jsResPush.ThrowOnError(); // TODO check if is needed here
-                                
+                                using (var jsResPush = entries.StaticCall("push", entry))
+                                    jsResPush.ThrowOnError();
                                 if (noEntries)
                                     noEntries = false;
-
-                                using (var entry = ScriptEngineV8.CreateObject())
-                                {
-                                    entry.SetProperty(nameof(TimeSeriesEntry.Timestamp), engine.CreateValue(singleResult.Timestamp.GetDefaultRavenFormat(isUtc: true)));
-                                    entry.SetProperty(nameof(TimeSeriesEntry.Tag), engine.CreateValue(singleResult.Tag?.ToString()));
-                                    entry.SetProperty(nameof(TimeSeriesEntry.Values), jsValues);
-                                    entry.SetProperty(nameof(TimeSeriesEntry.IsRollup), engine.CreateValue(singleResult.Type == SingleResultType.RolledUp));
-                                    
-                                    using (var jsResPush = jsValues.Call("push", InternalHandle.Empty, entry))
-                                        jsResPush.ThrowOnError(); // TODO check if is needed here
-                                }
                             }
-                            V8Engine.Dispose(jsSpanItems);
 
                             if (DebugMode)
                             {
