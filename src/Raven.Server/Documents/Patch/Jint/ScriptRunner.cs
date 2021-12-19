@@ -153,16 +153,16 @@ namespace Raven.Server.Documents.Patch
                     throw new ArgumentException($"{_timeSeriesSignature}: This method requires 2 arguments but was called with {args.Length}");
 
                 var append = new ClrFunctionInstance(ScriptEngineJint, "append", (thisObj, values) =>
-                    AppendTimeSeries(thisObj.Get("doc"), thisObj.Get("name"), values));
+                    AppendTimeSeriesJint(thisObj.Get("doc"), thisObj.Get("name"), values));
 
                 var delete = new ClrFunctionInstance(ScriptEngineJint, "delete", (thisObj, values) =>
-                    DeleteRangeTimeSeries(thisObj.Get("doc"), thisObj.Get("name"), values));
+                    DeleteRangeTimeSeriesJint(thisObj.Get("doc"), thisObj.Get("name"), values));
 
                 var get = new ClrFunctionInstance(ScriptEngineJint, "get", (thisObj, values) =>
-                    GetRangeTimeSeries(thisObj.Get("doc"), thisObj.Get("name"), values));
+                    GetRangeTimeSeriesJint(thisObj.Get("doc"), thisObj.Get("name"), values));
 
                 var getStats = new ClrFunctionInstance(ScriptEngineJint, "getStats", (thisObj, values) =>
-                    GetStatsTimeSeries(thisObj.Get("doc"), thisObj.Get("name"), values));
+                    GetStatsTimeSeriesJint(thisObj.Get("doc"), thisObj.Get("name"), values));
 
                 var obj = new ObjectInstance(ScriptEngineJint);
                 obj.Set("append", append);
@@ -175,7 +175,7 @@ namespace Raven.Server.Documents.Patch
                 return obj;
             }
 
-            private JsValue GetStatsTimeSeries(JsValue document, JsValue name, JsValue[] args)
+            private JsValue GetStatsTimeSeriesJint(JsValue document, JsValue name, JsValue[] args)
             {
                 var (id, doc) = GetIdAndDocFromArg(document, _timeSeriesSignature);
 
@@ -190,7 +190,7 @@ namespace Raven.Server.Documents.Patch
                 return tsStats;
             }
 
-            private JsValue AppendTimeSeries(JsValue document, JsValue name, JsValue[] args)
+            private JsValue AppendTimeSeriesJint(JsValue document, JsValue name, JsValue[] args)
             {
                 AssertValidDatabaseContext("timeseries(doc, name).append");
 
@@ -291,7 +291,7 @@ namespace Raven.Server.Documents.Patch
                 return Undefined.Instance;
             }
 
-            private JsValue DeleteRangeTimeSeries(JsValue document, JsValue name, JsValue[] args)
+            private JsValue DeleteRangeTimeSeriesJint(JsValue document, JsValue name, JsValue[] args)
             {
                 AssertValidDatabaseContext("timeseries(doc, name).delete");
 
@@ -351,7 +351,7 @@ namespace Raven.Server.Documents.Patch
                 return JsValue.Undefined;
             }
 
-            private JsValue GetRangeTimeSeries(JsValue document, JsValue name, JsValue[] args)
+            private JsValue GetRangeTimeSeriesJint(JsValue document, JsValue name, JsValue[] args)
             {
                 AssertValidDatabaseContext("get");
 
