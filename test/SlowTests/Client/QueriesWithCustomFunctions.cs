@@ -106,7 +106,7 @@ namespace SlowTests.Client
                         .Select(u => new { u.Name, Age = DateTime.Today - u.Birthday });
 
                     Assert.Equal("from 'Users' as u select { " +
-                                 "Name : u.Name, Age : compareDates(new Date(new Date().setHours(0,0,0,0)), u.Birthday) }",
+                                 "Name : u.Name, Age : compareDates(new Date(new Date().setUTCHours(0,0,0,0)), u.Birthday) }",
                                 query.ToString());
 
                     var queryResult = query.ToList();
