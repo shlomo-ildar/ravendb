@@ -368,7 +368,7 @@ namespace Raven.Server.Documents.Patch.Jint
                 }
 
                 var jsArray = new ArrayInstance(e, items);
-                jsArray.SetPrototypeOf(e.Array.PrototypeObject);
+                jsArray.SetPrototypeOf(e.Realm.Intrinsics.Array.PrototypeObject);
 
                 return jsArray;
             }
@@ -464,7 +464,7 @@ namespace Raven.Server.Documents.Patch.Jint
             _blittable = blittable;
             _documentId = id;
 
-            SetPrototypeOf(engine.Object.PrototypeObject);
+            SetPrototypeOf(engine.Realm.Intrinsics.Object.PrototypeObject);
         }
 
         public BlittableObjectInstanceJint(Engine engine,

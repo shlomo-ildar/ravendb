@@ -205,11 +205,11 @@ namespace Raven.Server.Documents.Patch.Jint
                 }
                 else if (target is IEnumerable enumerable)
                 {
-                    var jsArray = (ArrayInstance)_engine.Array.Construct(Arguments.Empty);
+                    var jsArray = (ArrayInstance)_engine.Realm.Intrinsics.Array.Construct(Arguments.Empty);
                     foreach (var item in enumerable)
                     {
                         var jsItem = JsValue.FromObject(_engine, item);
-                        _engine.Array.PrototypeObject.Push(jsArray, Arguments.From(jsItem));
+                        _engine.Realm.Intrinsics.Array.PrototypeObject.Push(jsArray, Arguments.From(jsItem));
                     }
                     WriteArray(jsArray);
                 }

@@ -167,7 +167,7 @@ namespace Raven.Server.Documents.ETL
             if (Current.Document.TryGetMetadata(out var metadata) == false ||
                 metadata.TryGet(Constants.Documents.Metadata.Attachments, out BlittableJsonReaderArray attachmentsBlittableArray) == false)
             {
-                return engine.Array.Construct(Array.Empty<JsValue>());
+                return engine.Realm.Intrinsics.Array.Construct(Array.Empty<JsValue>());
             }
 
             var attachments = new JsValue[attachmentsBlittableArray.Length];
@@ -177,7 +177,7 @@ namespace Raven.Server.Documents.ETL
                 attachments[i] = DocumentScript.TranslateToJs(Context, attachmentsBlittableArray[i]).Jint.Item;
             }
 
-            return engine.Array.Construct(attachments);
+            return engine.Realm.Intrinsics.Array.Construct(attachments);
         }
 
         private JsValue HasAttachmentJint(JsValue self, JsValue[] args)
@@ -218,7 +218,7 @@ namespace Raven.Server.Documents.ETL
             if (Current.Document.TryGetMetadata(out var metadata) == false ||
                 metadata.TryGet(Constants.Documents.Metadata.Counters, out BlittableJsonReaderArray countersArray) == false)
             {
-                return engine.Array.Construct(Array.Empty<JsValue>());
+                return engine.Realm.Intrinsics.Array.Construct(Array.Empty<JsValue>());
             }
 
             var counters = new JsValue[countersArray.Length];
@@ -228,7 +228,7 @@ namespace Raven.Server.Documents.ETL
                 counters[i] = DocumentScript.TranslateToJs(Context, countersArray[i]).Jint.Item;
             }
 
-            return engine.Array.Construct(counters);
+            return engine.Realm.Intrinsics.Array.Construct(counters);
         }
 
         private JsValue HasCounterJint(JsValue self, JsValue[] args)
@@ -273,7 +273,7 @@ namespace Raven.Server.Documents.ETL
             if (Current.Document.TryGetMetadata(out var metadata) == false ||
                 metadata.TryGet(Constants.Documents.Metadata.TimeSeries, out BlittableJsonReaderArray timeSeriesArray) == false)
             {
-                return engine.Array.Construct(Array.Empty<JsValue>());
+                return engine.Realm.Intrinsics.Array.Construct(Array.Empty<JsValue>());
             }
 
             var timeSeriesNames = new JsValue[timeSeriesArray.Length];
@@ -281,7 +281,7 @@ namespace Raven.Server.Documents.ETL
             {
                 timeSeriesNames[i] = DocumentScript.TranslateToJs(Context, timeSeriesArray[i]).Jint.Item;
             }
-            return engine.Array.Construct(timeSeriesNames);
+            return engine.Realm.Intrinsics.Array.Construct(timeSeriesNames);
         }
 
         private JsValue HasTimeSeriesJint(JsValue self, JsValue[] args)

@@ -183,8 +183,8 @@ namespace Raven.Server.Documents.Patch
                 var stats = _database.DocumentsStorage.TimeSeriesStorage.Stats.GetStats(_docsCtx, id, timeSeries);
 
                 var tsStats = new ObjectInstance(ScriptEngineJint);
-                tsStats.Set(nameof(stats.Start), ScriptEngineJint.Date.Construct(stats.Start));
-                tsStats.Set(nameof(stats.End), ScriptEngineJint.Date.Construct(stats.End));
+                tsStats.Set(nameof(stats.Start), ScriptEngineJint.Realm.Intrinsics.Date.Construct(stats.Start));
+                tsStats.Set(nameof(stats.End), ScriptEngineJint.Realm.Intrinsics.Date.Construct(stats.End));
                 tsStats.Set(nameof(stats.Count), stats.Count);
 
                 return tsStats;
@@ -389,7 +389,7 @@ namespace Raven.Server.Documents.Patch
                     }
                     var jsValues = new ArrayInstance(ScriptEngineJint);
                     jsValues.FastAddProperty("length", 0, true, false, false);
-                    ScriptEngineJint.Array.PrototypeObject.Push(jsValues, v);
+                    ScriptEngineJint.Realm.Intrinsics.Array.PrototypeObject.Push(jsValues, v);
 
                     var entry = new ObjectInstance(ScriptEngineJint);
                     entry.Set(nameof(TimeSeriesEntry.Timestamp), singleResult.Timestamp.GetDefaultRavenFormat(isUtc: true));
@@ -421,7 +421,7 @@ namespace Raven.Server.Documents.Patch
                     });
                 }
 
-                return ScriptEngineJint.Array.Construct(entries.ToArray());
+                return ScriptEngineJint.Realm.Intrinsics.Array.Construct(entries.ToArray());
             }
 
             private void GenericSortTwoElementArray(JsValue[] args, [CallerMemberName] string caller = null)
@@ -870,14 +870,14 @@ namespace Raven.Server.Documents.Patch
 
                     if (args[0].IsArray())
                     {
-                        var results = (ArrayInstance)ScriptEngineJint.Array.Construct(Array.Empty<JsValue>());
+                        var results = (ArrayInstance)ScriptEngineJint.Realm.Intrinsics.Array.Construct(Array.Empty<JsValue>());
                         var arrayInstance = args[0].AsArray();
                         foreach (var kvp in arrayInstance.GetOwnPropertiesWithoutLength())
                         {
                             if (kvp.Value.Value.IsString() == false)
                                 throw new InvalidOperationException("load(ids) must be called with a array of strings, but got " + kvp.Value.Value.Type + " - " + kvp.Value.Value);
                             var result = LoadDocumentInternalJint(kvp.Value.Value.AsString());
-                            ScriptEngineJint.Array.PrototypeObject.Push(results, new[] { result });
+                            ScriptEngineJint.Realm.Intrinsics.Array.PrototypeObject.Push(results, new[] { result });
                         }
                         return results;
                     }

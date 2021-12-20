@@ -26,13 +26,13 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript.Jint
         public JsValue Execute()
         {
             if (_item == null)
-                return _engine.Array.Construct(0);
+                return _engine.Realm.Intrinsics.Array.Construct(0);
 
-            var current = NullIfEmptyEnumerable(_func.Invoke(_item));
+            var current = NullIfEmptyEnumerable(_engine.Invoke(_func, _item));
             if (current == null)
             {
                 _result.Add(_item);
-                return _engine.Array.Construct(_result.ToArray());
+                return _engine.Realm.Intrinsics.Array.Construct(_result.ToArray());
             }
 
             _queue.Enqueue(_item);
@@ -50,7 +50,7 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript.Jint
                     AddItem(currentJs);
             }
 
-            return _engine.Array.Construct(_result.ToArray());
+            return _engine.Realm.Intrinsics.Array.Construct(_result.ToArray());
         }
 
         private void AddItem(JsValue current)
@@ -59,7 +59,7 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript.Jint
                 return;
 
             _result.Add(current);
-            var result = NullIfEmptyEnumerable(_func.Invoke(current));
+            var result = NullIfEmptyEnumerable(_engine.Invoke(_func, current));
             if (result != null)
                 _queue.Enqueue(result);
         }

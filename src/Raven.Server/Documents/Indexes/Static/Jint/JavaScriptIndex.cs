@@ -188,7 +188,7 @@ namespace Raven.Server.Documents.Indexes.Static
                 if (keys.Length == 0)
                     return DynamicJsNullJint.ImplicitNullJint;
 
-                var values = EngineJint.Array.Construct(keys.Length);
+                var values = EngineJint.Realm.Intrinsics.Array.Construct(keys.Length);
                 var arrayArgs = new JsValue[1];
                 for (uint i = 0; i < keys.Length; i++)
                 {
@@ -199,7 +199,7 @@ namespace Raven.Server.Documents.Indexes.Static
                     object value = CurrentIndexingScope.Current.LoadCompareExchangeValue(null, key.AsString());
                     arrayArgs[0] = ConvertToJsValueJint(value);
 
-                    EngineJint.Array.PrototypeObject.Push(values, args);
+                    EngineJint.Realm.Intrinsics.Array.PrototypeObject.Push(values, args);
                 }
 
                 return values;

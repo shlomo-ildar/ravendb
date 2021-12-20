@@ -80,11 +80,11 @@ namespace Raven.Server.Documents.Patch.Jint
             for (var i = 0; i < attachments.Length; i++)
                 attachmentsArray[i] = new AttachmentNameObjectInstanceJint(Engine, (BlittableJsonReaderObject)attachments[i]);
 
-            return Engine.Array.Construct(attachmentsArray);
+            return Engine.Realm.Intrinsics.Array.Construct(attachmentsArray);
 
             static ArrayInstance EmptyArray(Engine engine)
             {
-                return engine.Array.Construct(0);
+                return engine.Realm.Intrinsics.Array.Construct(0);
             }
         }
 
@@ -154,8 +154,8 @@ namespace Raven.Server.Documents.Patch.Jint
             for (var i = 0; i < values.Length; i++)
                 values[i] = new AttachmentObjectInstanceJint(Engine, attachments[i]);
 
-            var array = Engine.Array.Construct(Arguments.Empty);
-            Engine.Array.PrototypeObject.Push(array, values);
+            var array = Engine.Realm.Intrinsics.Array.Construct(Arguments.Empty);
+            Engine.Realm.Intrinsics.Array.PrototypeObject.Push(array, values);
 
             return array;
 
@@ -183,7 +183,7 @@ namespace Raven.Server.Documents.Patch.Jint
 
             static ArrayInstance EmptyArray(Engine engine)
             {
-                return engine.Array.Construct(0);
+                return engine.Realm.Intrinsics.Array.Construct(0);
             }
         }
 
@@ -212,11 +212,11 @@ namespace Raven.Server.Documents.Patch.Jint
             for (var i = 0; i < timeSeries.Length; i++)
                 timeSeriesArray[i] = timeSeries[i]?.ToString();
 
-            return Engine.Array.Construct(timeSeriesArray);
+            return Engine.Realm.Intrinsics.Array.Construct(timeSeriesArray);
 
             static ArrayInstance EmptyArray(Engine engine)
             {
-                return engine.Array.Construct(0);
+                return engine.Realm.Intrinsics.Array.Construct(0);
             }
         }
 
@@ -299,34 +299,34 @@ namespace Raven.Server.Documents.Patch.Jint
                 return lng;
             if (o is BlittableJsonReaderArray bjra)
             {
-                var jsArray = engine.Array.Construct(Array.Empty<JsValue>());
+                var jsArray = engine.Realm.Intrinsics.Array.Construct(Array.Empty<JsValue>());
                 var args = new JsValue[1];
                 for (var i = 0; i < bjra.Length; i++)
                 {
                     args[0] = TranslateToJs(context, bjra[i]);
-                    engine.Array.PrototypeObject.Push(jsArray, args);
+                    engine.Realm.Intrinsics.Array.PrototypeObject.Push(jsArray, args);
                 }
                 return jsArray;
             }
             if (o is List<object> list)
             {
-                var jsArray = engine.Array.Construct(Array.Empty<JsValue>());
+                var jsArray = engine.Realm.Intrinsics.Array.Construct(Array.Empty<JsValue>());
                 var args = new JsValue[1];
                 for (var i = 0; i < list.Count; i++)
                 {
                     args[0] = TranslateToJs(context, list[i]);
-                    engine.Array.PrototypeObject.Push(jsArray, args);
+                    engine.Realm.Intrinsics.Array.PrototypeObject.Push(jsArray, args);
                 }
                 return jsArray;
             }
             if (o is List<Document> docList)
             {
-                var jsArray = engine.Array.Construct(Array.Empty<JsValue>());
+                var jsArray = engine.Realm.Intrinsics.Array.Construct(Array.Empty<JsValue>());
                 var args = new JsValue[1];
                 for (var i = 0; i < docList.Count; i++)
                 {
                     args[0] = new BlittableObjectInstanceJint(engine, null, Clone(docList[i].Data, context), docList[i]);
-                    engine.Array.PrototypeObject.Push(jsArray, args);
+                    engine.Realm.Intrinsics.Array.PrototypeObject.Push(jsArray, args);
                 }
                 return jsArray;
             }

@@ -191,7 +191,7 @@ var process = {
         public JsHandle GlobalObject
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(Global);
+            get => new(Realm.GlobalObject);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -223,7 +223,7 @@ var process = {
 
         public JsHandle CreateObject()
         {
-            return new JsHandle(Object.Construct(System.Array.Empty<JsValue>())); //new ObjectInstance(this));
+            return new JsHandle(Realm.Intrinsics.Object.Construct(System.Array.Empty<JsValue>())); //new ObjectInstance(this));
         }
 
         public JsHandle CreateEmptyArray()

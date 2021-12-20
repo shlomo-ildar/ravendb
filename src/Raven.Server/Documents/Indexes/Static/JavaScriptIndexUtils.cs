@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Esprima.Ast;
+using Jint;
 using Jint.Native;
 using Raven.Client;
 using Raven.Server.Documents.Indexes.Static.Counters;
@@ -187,7 +188,7 @@ namespace Raven.Server.Documents.Indexes.Static.Utils
             try
             {
                 // json string of the object
-                return jsValue.AsObject().Engine.Json.Stringify(JsValue.Null, _oneItemArray);
+                return jsValue.AsObject().Engine.Realm.Intrinsics.Json.Stringify(JsValue.Null, _oneItemArray);
             }
             finally
             {

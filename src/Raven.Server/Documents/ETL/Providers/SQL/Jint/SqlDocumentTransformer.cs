@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Jint;
 using Jint.Native;
 using Jint.Runtime;
 using Raven.Server.Documents.Patch.Jint;
@@ -42,7 +43,7 @@ namespace Raven.Server.Documents.ETL.Providers.SQL
             if (sizeSpecified && args[1].IsNumber() == false)
                 throw new InvalidOperationException("varchar() / nvarchar(): second argument must be a number");
 
-            var item = engineEx.Object.Construct(Arguments.Empty);
+            var item = engineEx.Realm.Intrinsics.Object.Construct(Arguments.Empty);
 
             item.Set(nameof(VarcharFunctionCall.Type), type, true);
             item.Set(nameof(VarcharFunctionCall.Value), args[0], true);

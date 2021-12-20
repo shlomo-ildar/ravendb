@@ -145,7 +145,7 @@ Actually, it is worth to switch off the whole file in case it does not contain m
         public JsHandle GlobalObject
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(Global);
+            get => new(Realm.GlobalObject);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

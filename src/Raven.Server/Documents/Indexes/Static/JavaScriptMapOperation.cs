@@ -251,7 +251,7 @@ namespace Raven.Server.Documents.Indexes.Static
             var properties = new List<Expression>
             {
                 new Property(PropertyKind.Data, new Identifier(field), false,
-                    new StaticMemberExpression(new Identifier("self"), new Identifier(field)), false, false)
+                    new StaticMemberExpression(new Identifier("self"), new Identifier(field), false), false, false)
             };
             var fields = new List<string> {field};
 
@@ -268,7 +268,7 @@ namespace Raven.Server.Documents.Indexes.Static
                     if (field != null)
                     {
                         properties.Add(new Property(PropertyKind.Data, new Identifier(field), false,
-                        new StaticMemberExpression(new Identifier("self"), new Identifier(field)), false, false));
+                        new StaticMemberExpression(new Identifier("self"), new Identifier(field), false), false, false));
                         fields.Add(field);
                     }
                 }
@@ -293,7 +293,7 @@ namespace Raven.Server.Documents.Indexes.Static
                     functionObject = new JsHandle(new ScriptFunctionInstance(
                         engine,
                         functionExp,
-                        LexicalEnvironment.NewDeclarativeEnvironment(engine, engine.ExecutionContext.LexicalEnvironment),
+                        JintEnvironment.NewDeclarativeEnvironment(engine, engine.ExecutionContext.LexicalEnvironment), //TODO [shlomo] restore whne Jint gets updated
                         function.Strict
                     ));
                     break;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Jint;
 using Jint.Native.Function;
 using Raven.Client;
 using Raven.Client.Documents.Indexes;
