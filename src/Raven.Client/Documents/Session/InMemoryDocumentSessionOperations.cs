@@ -252,6 +252,8 @@ namespace Raven.Client.Documents.Session
             TransactionMode = options.TransactionMode;
             DisableAtomicDocumentWritesInClusterWideTransaction = options.DisableAtomicDocumentWritesInClusterWideTransaction;
 
+            var serverVersion = RequestExecutor?.LastServerVersion;
+            var useOptionalChaining = serverVersion != null && string.Compare(serverVersion, "5.3", StringComparison.Ordinal) >= 0; // TODO [shlomo] change to 6.0
             _javascriptCompilationOptions = new JavascriptCompilationOptions(
                 flags: JsCompilationFlags.BodyOnly | JsCompilationFlags.ScopeParameter,
                 extensions: new JavascriptConversionExtension[]
@@ -260,7 +262,7 @@ namespace Raven.Client.Documents.Session
                     JavascriptConversionExtensions.NullableSupport.Instance
                 })
             {
-                CustomMetadataProvider = new PropertyNameConventionJSMetadataProvider(RequestExecutor.Conventions)
+                CustomMetadataProvider = new PropertyNameConventionJSMetadataProvider(RequestExecutor.Conventions, useOptionalChaining) 
             };
         }
 

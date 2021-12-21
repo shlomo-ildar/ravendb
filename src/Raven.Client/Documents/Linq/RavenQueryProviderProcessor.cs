@@ -3133,23 +3133,27 @@ The recommended method is to use full text search (mark the field as Analyzed an
                 JavascriptConversionExtensions.NewSupport.Instance,
                 JavascriptConversionExtensions.ListInitSupport.Instance,
                 MemberInitAsJson.ForAllTypes,
-                new JavascriptConversionExtensions.TimeSeriesSupport<T>(this)
+                new JavascriptConversionExtensions.TimeSeriesSupport<T>(this),
+                JavascriptConversionExtensions.MemberExpressionSupport.Instance
             };
 
             if (loadArg == false)
             {
-                var newSize = _typedParameterSupport != null
-                    ? extensions.Length + 2
-                    : extensions.Length + 1;
+                var sizeInc = _typedParameterSupport != null ? 2 : 1;
+                var newSize = extensions.Length + sizeInc; 
                 Array.Resize(ref extensions, newSize);
+
+                extensions[newSize - 1] = extensions[newSize - sizeInc - 1];
                 if (_typedParameterSupport != null)
-                    extensions[newSize - 2] = _typedParameterSupport;
-                extensions[newSize - 1] = new JavascriptConversionExtensions.IdentityPropertySupport(DocumentQuery.Conventions, _typedParameterSupport?.Name);
+                    extensions[newSize - 3] = _typedParameterSupport;
+                extensions[newSize - 2] = new JavascriptConversionExtensions.IdentityPropertySupport(DocumentQuery.Conventions, _typedParameterSupport?.Name);
             }
 
+            var serverVersion = QueryGenerator?.Session?.RequestExecutor?.LastServerVersion;
+            var useOptionalChaining = serverVersion != null && string.Compare(serverVersion, "5.3", StringComparison.Ordinal) >= 0; // TODO [shlomo] change to 6.0
             return expression.CompileToJavascript(new JavascriptCompilationOptions(extensions)
             {
-                CustomMetadataProvider = new PropertyNameConventionJSMetadataProvider(_conventions)
+                CustomMetadataProvider = new PropertyNameConventionJSMetadataProvider(_conventions, useOptionalChaining)
             });
         }
 

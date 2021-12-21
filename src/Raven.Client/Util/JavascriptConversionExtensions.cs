@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using Lambda2Js;
 using Newtonsoft.Json;
@@ -22,42 +23,60 @@ namespace Raven.Client.Util
     public delegate void WriterAction(JavascriptWriter writer);
     public delegate void ContextAction(JavascriptConversionContext context);
 
+    public delegate void WrapperAction(JavascriptConversionContext context, ContextAction obj);
+    
     internal class JavascriptConversionExtensions
     {
         internal const string TransparentIdentifier = "<>h__TransparentIdentifier";
         private const string DefaultAliasPrefix = "__rvn";
 
         public static void WriteObjectPropertyAccess(JavascriptConversionContext context, ContextAction obj, WriterAction access,
-            ContextAction objWrapper = null)
+            WrapperAction objWrapper = null, bool addDot = false)
         {
             ContextAction accessCtx = access == null ? null : context =>
             {
                 var writer = context.GetWriter();
                 access(writer);
             };
-            WriteObjectPropertyAccess(context, obj, accessCtx,  objWrapper);
+            WriteObjectPropertyAccess(context, obj, accessCtx,  objWrapper, addDot);
         }
 
-        public static void WriteObjectPropertyAccess(JavascriptConversionContext context, ContextAction obj, ContextAction access, ContextAction objWrapper = null)
+        public static void WriteObjectPropertyAccess(JavascriptConversionContext context, ContextAction obj, ContextAction access, WrapperAction objWrapper = null, bool addDot = false)
         {
             var writer = context.GetWriter();
             
-            objWrapper ??= obj;
-
             context.PreventDefault();
 
+            void WriteObjWrapper(ContextAction obj)
+            {
+                if (objWrapper == null)
+                    obj(context);
+                else
+                    objWrapper(context, obj);
+            }
+
+            void Finish()
+            {
+                writer.Write(";})()");
+            }
+            
             if (access == null)
             {
-                objWrapper(context);
+                WriteObjWrapper(obj);
                 return;
             }
             
-            bool canUseOptionalChaining = false;
+            var optChanining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
+            
+            bool canUseOptionalChaining = true;
             if (canUseOptionalChaining)
             {
-                objWrapper(context);
-                writer.Write("?");
+                WriteObjWrapper(obj);
+                writer.Write(optChanining);
+                if (addDot)
+                    writer.Write(".");
                 access(context);
+                return;
             }
             
             var res = writer.ToString();
@@ -65,25 +84,28 @@ namespace Raven.Client.Util
             bool isNullCheckNeeded2 = isNullCheckNeeded;
             if (isNullCheckNeeded)
             {
-                writer.Write("(");
+                writer.Write("(() => {let a=");
                 obj(context);
                 var res2 = writer.ToString();
-                isNullCheckNeeded2 = (objWrapper != obj) || !(res2.EndsWith("]") || res2.EndsWith("\""));
+                isNullCheckNeeded2 = (objWrapper != null) || !(res2.EndsWith("]") || res2.EndsWith("\""));
                 if (!isNullCheckNeeded2)
                 {
+                    writer.Write(";return a");
                     access(context);
-                    writer.Write(")");
+                    Finish();
                     return;
                 }
 
-                writer.Write($"!=null?");
+                writer.Write(";return a!=null?");
             }
 
-            objWrapper(context);
+            WriteObjWrapper(context => writer.Write("a"));
             access(context);
 
             if (isNullCheckNeeded)
-                writer.Write(":null)");
+                writer.Write(":null");
+
+            Finish();
         }
         
         public class CustomMethods : JavascriptConversionExtension
@@ -104,8 +126,10 @@ namespace Raven.Client.Util
                     return;
                 context.PreventDefault();
 
+                var optChanining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
+
                 var writer = context.GetWriter();
-                writer.Write(".");
+                writer.Write($"{optChanining}.");
                 writer.Write(nameAttribute.Name);
                 writer.Write("(");
 
@@ -300,7 +324,7 @@ namespace Raven.Client.Util
                             context.Visitor.Visit(context.Node);
                         };
 
-                        ContextAction objWrapper = context =>
+                        WrapperAction objWrapper = (context, obj) =>
                         {
                             var writer = context.GetWriter();
                             writer.Write("Object.keys(");
@@ -394,6 +418,8 @@ namespace Raven.Client.Util
                 var methodName = method.Name;
                 if (IsCollection(methodCallExpression.Method.DeclaringType) == false)
                     return;
+
+                var optChanining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
 
                 string newName;
                 switch (methodName)
@@ -540,7 +566,7 @@ namespace Raven.Client.Util
                                 }
                             };
                             
-                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access);
+                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access, addDot: methodCallExpression.Arguments.Count <= 1);
                             return;
                         }
                     case "Last":
@@ -577,7 +603,7 @@ namespace Raven.Client.Util
                                 }
                             };
 
-                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access);
+                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access, addDot: true);
                             return;
                         }
                     case "Reverse":
@@ -613,7 +639,7 @@ namespace Raven.Client.Util
                                     context.Visitor.Visit(methodCallExpression.Arguments[1]);
                                     writer.Write(", ");
                                     context.Visitor.Visit(methodCallExpression.Arguments[0]);
-                                    writer.Write(".length)");
+                                    writer.Write($"{optChanining}.length)");
                                 }
                             };
 
@@ -698,7 +724,7 @@ namespace Raven.Client.Util
                                         context.Visitor.Visit(methodCallExpression.Arguments[0]);
                                     };
 
-                                    ContextAction objWrapper = context =>
+                                    WrapperAction objWrapper = (context, obj) =>
                                     {
                                         writer.Write("Object.getOwnPropertyNames(");
                                         obj(context);
@@ -711,7 +737,7 @@ namespace Raven.Client.Util
                                         {
                                             writer.Write(".map(function(k){return ");
                                             context.Visitor.Visit(methodCallExpression.Arguments[0]);
-                                            writer.Write("[k]})");
+                                            writer.Write($"[k]}}){optChanining}");
                                         }
 
                                         writer.Write(".reduce(function(a, b) { return a.concat(b);},[])");
@@ -744,6 +770,7 @@ namespace Raven.Client.Util
                                     {
                                         writer.Write(".filter");
                                         context.Visitor.Visit(methodCallExpression.Arguments[1]);
+                                        writer.Write(optChanining);
                                     }
 
                                     writer.Write(".length");
@@ -779,7 +806,7 @@ namespace Raven.Client.Util
                 {
                     if (methodName == "Sum")
                     {
-                        writer.Write(".reduce(function(a, b) { return a + b; }, 0)");
+                        writer.Write($"{optChanining}.reduce(function(a, b) {{ return a + b; }}, 0)");
                     }
 
                     if (methodName == "Contains")
@@ -1312,6 +1339,68 @@ namespace Raven.Client.Util
             }
         }
 
+        // this extension can be used only in case of CompileToJavascript called with JavascriptCompilationOptions having no flag JsCompilationFlags.ScopeParameter set
+        public class MemberExpressionSupport : JavascriptConversionExtension
+        {
+            public static readonly MemberExpressionSupport Instance = new MemberExpressionSupport();
+
+            private MemberExpressionSupport()
+            {
+            }
+
+            public override void ConvertToJavascript(JavascriptConversionContext context)
+            {
+                if (!(context.Node is MemberExpression node))
+                    return;
+
+                var writer = context.GetWriter();
+                var optChanining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
+
+                if (node.Expression == null && (object) node.Member.DeclaringType == (object) typeof (string) && node.Member.Name == "Empty")
+                {
+                    using (writer.Operation(JavascriptOperationTypes.Literal))
+                        writer.Write("\"\"");
+                    return;
+                }
+                using (writer.Operation((Expression) node))
+                {
+                    JavascriptMetadataProvider metadataProvider = context.Options.GetMetadataProvider();
+                    int length = writer.Length;
+
+                    
+                    if (node.Expression == null)
+                    {
+                        context.PreventDefault();
+                        Type declaringType = node.Member.DeclaringType;
+                        if ((object) declaringType != null)
+                        {
+                            writer.Write(declaringType.FullName);
+                            writer.Write($"{optChanining}.");
+                            writer.Write(declaringType.Name);
+                        }
+                    }
+                    else if (node.Expression.Type.IsClosureRootType())
+                        return;
+                    else // if (node.Expression != this.contextParameter) - in case no JsCompilationFlags.ScopeParameter is set this condition is always true as this.contextParameter is null
+                    {
+                        context.PreventDefault();
+                        context.Visitor.Visit(node.Expression);
+                    }
+
+                    if (writer.Length > length)
+                    {
+                        writer.Write($"{optChanining}.");
+                    }
+
+                    PropertyInfo member = node.Member as PropertyInfo;
+                    if ((object) member?.DeclaringType != null && (object) node.Type == (object) typeof (int) && node.Member.Name == "Count") // && TypeHelpers.IsListType(member.DeclaringType))
+                        writer.Write("length");
+                    else
+                        writer.Write(metadataProvider.GetMemberMetadata(node.Member)?.MemberName);
+                }
+            }
+        }
+        
         public class ReplaceParameterWithNewName : JavascriptConversionExtension
         {
             private readonly string _newName;
@@ -1582,8 +1671,11 @@ namespace Raven.Client.Util
                 {
                     if (mce.Arguments.Count == 0)
                     {
-                        WriteObjectPropertyAccess(context, context => context.Visitor.Visit(mce.Object), 
-                            (WriterAction)(writer => writer.Write(".toString()")));
+                        WriterAction access = writer =>
+                        {
+                            writer.Write(".toString( )");
+                        };
+                        WriteObjectPropertyAccess(context, context => context.Visitor.Visit(mce.Object), access);
                         return;
                     }
 
@@ -1742,7 +1834,7 @@ namespace Raven.Client.Util
                             WriteObjectPropertyAccess(context, context => context.Visitor.Visit(memberExpression.Expression), access);
                         };
 
-                        ContextAction objWrapper2 = context =>
+                        WrapperAction objWrapper2 = (context, obj) =>
                         {
                             writer.Write("new Date(");
 
@@ -2475,6 +2567,8 @@ namespace Raven.Client.Util
                 var writer = context.GetWriter();
                 context.PreventDefault();
 
+                var optChanining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
+
                 ContextAction obj;
                 WriterAction access;
                 using (writer.Operation(mce))
@@ -2493,7 +2587,7 @@ namespace Raven.Client.Util
                             {
                                 writer.Write($".{newName}(");
                                 context.Visitor.Visit(mce.Arguments[0]);
-                                writer.Write(")");
+                                writer.Write($")");
                             };
 
                             if (mce.Arguments.Count > 2)
@@ -2514,8 +2608,12 @@ namespace Raven.Client.Util
                             writer.Write("(!");
                             context.Visitor.Visit(mce.Arguments[0]);
                             writer.Write(" || !");
-                            context.Visitor.Visit(mce.Arguments[0]);
-                            writer.Write(".trim())");
+                            access = writer =>
+                            {
+                                writer.Write(".trim())");
+                            };
+                            
+                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(mce.Arguments[0]), access);
                             break;
 
                         case "toCharArray":
@@ -2527,7 +2625,7 @@ namespace Raven.Client.Util
                                     context.Visitor.Visit(mce.Arguments[0]);
                                     writer.Write(", ");
                                     context.Visitor.Visit(mce.Arguments[1]);
-                                    writer.Write(")");
+                                    writer.Write($"){optChanining}");
                                 }
 
                                 writer.Write(".split('')");
@@ -2671,7 +2769,7 @@ namespace Raven.Client.Util
                         context.Visitor.Visit(methodCallExpression.Arguments[0]);
                     };
 
-                    ContextAction objWrapper = context =>
+                    WrapperAction objWrapper = (context, obj) =>
                     {
                         writer.Write("getMetadata(");
                         obj(context);
@@ -2687,7 +2785,7 @@ namespace Raven.Client.Util
                         _ => null
                     };
                     
-                    WriteObjectPropertyAccess(context, obj, access, objWrapper);
+                    WriteObjectPropertyAccess(context, obj, access, objWrapper, addDot: true);
                 }
             }
         }

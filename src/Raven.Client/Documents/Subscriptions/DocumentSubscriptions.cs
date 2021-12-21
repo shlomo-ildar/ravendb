@@ -142,7 +142,8 @@ namespace Raven.Client.Documents.Subscriptions
                         JavascriptConversionExtensions.NullCoalescingSupport.Instance,
                         JavascriptConversionExtensions.NestedConditionalSupport.Instance,
                         JavascriptConversionExtensions.StringSupport.Instance,
-                        new JavascriptConversionExtensions.IdentityPropertySupport(conventions)
+                        new JavascriptConversionExtensions.IdentityPropertySupport(conventions),
+                        JavascriptConversionExtensions.MemberExpressionSupport.Instance
                     ));
 
                 queryBuilder
@@ -172,7 +173,8 @@ namespace Raven.Client.Documents.Subscriptions
                         JavascriptConversionExtensions.CounterSupport.Instance,
                         JavascriptConversionExtensions.CompareExchangeSupport.Instance,
                         new JavascriptConversionExtensions.LoadSupport(),
-                        JavascriptConversionExtensions.MemberInit.Instance
+                        JavascriptConversionExtensions.MemberInit.Instance,
+                        JavascriptConversionExtensions.MemberExpressionSupport.Instance
                     ));
 
                 queryBuilder
