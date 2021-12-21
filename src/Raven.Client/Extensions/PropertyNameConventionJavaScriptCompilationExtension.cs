@@ -10,7 +10,7 @@ namespace Raven.Client.Extensions
         public bool UseOptionalChanining;
         public string OptionalChanining;
 
-        public PropertyNameConventionJSMetadataProvider(DocumentConventions conventions, bool useOptionalChanining)
+        public PropertyNameConventionJSMetadataProvider(DocumentConventions conventions, bool useOptionalChanining = false)
         {
             _conventions = conventions;
             UseOptionalChanining = useOptionalChanining;
