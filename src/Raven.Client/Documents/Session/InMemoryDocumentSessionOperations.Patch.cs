@@ -10,8 +10,10 @@ using System.Diagnostics;
 using System.Linq.Expressions;
 using Lambda2Js;
 using Raven.Client.Documents.Commands.Batches;
+using Raven.Client.Documents.Conventions;
 using Raven.Client.Documents.Linq;
 using Raven.Client.Documents.Operations;
+using Raven.Client.Extensions;
 using Raven.Client.Json;
 using Raven.Client.Json.Serialization;
 using Raven.Client.Util;
@@ -107,13 +109,19 @@ namespace Raven.Client.Documents.Session
         {
             var extension = new JavascriptConversionExtensions.CustomMethods {Suffix = _customCount++};
             var pathScript = path.CompileToJavascript(_javascriptCompilationOptions);
+            var serverVersion = _requestExecutor?.LastServerVersion;
+            var useOptionalChaining = serverVersion != null && string.Compare(serverVersion, "5.3", StringComparison.Ordinal) >= 0; // TODO [shlomo] change to 6.0
             var adderScript = arrayAdder.CompileToJavascript(
                 new JavascriptCompilationOptions(
                     JsCompilationFlags.BodyOnly | JsCompilationFlags.ScopeParameter,
                     new LinqMethods(),
                     extension,
                     JavascriptConversionExtensions.ToStringSupport.Instance,
-                    JavascriptConversionExtensions.ConstantSupport.Instance)
+                    JavascriptConversionExtensions.ConstantSupport.Instance
+                )
+                {
+                    CustomMetadataProvider = new PropertyNameConventionJSMetadataProvider(DocumentConventions.Default, useOptionalChaining)
+                }
             );
 
             var patchRequest = CreatePatchRequest(arrayAdder, pathScript, adderScript, extension);
@@ -207,13 +215,20 @@ namespace Raven.Client.Documents.Session
         {
             var extension = new JavascriptConversionExtensions.CustomMethods {Suffix = _customCount++};
             var pathScript = path.CompileToJavascript(_javascriptCompilationOptions);
+            var serverVersion = _requestExecutor?.LastServerVersion;
+            var useOptionalChaining = serverVersion != null && string.Compare(serverVersion, "5.3", StringComparison.Ordinal) >= 0; // TODO [shlomo] change to 6.0
             var adderScript = arrayAdder.CompileToJavascript(
                 new JavascriptCompilationOptions(
                     JsCompilationFlags.BodyOnly | JsCompilationFlags.ScopeParameter,
                     new LinqMethods(),
                     extension,
                     JavascriptConversionExtensions.ToStringSupport.Instance,
-                    JavascriptConversionExtensions.ConstantSupport.Instance));
+                    JavascriptConversionExtensions.ConstantSupport.Instance
+                )
+                {
+                    CustomMetadataProvider = new PropertyNameConventionJSMetadataProvider(DocumentConventions.Default, useOptionalChaining)
+                }
+                );
 
             var patchRequest = CreatePatchRequest(arrayAdder, pathScript, adderScript, extension);
 
