@@ -264,6 +264,17 @@ namespace Raven.Client.Documents.Session
             {
                 CustomMetadataProvider = new PropertyNameConventionJSMetadataProvider(RequestExecutor.Conventions, useOptionalChaining) 
             };
+            
+            _javascriptCompilationOptionsWoOptChaining = !useOptionalChaining ? _javascriptCompilationOptions : new JavascriptCompilationOptions(
+                flags: JsCompilationFlags.BodyOnly | JsCompilationFlags.ScopeParameter,
+                extensions: new JavascriptConversionExtension[]
+                {
+                    JavascriptConversionExtensions.LinqMethodsSupport.Instance,
+                    JavascriptConversionExtensions.NullableSupport.Instance
+                })
+            {
+                CustomMetadataProvider = new PropertyNameConventionJSMetadataProvider(RequestExecutor.Conventions, false) 
+            };
         }
 
         /// <summary>

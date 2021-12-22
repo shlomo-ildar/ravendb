@@ -28,6 +28,7 @@ namespace Raven.Client.Documents.Session
         private int _valsCount;
         private int _customCount;
         private readonly JavascriptCompilationOptions _javascriptCompilationOptions;
+        private readonly JavascriptCompilationOptions _javascriptCompilationOptionsWoOptChaining;
 
         public void Increment<T, U>(T entity, Expression<Func<T, U>> path, U valToAdd)
         {
@@ -38,7 +39,7 @@ namespace Raven.Client.Documents.Session
 
         public void Increment<T, U>(string id, Expression<Func<T, U>> path, U valToAdd)
         {
-            var pathScript = path.CompileToJavascript(_javascriptCompilationOptions);
+            var pathScript = path.CompileToJavascript(_javascriptCompilationOptionsWoOptChaining);
 
             var variable = $"this.{pathScript}";
             var value = $"args.val_{_valsCount}";
@@ -66,7 +67,7 @@ namespace Raven.Client.Documents.Session
         public void AddOrIncrement<T, TU>(string id, T entity, Expression<Func<T, TU>> path, TU valueToAdd)
         {
             
-            var pathScript = path.CompileToJavascript(_javascriptCompilationOptions);
+            var pathScript = path.CompileToJavascript(_javascriptCompilationOptionsWoOptChaining);
             
             var variable = $"this.{pathScript}";
             var value = $"args.val_{_valsCount}";
@@ -108,7 +109,7 @@ namespace Raven.Client.Documents.Session
         public void AddOrPatch<T, TU>(string id, T entity, Expression<Func<T, List<TU>>> path, Expression<Func<JavaScriptArray<TU>, object>> arrayAdder)
         {
             var extension = new JavascriptConversionExtensions.CustomMethods {Suffix = _customCount++};
-            var pathScript = path.CompileToJavascript(_javascriptCompilationOptions);
+            var pathScript = path.CompileToJavascript(_javascriptCompilationOptionsWoOptChaining);
             var serverVersion = _requestExecutor?.LastServerVersion;
             var useOptionalChaining = serverVersion != null && string.Compare(serverVersion, "5.3", StringComparison.Ordinal) >= 0; // TODO [shlomo] change to 6.0
             var adderScript = arrayAdder.CompileToJavascript(
@@ -188,7 +189,7 @@ namespace Raven.Client.Documents.Session
 
         public void Patch<T, U>(string id, Expression<Func<T, U>> path, U value)
         {
-            var pathScript = path.CompileToJavascript(_javascriptCompilationOptions);
+            var pathScript = path.CompileToJavascript(_javascriptCompilationOptionsWoOptChaining);
 
             var valueToUse = AddTypeNameToValueIfNeeded(path.Body.Type, value);
 
@@ -214,7 +215,7 @@ namespace Raven.Client.Documents.Session
             Expression<Func<JavaScriptArray<U>, object>> arrayAdder)
         {
             var extension = new JavascriptConversionExtensions.CustomMethods {Suffix = _customCount++};
-            var pathScript = path.CompileToJavascript(_javascriptCompilationOptions);
+            var pathScript = path.CompileToJavascript(_javascriptCompilationOptionsWoOptChaining);
             var serverVersion = _requestExecutor?.LastServerVersion;
             var useOptionalChaining = serverVersion != null && string.Compare(serverVersion, "5.3", StringComparison.Ordinal) >= 0; // TODO [shlomo] change to 6.0
             var adderScript = arrayAdder.CompileToJavascript(
@@ -241,7 +242,7 @@ namespace Raven.Client.Documents.Session
         public void Patch<T, TKey, TValue>(string id, Expression<Func<T, IDictionary<TKey, TValue>>> path,
             Expression<Func<JavaScriptDictionary<TKey, TValue>, object>> dictionaryAdder)
         {
-            var pathScript = path.CompileToJavascript(_javascriptCompilationOptions);
+            var pathScript = path.CompileToJavascript(_javascriptCompilationOptionsWoOptChaining);
 
             if (!(dictionaryAdder.Body is MethodCallExpression call))
             {

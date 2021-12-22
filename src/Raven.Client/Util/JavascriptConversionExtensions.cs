@@ -43,10 +43,6 @@ namespace Raven.Client.Util
 
         public static void WriteObjectPropertyAccess(JavascriptConversionContext context, ContextAction obj, ContextAction access, WrapperAction objWrapper = null, bool addDot = false)
         {
-            var writer = context.GetWriter();
-            
-            context.PreventDefault();
-
             void WriteObjWrapper(ContextAction obj)
             {
                 if (objWrapper == null)
@@ -54,58 +50,25 @@ namespace Raven.Client.Util
                 else
                     objWrapper(context, obj);
             }
+            
+            context.PreventDefault();
+            var writer = context.GetWriter();
 
-            void Finish()
-            {
-                writer.Write(";})()");
-            }
-            
+            WriteObjWrapper(obj);
+
             if (access == null)
-            {
-                WriteObjWrapper(obj);
                 return;
-            }
-            
+
+            bool useOptionalChaining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).UseOptionalChanining;
             var optChaining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
-            
-            bool canUseOptionalChaining = true;
-            if (canUseOptionalChaining)
+
+            if (useOptionalChaining)
             {
-                WriteObjWrapper(obj);
                 writer.Write(optChaining);
                 if (addDot)
                     writer.Write(".");
-                access(context);
-                return;
             }
-            
-            var res = writer.ToString();
-            bool isNullCheckNeeded = !(res.EndsWith("]") || res.EndsWith("\""));
-            bool isNullCheckNeeded2 = isNullCheckNeeded;
-            if (isNullCheckNeeded)
-            {
-                writer.Write("(() => {let a=");
-                obj(context);
-                var res2 = writer.ToString();
-                isNullCheckNeeded2 = (objWrapper != null) || !(res2.EndsWith("]") || res2.EndsWith("\""));
-                if (!isNullCheckNeeded2)
-                {
-                    writer.Write(";return a");
-                    access(context);
-                    Finish();
-                    return;
-                }
-
-                writer.Write(";return a!=null?");
-            }
-
-            WriteObjWrapper(context => writer.Write("a"));
             access(context);
-
-            if (isNullCheckNeeded)
-                writer.Write(":null");
-
-            Finish();
         }
         
         public class CustomMethods : JavascriptConversionExtension
