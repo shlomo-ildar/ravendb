@@ -65,7 +65,7 @@ namespace SlowTests.Client.TimeSeries.Patch
 
                 var testTask = shouldPass
                     ? session.SaveChangesAsync()
-                    : Assert.ThrowsAsync<RavenException>(async () => await session.SaveChangesAsync());
+                    : Assert.ThrowsAnyAsync<RavenException>(async () => await session.SaveChangesAsync());
 
                 await testTask;
             }
