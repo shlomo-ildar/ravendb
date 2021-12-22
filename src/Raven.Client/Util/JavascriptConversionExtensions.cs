@@ -66,13 +66,13 @@ namespace Raven.Client.Util
                 return;
             }
             
-            var optChanining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
+            var optChaining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
             
             bool canUseOptionalChaining = true;
             if (canUseOptionalChaining)
             {
                 WriteObjWrapper(obj);
-                writer.Write(optChanining);
+                writer.Write(optChaining);
                 if (addDot)
                     writer.Write(".");
                 access(context);
@@ -126,10 +126,10 @@ namespace Raven.Client.Util
                     return;
                 context.PreventDefault();
 
-                var optChanining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
+                var optChaining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
 
                 var writer = context.GetWriter();
-                writer.Write($"{optChanining}.");
+                writer.Write($"{optChaining}.");
                 writer.Write(nameAttribute.Name);
                 writer.Write("(");
 
@@ -332,10 +332,11 @@ namespace Raven.Client.Util
                             writer.Write(")");
                         };
 
-                        WriterAction access = writer =>
+                        WriterAction access = null;
+                        // Do not translate Key (we already have the keys here!)
+                        if (currentCall != DictionaryInnerCall.Key)
                         {
-                            // Do not translate Key (we already have the keys here!)
-                            if (currentCall != DictionaryInnerCall.Key)
+                            access = writer =>
                             {
                                 writer.Write(".map(function(a){");
 
@@ -355,8 +356,8 @@ namespace Raven.Client.Util
                                 }
 
                                 writer.Write("})");
-                            }
-                        };
+                            };
+                        }
 
                         WriteObjectPropertyAccess(context, obj, access, objWrapper);
                     }
@@ -419,7 +420,7 @@ namespace Raven.Client.Util
                 if (IsCollection(methodCallExpression.Method.DeclaringType) == false)
                     return;
 
-                var optChanining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
+                var optChaining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
 
                 string newName;
                 switch (methodName)
@@ -639,7 +640,7 @@ namespace Raven.Client.Util
                                     context.Visitor.Visit(methodCallExpression.Arguments[1]);
                                     writer.Write(", ");
                                     context.Visitor.Visit(methodCallExpression.Arguments[0]);
-                                    writer.Write($"{optChanining}.length)");
+                                    writer.Write($"{optChaining}.length)");
                                 }
                             };
 
@@ -737,7 +738,7 @@ namespace Raven.Client.Util
                                         {
                                             writer.Write(".map(function(k){return ");
                                             context.Visitor.Visit(methodCallExpression.Arguments[0]);
-                                            writer.Write($"[k]}}){optChanining}");
+                                            writer.Write($"[k]}}){optChaining}");
                                         }
 
                                         writer.Write(".reduce(function(a, b) { return a.concat(b);},[])");
@@ -770,7 +771,7 @@ namespace Raven.Client.Util
                                     {
                                         writer.Write(".filter");
                                         context.Visitor.Visit(methodCallExpression.Arguments[1]);
-                                        writer.Write(optChanining);
+                                        writer.Write(optChaining);
                                     }
 
                                     writer.Write(".length");
@@ -831,14 +832,12 @@ namespace Raven.Client.Util
                 }
                 else
                 {
-                    WriterAction access = null;
-
                     // When having no other arguments, don't call the function, when it's a .map operation
                     // .Sum()/.Average()/.Select() for example can be called without arguments, which means,
                     // map all, though .map() without arguments returns an empty list
-                    if (newName != "map" || methodCallExpression.Arguments.Count > 1)
+                    WriterAction access = writer =>
                     {
-                        access = writer =>
+                        if (newName != "map" || methodCallExpression.Arguments.Count > 1)
                         {
                             writer.Write($".{newName}");
                             writer.Write("(");
@@ -846,11 +845,12 @@ namespace Raven.Client.Util
                             {
                                 context.Visitor.Visit(methodCallExpression.Arguments[1]);
                             }
-                            writer.Write(")");
 
-                            accessTail(writer);
-                        };
-                    }
+                            writer.Write(")");
+                        }
+
+                        accessTail(writer);
+                    };
                     
                     WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access);
                 }
@@ -1354,7 +1354,7 @@ namespace Raven.Client.Util
                     return;
 
                 var writer = context.GetWriter();
-                var optChanining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
+                var optChaining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
 
                 if (node.Expression == null && (object) node.Member.DeclaringType == (object) typeof (string) && node.Member.Name == "Empty")
                 {
@@ -1375,7 +1375,7 @@ namespace Raven.Client.Util
                         if ((object) declaringType != null)
                         {
                             writer.Write(declaringType.FullName);
-                            writer.Write($"{optChanining}.");
+                            writer.Write($"{optChaining}.");
                             writer.Write(declaringType.Name);
                         }
                     }
@@ -1389,7 +1389,7 @@ namespace Raven.Client.Util
 
                     if (writer.Length > length)
                     {
-                        writer.Write($"{optChanining}.");
+                        writer.Write($"{optChaining}.");
                     }
 
                     PropertyInfo member = node.Member as PropertyInfo;
@@ -2567,7 +2567,7 @@ namespace Raven.Client.Util
                 var writer = context.GetWriter();
                 context.PreventDefault();
 
-                var optChanining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
+                var optChaining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
 
                 ContextAction obj;
                 WriterAction access;
@@ -2625,7 +2625,7 @@ namespace Raven.Client.Util
                                     context.Visitor.Visit(mce.Arguments[0]);
                                     writer.Write(", ");
                                     context.Visitor.Visit(mce.Arguments[1]);
-                                    writer.Write($"){optChanining}");
+                                    writer.Write($"){optChaining}");
                                 }
 
                                 writer.Write(".split('')");
