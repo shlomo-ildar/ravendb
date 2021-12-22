@@ -11,6 +11,7 @@ using Raven.Server.Extensions.V8;
 using Raven.Client;
 using Raven.Client.Documents.Indexes.Spatial;
 using Raven.Client.Documents.Session.TimeSeries;
+using Raven.Client.Exceptions;
 using Raven.Client.Exceptions.Documents;
 using Raven.Client.Exceptions.Documents.Patching;
 using Raven.Server.ServerWide;
@@ -1689,8 +1690,8 @@ namespace Raven.Server.Documents.Patch
 
             private JavaScriptException CreateFullError(V8Exception e)
             {
-                var javaScriptException = new JavaScriptException(e.Message, e);
-                return javaScriptException;
+                var jsException = new JavaScriptException(e.Message, e);
+                return jsException;
             }
         }
     }
