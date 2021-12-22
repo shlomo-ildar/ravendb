@@ -806,7 +806,7 @@ namespace Raven.Client.Util
                 {
                     if (methodName == "Sum")
                     {
-                        writer.Write($"{optChanining}.reduce(function(a, b) {{ return a + b; }}, 0)");
+                        writer.Write(".reduce(function(a, b) { return a + b; }, 0)");
                     }
 
                     if (methodName == "Contains")
@@ -1673,7 +1673,7 @@ namespace Raven.Client.Util
                     {
                         WriterAction access = writer =>
                         {
-                            writer.Write(".toString( )");
+                            writer.Write(".toString()");
                         };
                         WriteObjectPropertyAccess(context, context => context.Visitor.Visit(mce.Object), access);
                         return;
@@ -2761,31 +2761,38 @@ namespace Raven.Client.Util
                     && methodCallExpression.Object?.Type != typeof(IAsyncAdvancedSessionOperations))
                     return;
 
-                var writer = context.GetWriter();
-                using (writer.Operation(methodCallExpression))
+                switch (methodCallExpression.Method.Name)
                 {
-                    ContextAction obj = context =>
+                    case nameof(RavenQuery.LastModified):
+                    case nameof(RavenQuery.Metadata):
+                    case nameof(IAdvancedSessionOperations.GetMetadataFor):
                     {
-                        context.Visitor.Visit(methodCallExpression.Arguments[0]);
-                    };
-
-                    WrapperAction objWrapper = (context, obj) =>
-                    {
-                        writer.Write("getMetadata(");
-                        obj(context);
-                        writer.Write(")");
-                    };
-
-                    WriterAction access = methodCallExpression.Method.Name switch
-                    {
-                        nameof(RavenQuery.LastModified) => writer =>
+                        var writer = context.GetWriter();
+                        using (writer.Operation(methodCallExpression))
                         {
-                            writer.Write("['" + Constants.Documents.Metadata.LastModified + "']");
-                        },
-                        _ => null
-                    };
+                            ContextAction obj = context =>
+                            {
+                                context.Visitor.Visit(methodCallExpression.Arguments[0]);
+                            };
+
+                            WrapperAction objWrapper = (context, obj) =>
+                            {
+                                writer.Write("getMetadata(");
+                                obj(context);
+                                writer.Write(")");
+                            };
+
+                            WriterAction access = methodCallExpression.Method.Name == nameof(RavenQuery.LastModified)
+                                ? writer =>
+                                    {
+                                        writer.Write("['" + Constants.Documents.Metadata.LastModified + "']");
+                                    }
+                                : null;
                     
-                    WriteObjectPropertyAccess(context, obj, access, objWrapper, addDot: true);
+                            WriteObjectPropertyAccess(context, obj, access, objWrapper, addDot: true);
+                        }
+                        break;
+                    }
                 }
             }
         }
