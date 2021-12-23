@@ -183,7 +183,6 @@
     <PackageReference Include="System.Reflection.Metadata" Version="6.0.0" />
     <PackageReference Include="System.Security.Cryptography.Cng" Version="5.0.0" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="6.0.0" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="5.0.0" />
     <PackageReference Include="Esprima" Version="2.0.4" />
   </ItemGroup>
   <ItemGroup>
