@@ -261,7 +261,7 @@ from 'Orders' as __alias0 where __alias0.Company = $p0 select output(__alias0)",
                                 let sum = order.Lines.Sum(l => l.PricePerUnit * l.Quantity * load.AccountsReceivable)
                                 select new
                                 {
-                                    Comapny = load,
+                                    Company = load,
                                     Sum = sum,
                                     Employees = update.Select(e => e.FirstName).ToList()
                                 };
@@ -273,13 +273,13 @@ from 'Orders' as __alias0 where __alias0.Company = $p0 select output(__alias0)",
     var _load = load(include);
     var update = load(_load?.EmployeesIds);
     var sum = order?.Lines?.map(function(l){return l?.PricePerUnit*l?.Quantity*_load?.AccountsReceivable;}).reduce(function(a, b) { return a + b; }, 0);
-    return { Comapny : _load, Sum : sum, Employees : update?.map(function(e){return e?.FirstName;}) };
+    return { Company : _load, Sum : sum, Employees : update?.map(function(e){return e?.FirstName;}) };
 }
 from 'Orders' as __alias0 select output(__alias0)", query.ToString());
 
                     var result = query.ToList();
 
-                    Assert.Equal("GD", result[0].Comapny.Name);
+                    Assert.Equal("GD", result[0].Company.Name);
                     Assert.Equal(500, result[0].Sum);
                     Assert.Equal(2, result[0].Employees.Count);
                     Assert.Equal("Jerry", result[0].Employees[0]);
