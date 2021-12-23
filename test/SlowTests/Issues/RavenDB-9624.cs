@@ -269,11 +269,11 @@ from 'Orders' as __alias0 where __alias0.Company = $p0 select output(__alias0)",
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(__alias0) {
     var order = __alias0;
-    var include = order.Company;
+    var include = order?.Company;
     var _load = load(include);
-    var update = load(_load.EmployeesIds);
-    var sum = order.Lines.map(function(l){return l.PricePerUnit*l.Quantity*_load.AccountsReceivable;}).reduce(function(a, b) { return a + b; }, 0);
-    return { Comapny : _load, Sum : sum, Employees : update.map(function(e){return e.FirstName;}) };
+    var update = load(_load?.EmployeesIds);
+    var sum = order?.Lines?.map(function(l){return l?.PricePerUnit*l?.Quantity*_load?.AccountsReceivable;}).reduce(function(a, b) { return a + b; }, 0);
+    return { Comapny : _load, Sum : sum, Employees : update?.map(function(e){return e?.FirstName;}) };
 }
 from 'Orders' as __alias0 select output(__alias0)", query.ToString());
 
