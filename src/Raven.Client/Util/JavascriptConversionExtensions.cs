@@ -1356,7 +1356,7 @@ namespace Raven.Client.Util
                     }
 
                     PropertyInfo member = node.Member as PropertyInfo;
-                    if ((object) member?.DeclaringType != null && (object) node.Type == (object) typeof (int) && node.Member.Name == "Count") // && TypeHelpers.IsListType(member.DeclaringType))
+                    if ((object) member?.DeclaringType != null && (object) node.Type == (object) typeof (int) && node.Member.Name == "Count" && TypeHelpers.IsListType(member.DeclaringType))
                         writer.Write("length");
                     else
                         writer.Write(metadataProvider.GetMemberMetadata(node.Member)?.MemberName);

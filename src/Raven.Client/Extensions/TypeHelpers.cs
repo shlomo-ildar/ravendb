@@ -11,6 +11,21 @@ namespace Raven.Client.Extensions
 {
   internal static class TypeHelpers
   {
+      public static bool IsListType(Type type)
+      {
+          if ((object) type == null)
+              throw new ArgumentNullException(nameof (type));
+          if (typeof (ICollection).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo()))
+              return true;
+          if (type.GetTypeInfo().IsGenericType)
+          {
+              Type genericTypeDefinition = type.GetGenericTypeDefinition();
+              if (typeof (ICollection<>).GetTypeInfo().IsAssignableFrom(genericTypeDefinition.GetTypeInfo()))
+                  return true;
+          }
+          return false;
+      }
+
       public static bool TestAttribute<T>(this Type type, Func<T, bool> predicate) where T : Attribute
     {
       if (predicate == null)
