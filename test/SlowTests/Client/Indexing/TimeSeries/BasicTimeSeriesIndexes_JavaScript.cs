@@ -150,7 +150,7 @@ return ts.Entries.map(entry => ({
 return ts.Entries.map(entry => ({
         HeartBeat: entry.Value,
         Date: new Date(Date.UTC(entry.Timestamp.getFullYear(), entry.Timestamp.getMonth(), entry.Timestamp.getDate())),
-        City: load(entry.Tag, 'Addresses').City,
+        City: load(entry.Tag, 'Addresses')?.City,
         Count: 1
     }));
 })"
