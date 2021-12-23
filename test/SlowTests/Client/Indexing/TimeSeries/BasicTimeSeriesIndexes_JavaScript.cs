@@ -85,7 +85,7 @@ return ts.Entries.map(entry => ({
         HeartBeat: entry.Value,
         Date: new Date(entry.Timestamp.getFullYear(), entry.Timestamp.getMonth(), entry.Timestamp.getDate()),
         User: ts.DocumentId,
-        Employee: load(entry.Tag, 'Employees').FirstName
+        Employee: load(entry.Tag, 'Employees')?.FirstName
     }));
 })"
                 };
@@ -112,7 +112,7 @@ return ts.Entries.map(entry => ({
                     @"timeSeries.map('Users', 'HeartRate', function (ts) {
 return ts.Entries.map(entry => ({
         HeartBeat: entry.Value,
-        Date: new Date(entry.Timestamp.getFullYear(), entry.Timestamp.getMonth(), entry.Timestamp.getDate()),
+        Date: new Date(Date.UTC(entry.Timestamp.getFullYear(), entry.Timestamp.getMonth(), entry.Timestamp.getDate())),
         User: ts.DocumentId,
         Count: 1
     }));
@@ -149,7 +149,7 @@ return ts.Entries.map(entry => ({
                     @"timeSeries.map('Users', 'HeartRate', function (ts) {
 return ts.Entries.map(entry => ({
         HeartBeat: entry.Value,
-        Date: new Date(entry.Timestamp.getFullYear(), entry.Timestamp.getMonth(), entry.Timestamp.getDate()),
+        Date: new Date(Date.UTC(entry.Timestamp.getFullYear(), entry.Timestamp.getMonth(), entry.Timestamp.getDate())),
         City: load(entry.Tag, 'Addresses').City,
         Count: 1
     }));
@@ -484,7 +484,7 @@ return ({
                 Assert.Equal(2, WaitForValue(() => store.Maintenance.Send(new GetIndexStatisticsOperation(indexName)).EntriesCount, 2));
 
                 terms = store.Maintenance.Send(new GetTermsOperation(indexName, "Employee", null));
-                Assert.Equal(0, terms.Length);
+                Assert.Equal(1, terms.Length);
 
                 // delete source document
 
