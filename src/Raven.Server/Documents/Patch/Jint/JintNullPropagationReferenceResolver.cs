@@ -52,7 +52,7 @@ namespace Raven.Server.Documents.Patch.Jint
 
         public bool TryGetCallable(Engine engine, object callee, out JsValue value)
         {
-            // fixed for compatibility the case of calling non-existing method by disabling TryGetCallable
+            // fixed for compatibility the case of calling non-existing method by disabling TryGetCallable (test SmallLogTransformerTest)
             // (as old Jint version hasn't actually called it, when the new one has started to call it and it stopped throwing as before)
             value = JsValue.Undefined;
             return false;
