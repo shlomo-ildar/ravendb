@@ -52,8 +52,8 @@ namespace SlowTests.Issues
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(item) {
-	var prices = Object.map(item.PriceConfig, function(v, k){ return {Price:v.Item1,Quantity:v.Item2};});
-	return { Name : item.Name, Prices : prices };
+    var prices = Object.map(item?.PriceConfig, function(v, k){ return {Price:v?.Item1,Quantity:v?.Item2};});
+    return { Name : item?.Name, Prices : prices };
 }
 from index 'TestDocumentByName' as item select output(item)", query.ToString());
 
@@ -89,8 +89,8 @@ from index 'TestDocumentByName' as item select output(item)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(item) {
-	var total = Object.map(item.MusicCollection, function(v, k){ return v.map(function(x){return x.Quantity*x.Price;}).reduce(function(a, b) { return a + b; }, 0);});
-	return { Total : total };
+    var total = Object.map(item?.MusicCollection, function(v, k){ return v?.map(function(x){return x?.Quantity*x?.Price;}).reduce(function(a, b) { return a + b; }, 0);});
+    return { Total : total };
 }
 from index 'TestDocumentByName' as item select output(item)", query.ToString());
 
@@ -132,8 +132,8 @@ from index 'TestDocumentByName' as item select output(item)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(item) {
-	var georgeAlbums = Object.keys(item.MusicCollection).map(function(a){return{Key: a,Value:item.MusicCollection[a]};}).filter(function(x){return x.Key.startsWith(""G"");}).map(function(s){return s.Value.map(function(x){return {Title:x.Title,ReleaseDate:x.ReleaseDate};});});
-	return { Name : item.Name, GeorgeAlbums : georgeAlbums };
+    var georgeAlbums = Object.keys(item?.MusicCollection)?.map(function(a){return{Key: a,Value:item?.MusicCollection[a]};})?.filter(function(x){return x?.Key?.startsWith(""G"");})?.map(function(s){return s?.Value?.map(function(x){return {Title:x?.Title,ReleaseDate:x?.ReleaseDate};});});
+    return { Name : item?.Name, GeorgeAlbums : georgeAlbums };
 }
 from index 'TestDocumentByName' as item select output(item)", query.ToString());
 
@@ -174,8 +174,8 @@ from index 'TestDocumentByName' as item select output(item)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(item) {
-	var artists = Object.map(item.MusicCollection, function(v, k){ return v.map(function(x){return {Title:x.Title,ReleaseDate:x.ReleaseDate};});});
-	return { Name : item.Name, AlbumsByArtists : artists };
+    var artists = Object.map(item?.MusicCollection, function(v, k){ return v?.map(function(x){return {Title:x?.Title,ReleaseDate:x?.ReleaseDate};});});
+    return { Name : item?.Name, AlbumsByArtists : artists };
 }
 from index 'TestDocumentByName' as item select output(item)", query.ToString());
 
