@@ -7,16 +7,13 @@ using System.Threading.Tasks;
 using V8.Net;
 using Raven.Client.ServerWide.JavaScript;
 using Raven.Server.Config.Categories;
-using Raven.Server.Documents.Indexes.Static;
 using Raven.Server.Documents.Indexes.Static.JavaScript.V8;
 using Raven.Server.Documents.Indexes.Static.Counters.V8;
-using Raven.Server.Documents.Indexes.Static.TimeSeries;
 using Raven.Server.Documents.Indexes.Static.TimeSeries.V8;
 using Sparrow;
 using Sparrow.Json;
 using Raven.Client.Util;
 using Jint.Native;
-using Microsoft.CodeAnalysis;
 using Raven.Client.Exceptions.Documents.Patching;
 using Raven.Server.Config.Settings;
 
@@ -355,7 +352,6 @@ var process = {
         public TypeBinder? TypeBinderBlittableObjectInstance;
         public TypeBinder? TypeBinderTask;
         public TypeBinder? TypeBinderTimeSeriesSegmentObjectInstance;
-        public TypeBinder? TypeBinderDynamicTimeSeriesEntry;
         public TypeBinder? TypeBinderCounterEntryObjectInstance;
         public TypeBinder? TypeBinderAttachmentNameObjectInstance;
         public TypeBinder? TypeBinderAttachmentObjectInstance;
@@ -396,11 +392,6 @@ var process = {
                 => tb.CreateObjectBinder<TimeSeriesSegmentObjectInstanceV8.CustomBinder, TimeSeriesSegmentObjectInstanceV8>((TimeSeriesSegmentObjectInstanceV8)obj, initializeBinder, keepAlive: true);
             base.GlobalObject.SetProperty(typeof(TimeSeriesSegmentObjectInstanceV8));
 
-            TypeBinderDynamicTimeSeriesEntry = RegisterType<DynamicTimeSeriesSegment.DynamicTimeSeriesEntry>(null, false);
-            TypeBinderDynamicTimeSeriesEntry.OnGetObjectBinder = (tb, obj, initializeBinder)
-                => tb.CreateObjectBinder<DynamicTimeSeriesEntryCustomBinder, DynamicTimeSeriesSegment.DynamicTimeSeriesEntry>((DynamicTimeSeriesSegment.DynamicTimeSeriesEntry)obj, initializeBinder, keepAlive: true);
-            base.GlobalObject.SetProperty(typeof(DynamicTimeSeriesSegment.DynamicTimeSeriesEntry));
-            
             TypeBinderCounterEntryObjectInstance = RegisterType<CounterEntryObjectInstanceV8>(null, false);
             TypeBinderCounterEntryObjectInstance.OnGetObjectBinder = (tb, obj, initializeBinder)
                 => tb.CreateObjectBinder<CounterEntryObjectInstanceV8.CustomBinder, CounterEntryObjectInstanceV8>((CounterEntryObjectInstanceV8)obj, initializeBinder, keepAlive: true);

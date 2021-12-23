@@ -38,10 +38,10 @@ namespace Raven.Server.Documents.Indexes.Static.TimeSeries.V8
                 var i = 0;
                 foreach (DynamicTimeSeriesSegment.DynamicTimeSeriesEntry entry in _segment.Entries)
                 {
-                    jsItems[i] = ((V8EngineEx)engine).CreateObjectBinder<DynamicTimeSeriesEntryCustomBinder>(entry);
+                    jsItems[i] = CreateDynamicTimeSeriesEntryObjectInstance(engineEx, entry);
                     i++;
                 }
-                return ((V8EngineEx)engine).CreateArrayWithDisposal(jsItems);
+                return (engineEx).CreateArrayWithDisposal(jsItems);
             }
 
             if (propertyName == nameof(TimeSeriesSegment.DocumentId))
@@ -62,61 +62,29 @@ namespace Raven.Server.Documents.Indexes.Static.TimeSeries.V8
             return InternalHandle.Empty;
         }
 
-        public class CustomBinder : CustomBinder<TimeSeriesSegmentObjectInstanceV8>
+        private InternalHandle CreateDynamicTimeSeriesEntryObjectInstance(V8EngineEx engineEx, DynamicTimeSeriesSegment.DynamicTimeSeriesEntry entry)
         {
-        }
-    }
+            var engine = (V8Engine)engineEx;
 
-    public class DynamicTimeSeriesEntryCustomBinder : ObjectBinderEx<DynamicTimeSeriesSegment.DynamicTimeSeriesEntry>
-    {
-        public override InternalHandle NamedPropertyGetter(ref string propertyName)
-        {
-            var timeSeriesEntry = Object as DynamicTimeSeriesSegment.DynamicTimeSeriesEntry;
+            var res = engine.CreateObject();
 
-            if (propertyName == nameof(timeSeriesEntry.Tag))
-                return Engine.CreateValue(timeSeriesEntry._entry.Tag?.ToString());
-            if (propertyName == nameof(timeSeriesEntry.Timestamp))
-                return Engine.CreateValue(timeSeriesEntry._entry.Timestamp);
-            if (propertyName == nameof(timeSeriesEntry.Value))
-                return Engine.CreateValue(timeSeriesEntry._entry.Values.Span[0]);
-
-
-            if (propertyName == nameof(timeSeriesEntry.Values))
-            {
-                int arrayLength =  timeSeriesEntry._entry.Values.Length;
-                var jsItems = new InternalHandle[arrayLength];
-                for (int i = 0; i < arrayLength; ++i)
-                {
-                    jsItems[i] = Engine.CreateValue(timeSeriesEntry._entry.Values.Span[i]);
-                }
-
-                return ((V8EngineEx)Engine).CreateArrayWithDisposal(jsItems);
-            }
-
-            return InternalHandle.Empty;
-        }
-
-        public override V8PropertyAttributes? NamedPropertyQuery(ref string propertyName)
-        {
-            string[] propertyNames = { nameof(ObjClr.Tag), nameof(ObjClr.Timestamp), nameof(ObjClr.Value), nameof(ObjClr.Values) };
-            if (Array.IndexOf(propertyNames, propertyName) > -1)
-            {
-                return V8PropertyAttributes.Locked;
-            }
-            return null;
-        }
-
-        public override InternalHandle NamedPropertyEnumerator()
-        {
-            string[] propertyNames = { nameof(ObjClr.Tag), nameof(ObjClr.Timestamp), nameof(ObjClr.Value), nameof(ObjClr.Values) };
-
-            int arrayLength =  propertyNames.Length;
+            res.SetProperty(nameof(entry.Tag), engine.CreateValue(entry._entry.Tag?.ToString()), V8PropertyAttributes.ReadOnly);
+            res.SetProperty(nameof(entry.Timestamp), engine.CreateValue(entry._entry.Timestamp), V8PropertyAttributes.ReadOnly);
+            res.SetProperty(nameof(entry.Value), engine.CreateValue(entry._entry.Values.Span[0]), V8PropertyAttributes.ReadOnly);
+            
+            int arrayLength =  entry._entry.Values.Length;
             var jsItems = new InternalHandle[arrayLength];
             for (int i = 0; i < arrayLength; ++i)
             {
-                jsItems[i] = Engine.CreateValue(propertyNames[i]);
+                jsItems[i] = engine.CreateValue(entry._entry.Values.Span[i]);
             }
-            return ((V8EngineEx)Engine).CreateArrayWithDisposal(jsItems);
+
+            res.SetProperty(nameof(entry.Values), engine.CreateArrayWithDisposal(jsItems), V8PropertyAttributes.ReadOnly);
+            return res;
+        }
+
+        public class CustomBinder : CustomBinder<TimeSeriesSegmentObjectInstanceV8>
+        {
         }
     }
 }
