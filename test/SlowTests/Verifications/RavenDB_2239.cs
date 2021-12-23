@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Indexes;
 using Xunit;
@@ -116,10 +117,11 @@ namespace SlowTests.Verifications
             WaitForIndexing(store);
         }
 
-        [Fact]
-        public void SmallLogTransformerTest()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void SmallLogTransformerTest(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var sw = new Stopwatch();
                 sw.Restart();
