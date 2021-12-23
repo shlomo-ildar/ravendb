@@ -80,13 +80,16 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript.V8
             {
                 jsValue = NamedPropertyGetterOnce((V8EngineEx)engine, ref propertyName);
                 if (!jsValue.IsEmpty)
-                    _properties.Add(propertyName, jsValue);
+                {
+                    using (jsValue)
+                        _properties.Add(propertyName, jsValue);
+                }
             }
 
             if (jsValue.IsEmpty)
                 return IsImplicitNull ? EngineEx.ImplicitNullV8 : jsValue;
 
-            return jsValue;
+            return jsValue.Clone();
         }
 
         ~ObjectInstanceBaseV8()
