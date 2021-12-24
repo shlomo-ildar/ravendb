@@ -26,7 +26,7 @@ namespace SlowTests.Issues
             return CanLoadDatabaseAfterUsingVoronRecoveryOnItWithCopyOnWriteMode(false);
         }
         
-        // TODO [shlomo] temporary switched off the test as it causes segmentation fault on the server (but locally works)
+        // TODO [shlomo] temporary switched off the test as it sometimes causes hanging (but not always)
         //[Fact64Bit]
         public  Task CanLoadDatabaseAfterUsingVoronRecoveryOnItWithCopyOnWriteModeCompressed()
         {
