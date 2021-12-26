@@ -76,7 +76,7 @@ namespace Raven.Server.Documents.Patch
             public void InitializeV8()
             {
                 var scriptEngineExV8 = new V8EngineEx();
-                var ctx = scriptEngineExV8.CreateContextEx(_jsOptions);
+                scriptEngineExV8.CreateAndSetContextEx(_jsOptions);
                 ScriptEngineV8 = scriptEngineExV8;
                 ScriptEngineHandle = scriptEngineExV8;
 

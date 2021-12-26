@@ -21,6 +21,8 @@ namespace Raven.Server.Documents.Patch.V8
 {
     public class V8EngineEx : V8Engine, IJsEngineHandle
     {
+        public static readonly V8EngineEx Instance = new();
+        
         public class ContextEx
         {
             private Context _contextNative;
@@ -118,10 +120,10 @@ var process = {
 
         private ContextEx? _contextEx;
 
-        public InternalHandle SetContext(ContextEx ctx)
+        public void SetContext(ContextEx ctx)
         {
             _contextEx = ctx;
-            return SetContext(ctx.ContextNative);
+            SetContext(ctx.ContextNative);
         }
 
         public static void DisposeJsObjectsIfNeeded(object value)
@@ -362,16 +364,20 @@ var process = {
         public V8EngineEx(IJavaScriptOptions? jsOptions = null) : base(false, jsConverter: JsConverter.Instance)
         {
             if (jsOptions != null)
-                CreateContextEx(jsOptions);
+                CreateAndSetContextEx(jsOptions);
         }
 
-        public ContextEx CreateContextEx(IJavaScriptOptions jsOptions)
+        public ContextEx CreateAndSetContextEx(IJavaScriptOptions jsOptions, ObjectTemplate? globalTemplate = null)
         {
-            var contextEx = new ContextEx(this);
+            var contextEx = new ContextEx(this, globalTemplate);
             SetContext(contextEx);
-
             SetOptions(jsOptions);
-            
+            InitializeGlobal();
+            return contextEx;
+        }
+        
+        public void InitializeGlobal()
+        {
             _implicitNull = new DynamicJsNullV8(this, isExplicitNull: false);
             _explicitNull = new DynamicJsNullV8(this, isExplicitNull: true);
 
@@ -424,8 +430,6 @@ var process = {
 
             JsonStringifyV8 = this.Execute("JSON.stringify", "JSON.stringify", true, 0);
             _jsonStringify = new JsHandle(JsonStringifyV8);
-
-            return contextEx;
         }
 
         public override void Dispose() 

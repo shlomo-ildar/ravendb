@@ -124,7 +124,7 @@ namespace Raven.Server.Documents.Indexes.Static
         protected void InitializeV8()
         {
             EngineExV8 = new V8EngineEx();
-            var ctx = EngineExV8.CreateContextEx(JsOptions);
+            EngineExV8.CreateAndSetContextEx(JsOptions);
             EngineV8 = EngineExV8;
             EngineHandle = EngineExV8;
             _engineForParsing = new JintEngineExForV8();
