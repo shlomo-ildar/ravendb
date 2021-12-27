@@ -46,7 +46,7 @@ namespace SlowTests.Issues
                         });
 
                     Assert.Equal("from index 'BookingIndex' as x where x.FullName = $p0 " +
-                                 "select { FullName : x.FullName, StartDate : toStringWithFormat(x.Start, \"dd.MM.yyyy\") }"
+                                 "select { FullName : x?.FullName, StartDate : toStringWithFormat(x?.Start, \"dd.MM.yyyy\") }"
                             , query.ToString());
 
                     var result = query.Single();
@@ -85,7 +85,7 @@ namespace SlowTests.Issues
                         });
 
                     Assert.Equal("from 'Bookings' as x where x.FirstName = $p0 " +
-                                 "select { StartDate : toStringWithFormat(x.Start) }"
+                                 "select { StartDate : toStringWithFormat(x?.Start) }"
                         , query.ToString());
 
                     var result = query.Single();
@@ -127,7 +127,7 @@ namespace SlowTests.Issues
                         });
 
                     Assert.Equal("from 'Bookings' as x where x.FirstName = $p0 " +
-                                 $"select {{ StartDate : toStringWithFormat(x.Start, \"{culture.Name}\") }}"
+                                 $"select {{ StartDate : toStringWithFormat(x?.Start, \"{culture.Name}\") }}"
                         , query.ToString());
 
                     var result = query.Single();
@@ -166,7 +166,7 @@ namespace SlowTests.Issues
                         });
 
                     Assert.Equal("from 'Bookings' as x where x.FirstName = $p0 " +
-                                 $"select {{ StartDate : toStringWithFormat(x.Start, \"dd.MM.yyyy\", \"{CultureInfo.CurrentCulture.Name}\") }}"
+                                 $"select {{ StartDate : toStringWithFormat(x?.Start, \"dd.MM.yyyy\", \"{CultureInfo.CurrentCulture.Name}\") }}"
                         , query.ToString());
 
                     var result = query.Single();
@@ -206,7 +206,7 @@ namespace SlowTests.Issues
                         });
 
                     Assert.Equal("from 'Bookings' as x where x.FirstName = $p0 " +
-                                 "select { StartDate : toStringWithFormat(x.Start, \"dd.MM.yyyy\") }"
+                                 "select { StartDate : toStringWithFormat(x?.Start, \"dd.MM.yyyy\") }"
                         , query.ToString());
 
                     var result = query.Single();
@@ -245,7 +245,7 @@ namespace SlowTests.Issues
                         });
 
                     Assert.Equal("from 'Bookings' as x where x.FirstName = $p0 " +
-                                 "select { Number : toStringWithFormat(x.Number, \"000\") }"
+                                 "select { Number : toStringWithFormat(x?.Number, \"000\") }"
                         , query.ToString());
 
                     var result = query.Single();
@@ -283,7 +283,7 @@ namespace SlowTests.Issues
                         });
 
                     Assert.Equal("from 'Bookings' as x where x.FirstName = $p0 " +
-                                 "select { Number : toStringWithFormat(x.Number) }"
+                                 "select { Number : toStringWithFormat(x?.Number) }"
                         , query.ToString());
 
                     var result = query.Single();
@@ -322,7 +322,7 @@ namespace SlowTests.Issues
                         });
 
                     Assert.Equal("from 'Bookings' as x where x.FirstName = $p0 " +
-                                 $"select {{ Number : toStringWithFormat(x.Number, \"{CultureInfo.CurrentCulture.Name}\") }}"
+                                 $"select {{ Number : toStringWithFormat(x?.Number, \"{CultureInfo.CurrentCulture.Name}\") }}"
                         , query.ToString());
 
                     var result = query.Single();
@@ -361,7 +361,7 @@ namespace SlowTests.Issues
                         });
 
                     Assert.Equal("from 'Bookings' as x where x.FirstName = $p0 " +
-                                 $"select {{ Number : toStringWithFormat(x.Number, \"000\", \"{CultureInfo.CurrentCulture.Name}\") }}"
+                                 $"select {{ Number : toStringWithFormat(x?.Number, \"000\", \"{CultureInfo.CurrentCulture.Name}\") }}"
                         , query.ToString());
 
                     var result = query.Single();

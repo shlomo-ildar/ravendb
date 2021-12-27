@@ -62,9 +62,9 @@ namespace SlowTests.Issues
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(d, $p1) {
-	var externalDocument = id(d)==null?null:load($p1);
-	var x = id(d)==null?0:10;
-	return { Id : id(d), Int1 : x, Int2 : externalDocument.Int+1 };
+    var externalDocument = id(d)==null?null:load($p1);
+    var x = id(d)==null?0:10;
+    return { Id : id(d), Int1 : x, Int2 : externalDocument?.Int+1 };
 }
 from 'RavenDocuments' as d where id() = $p0 select output(d, $p1)"
     , query.ToString());

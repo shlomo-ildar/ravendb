@@ -54,10 +54,10 @@ namespace SlowTests.Issues
                         };
 
                     Assert.Equal("from 'Documents' as doc select { " +
-                                 "False : doc.Status!==\"Success\", " +
-                                 "SecondFalse : !(doc.Status===\"Success\"), " +
-                                 "True : doc.Status===\"Success\", " +
-                                 "SecondTrue : !(doc.Status!==\"Success\") }" , query.ToString());
+                                 "False : doc?.Status!==\"Success\", " +
+                                 "SecondFalse : !(doc?.Status===\"Success\"), " +
+                                 "True : doc?.Status===\"Success\", " +
+                                 "SecondTrue : !(doc?.Status!==\"Success\") }" , query.ToString());
 
                     var item = query.Single();
                     Assert.NotNull(item);

@@ -43,7 +43,7 @@ namespace SlowTests.Issues
                         };
                     
                     Assert.Equal("from 'Users' as u where u.Active != $p0 " +
-                                 "select { Name : u.FirstName+\" \"+u.LastName, Active : u.Active }", query.ToString());
+                                 "select { Name : u?.FirstName+\" \"+u?.LastName, Active : u?.Active }", query.ToString());
                     
                     var result = query.ToList();
                     

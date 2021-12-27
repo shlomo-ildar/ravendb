@@ -46,10 +46,10 @@ namespace SlowTests.Issues
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(u) {
-	var detailId = ""details/1-A"";
-	var name = u.Name;
-	var detail = load(detailId);
-	return { Name : name, DetailId : detailId, Detail : detail };
+    var detailId = ""details/1-A"";
+    var name = u?.Name;
+    var detail = load(detailId);
+    return { Name : name, DetailId : detailId, Detail : detail };
 }
 from 'Users' as u select output(u)", query.ToString());
 

@@ -84,8 +84,8 @@ namespace SlowTests.Issues
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(doc) {
-	var p = doc.Lines.map(function(y){return load(y.Product);});
-	return { p : p };
+    var p = doc?.Lines?.map(function(y){return load(y?.Product);});
+    return { p : p };
 }
 from 'Orders' as doc select output(doc)", q.ToString());
 

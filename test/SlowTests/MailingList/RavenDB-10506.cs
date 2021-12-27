@@ -53,8 +53,8 @@ namespace SlowTests.MailingList
                                      };
 
                     Assert.Equal("from 'Packages' as package " +
-                                 "load package.SomethingElseReference as somethingElse, package.ComplexRuleReference.Id as rule " +
-                                 "select { PackageId : id(package), RuleName : rule.Name, SomethingElseName : somethingElse.Name }"
+                                 "load package?.SomethingElseReference as somethingElse, package?.ComplexRuleReference?.Id as rule " +
+                                 "select { PackageId : id(package), RuleName : rule?.Name, SomethingElseName : somethingElse?.Name }"
                                 , projection.ToString());
 
                     var result = projection.ToList();
