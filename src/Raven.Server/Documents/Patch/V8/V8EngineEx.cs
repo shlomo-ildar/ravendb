@@ -27,7 +27,7 @@ namespace Raven.Server.Documents.Patch.V8
         {
             private Context _contextNative;
             
-            public ContextEx(V8Engine engine, ObjectTemplate globalTemplate = null)
+            public ContextEx(V8Engine engine, ObjectTemplate? globalTemplate = null)
             {
                 _contextNative = engine.CreateContext(globalTemplate);
             }
