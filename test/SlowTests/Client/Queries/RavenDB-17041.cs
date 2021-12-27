@@ -75,9 +75,9 @@ namespace SlowTests.Client.Queries
                     var actualQuery = query.ToString();
 
                     const string expectedQuery = "from index 'UserIndex' as u " +
-                                                 "select { FirstName : u.FirstName, " +
-                                                 "LastName : u.LastName, " +
-                                                 "Roles : u.Roles.map(function(r){return {Role:r.Role};}) } " +
+                                                 "select { FirstName : u?.FirstName, " +
+                                                 "LastName : u?.LastName, " +
+                                                 "Roles : u?.Roles?.map(function(r){return {Role:r?.Role};}) } " +
                                                  "include 'u.Roles[].Role'";
 
                     Assert.Equal(expectedQuery, actualQuery);
