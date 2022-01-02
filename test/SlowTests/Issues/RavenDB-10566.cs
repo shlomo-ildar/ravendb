@@ -54,8 +54,8 @@ namespace SlowTests.Issues
         }
         
         // TODO [shlomo] temporary switched off the test as it causes segmentation fault on the server (but locally works)
-        //[Theory]
-        //[JavaScriptEngineClassData]
+        [Theory]
+        [JavaScriptEngineClassData]
         public async Task CanPatchWithFilter(string jsEngineType)
         {
             using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
