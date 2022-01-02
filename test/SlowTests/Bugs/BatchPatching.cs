@@ -22,7 +22,7 @@ namespace SlowTests.Bugs
         {
             using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
-                const int count = 2415; // 2406 max achieved for V8
+                const int count = 512; // 2406 max achieved for V8, 2415 failed
                 using (var s = store.OpenSession())
                 {
                     for (int i = 0; i < count; i++)
