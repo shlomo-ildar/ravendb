@@ -209,29 +209,18 @@ namespace Raven.Server
                             }
 
                             Console.WriteLine("Server started, listening to requests...");
-/*
-                            var sleep = 20;
-                            Console.WriteLine($"Sleeping for {sleep} sec");
-                            //Thread.Sleep(sleep * 1000);
 
-                            int count = 513;
+                            /*int count = 20000;
                             var engines = new V8Engine[count];
                             for (int i = 0; i < count; i++)
                             {
-                                Console.WriteLine($"created engine: {i}");
-                                if (i == 512)
-                                {
-                                    sleep = 60;
-                                    Console.WriteLine($"Sleeping for {sleep} sec");
-                                    //Thread.Sleep(sleep * 1000);
-                                }
-
+                                Console.WriteLine($"creating engine: {i}");
                                 var engine = new V8Engine(false);
                                 //string[] optionsCmd = {"--max_heap_size=16*1024*1024*1024"}; //, "--initial_heap_size=1024"};  // max_old_space_size, min_semi_space_size, max_semi_space_size
                                 //engine.SetFlagsFromCommandLine(optionsCmd);
                                 engines[i] = engine;
-                            }
-*/
+                            }*/
+
                             prevColor = Console.ForegroundColor;
                             Console.ForegroundColor = ConsoleColor.DarkGray;
                             Console.WriteLine("TIP: type 'help' to list the available commands.");
