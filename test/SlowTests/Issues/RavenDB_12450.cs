@@ -74,7 +74,7 @@ namespace SlowTests.Issues
                             doc.Name
                         };
 
-                    Assert.Equal("from index 'DocumentIndex' as doc select { Id : id(doc)+\" test\", Name : doc.Name }"
+                    Assert.Equal("from index 'DocumentIndex' as doc select { Id : id(doc)+\" test\", Name : doc?.Name }"
                         , query.ToString());
 
                     var item = query.Single();
