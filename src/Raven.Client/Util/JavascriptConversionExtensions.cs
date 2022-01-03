@@ -899,8 +899,7 @@ namespace Raven.Client.Util
                             context.Visitor.Visit(methodCallExpression.Arguments[1]);
                         }
 
-                        writer.Write($".reduce(function(a, b) {{ return {maxOrMin}(a, b);}}");
-                        writer.Write(")");
+                        writer.Write($".reduce(function(a, b) {{ return {maxOrMin}(a, b);}}, null)");
                     }
                 };
 
