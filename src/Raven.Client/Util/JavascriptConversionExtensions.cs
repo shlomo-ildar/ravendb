@@ -743,19 +743,22 @@ namespace Raven.Client.Util
                         }
                     case "Count":
                         {
-                            WriterAction access = writer =>
-                            {
-                                if (methodCallExpression.Arguments.Count > 1)
+                            WriterAction access1 = methodCallExpression.Arguments.Count > 1
+                                ? writer =>
                                 {
                                     writer.Write(".filter");
                                     context.Visitor.Visit(methodCallExpression.Arguments[1]);
                                     writer.Write(optChaining);
                                 }
+                                : null;
 
-                                writer.Write(".length");
+                            WriterAction access2 = writer =>
+                            {
+                                writer.Write($".length");
                             };
 
-                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access, expression: methodCallExpression);
+                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), 
+                                new WriterAction[] {access1, access2}, expression: methodCallExpression);
                             return;
                         }
                     case "OrderBy":
@@ -780,17 +783,10 @@ namespace Raven.Client.Util
                 }
 
 
-                WriterAction accessTail1 = methodName == "Sum"
+                WriterAction accessTail = methodName == "Sum"
                     ? writer =>
                     {
                         writer.Write(".reduce(function(a, b) { return a + b; }, 0)");
-                    }
-                    : null;
-
-                WriterAction accessTail2 = methodName == "Contains" 
-                    ? writer =>
-                    {
-                        writer.Write(">=0");
                     }
                     : null;
 
@@ -803,6 +799,11 @@ namespace Raven.Client.Util
                         writer.Write("(");
                         context.Visitor.Visit(methodCallExpression.Arguments[0]);
                         writer.Write(")");
+
+                        if (methodName == "Contains")
+                        {
+                            writer.Write(">=0");
+                        }
                     };
 
                     obj = context => context.Visitor.Visit(methodCallExpression.Object);
@@ -830,7 +831,7 @@ namespace Raven.Client.Util
                     obj = context => context.Visitor.Visit(methodCallExpression.Arguments[0]);
                 }
 
-                WriteObjectPropertyAccess(context, obj, new WriterAction[] {accessHead, accessTail1, accessTail2});
+                WriteObjectPropertyAccess(context, obj, new WriterAction[] {accessHead, accessTail});
             }
 
             private static void OrderByToSort(JavascriptConversionContext context, MethodCallExpression methodCallExpression, bool desc = false)
@@ -1320,11 +1321,27 @@ namespace Raven.Client.Util
 
             public override void ConvertToJavascript(JavascriptConversionContext context)
             {
-                if (!(context.Node is MemberExpression node))
+                var node = context.Node as MemberExpression;
+                var nodeU = context.Node as UnaryExpression;
+                if (!(node != null || nodeU != null))
                     return;
 
                 var writer = context.GetWriter();
                 var optChaining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
+
+                if (nodeU != null)
+                {
+                    if (nodeU.NodeType == ExpressionType.ArrayLength)
+                    {
+                        context.PreventDefault();
+                        WriterAction access = writer =>
+                        {
+                            writer.Write($".length");
+                        };
+                        WriteObjectPropertyAccess(context, context => context.Visitor.Visit(nodeU.Operand), access);
+                    }
+                    return;
+                }
 
                 if (node.Expression == null && (object) node.Member.DeclaringType == (object) typeof (string) && node.Member.Name == "Empty")
                 {
