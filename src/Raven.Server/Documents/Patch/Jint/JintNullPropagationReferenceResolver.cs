@@ -34,12 +34,12 @@ namespace Raven.Server.Documents.Patch.Jint
                 value = engine.Invoke(ScriptRunner.SingleRun.GetMetadataMethod, boi);
                 return true;
             }
-            if (reference.GetReferencedName() == "reduce" &&
+            /*if (reference.GetReferencedName() == "reduce" &&
                 value.IsArray() && value.AsArray().Length == 0)
             {
                 value = Null.Instance;
                 return true;
-            }
+            }*/
 
             if (value is DynamicJsNullJint)
             {
