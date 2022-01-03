@@ -1320,19 +1320,18 @@ namespace Raven.Client.Util
 
                 if (node.Expression == null && (object) node.Member.DeclaringType == (object) typeof (string) && node.Member.Name == "Empty")
                 {
+                    context.PreventDefault();
                     using (writer.Operation(JavascriptOperationTypes.Literal))
-                        writer.Write("\"\"");
+                        writer.Write("''");
                     return;
                 }
                 using (writer.Operation((Expression) node))
                 {
                     JavascriptMetadataProvider metadataProvider = context.Options.GetMetadataProvider();
                     int length = writer.Length;
-
                     
                     if (node.Expression == null)
                     {
-                        context.PreventDefault();
                         Type declaringType = node.Member.DeclaringType;
                         if ((object) declaringType != null)
                         {
@@ -1342,13 +1341,15 @@ namespace Raven.Client.Util
                         }
                     }
                     else if (node.Expression.Type.IsClosureRootType())
-                        return;
+                    {
+                        return; // should be processed with default logic
+                    }
                     else // if (node.Expression != this.contextParameter) - in case no JsCompilationFlags.ScopeParameter is set this condition is always true as this.contextParameter is null
                     {
-                        context.PreventDefault();
                         context.Visitor.Visit(node.Expression);
                     }
 
+                    context.PreventDefault();
                     if (writer.Length > length)
                     {
                         writer.Write($"{optChaining}.");
@@ -1583,7 +1584,7 @@ namespace Raven.Client.Util
 
             private static readonly Dictionary<Type, string> ValueTypes = new Dictionary<Type, string>() {
                 { typeof(int), "parseInt" }, { typeof(uint), "parseInt" }, { typeof(double), "parseFloat" }, { typeof(decimal), "parseFloat" },
-                { typeof(bool), "\"true\" == " }, { typeof(char), "" }, { typeof(long), "parseInt" }, { typeof(ulong), "parseInt" },
+                { typeof(bool), "'true' == " }, { typeof(char), "" }, { typeof(long), "parseInt" }, { typeof(ulong), "parseInt" },
                 { typeof(sbyte), "parseInt" },  { typeof(short), "parseInt" }, {typeof(ushort), "parseInt" }, { typeof(byte), "parseInt" }
             };
 
@@ -1653,7 +1654,7 @@ namespace Raven.Client.Util
                             if (culture.Name == string.Empty)
                                 continue;
                             writer.Write(", ");
-                            writer.Write($"\"{culture.Name}\"");
+                            writer.Write($"'{culture.Name}'");
                         }
                         else
                         {
@@ -1944,9 +1945,9 @@ namespace Raven.Client.Util
                     {
                         context.PreventDefault();
                         var dateTime = (DateTime)value;
-                        writer.Write("new Date(Date.parse(\"");
+                        writer.Write("new Date(Date.parse('");
                         writer.Write(dateTime.GetDefaultRavenFormat());
-                        writer.Write("\"))");
+                        writer.Write("'))");
                         return;
                     }
 
@@ -1956,9 +1957,9 @@ namespace Raven.Client.Util
                         context.PreventDefault();
                         if (_conventions.SaveEnumsAsIntegers == false)
                         {
-                            writer.Write("\"");
+                            writer.Write("'");
                             writer.Write(value);
-                            writer.Write("\"");
+                            writer.Write("'");
                         }
                         else
                         {
@@ -1984,9 +1985,9 @@ namespace Raven.Client.Util
                                 writer.Write(", ");
                             if (arr[i] is string || arr[i] is char)
                             {
-                                writer.Write("\"");
+                                writer.Write("'");
                                 writer.Write(arr[i]);
-                                writer.Write("\"");
+                                writer.Write("'");
                             }
                             else
                             {
@@ -2007,9 +2008,9 @@ namespace Raven.Client.Util
                     }
                     else
                     {
-                        writer.Write("\"");
+                        writer.Write("'");
                         writer.Write(value);
-                        writer.Write("\"");
+                        writer.Write("'");
                     }
                 }
             }
@@ -2062,9 +2063,9 @@ namespace Raven.Client.Util
                         && _conventions.SaveEnumsAsIntegers == false)
                     {
                         context.PreventDefault();
-                        writer.Write("\"");
+                        writer.Write("'");
                         writer.Write(nodeValue);
-                        writer.Write("\"");
+                        writer.Write("'");
                     }
 
                     if (nodeType.IsArray || LinqMethodsSupport.IsCollection(nodeType))
@@ -2083,9 +2084,9 @@ namespace Raven.Client.Util
                                 writer.Write(", ");
                             if (arr[i] is string || arr[i] is char)
                             {
-                                writer.Write("\"");
+                                writer.Write("'");
                                 writer.Write(arr[i]);
-                                writer.Write("\"");
+                                writer.Write("'");
                             }
                             else
                             {
@@ -2203,9 +2204,9 @@ namespace Raven.Client.Util
                 context.PreventDefault();
 
                 var writer = context.GetWriter();
-                writer.Write("\"");
+                writer.Write("'");
                 writer.Write(toWrite);
-                writer.Write("\"");
+                writer.Write("'");
             }
         }
 
@@ -2563,7 +2564,7 @@ namespace Raven.Client.Util
                             context.Visitor.Visit(mce.Arguments[0]);
                             writer.Write(" == null || ");
                             context.Visitor.Visit(mce.Arguments[0]);
-                            writer.Write(" === \"\")");
+                            writer.Write(" === '')");
                             break;
 
                         case "nullOrWhitespace":
@@ -2636,7 +2637,7 @@ namespace Raven.Client.Util
                                         {
                                             if (i != 0)
                                             {
-                                                writer.Write("+\"|\"+");
+                                                writer.Write("+'|'+");
                                             }
 
                                             context.Visitor.Visit(arrayExpression.Expressions[i]);
@@ -2656,7 +2657,7 @@ namespace Raven.Client.Util
                                                 {
                                                     if (i != 0)
                                                     {
-                                                        writer.Write("+\"|\"+");
+                                                        writer.Write("+'|'+");
                                                     }
 
                                                     var str = items.GetValue(i).ToInvariantString();
@@ -2676,13 +2677,13 @@ namespace Raven.Client.Util
                                         context.Visitor.Visit(mce.Arguments[0]);
                                     }
 
-                                    writer.Write(", \"g\")");
+                                    writer.Write(", 'g')");
                                 }
                                 else if (newName == "replace")
                                 {
                                     writer.Write("new RegExp(");
                                     context.Visitor.Visit(mce.Arguments[0]);
-                                    writer.Write(", \"g\"), ");
+                                    writer.Write(", 'g'), ");
 
                                     context.Visitor.Visit(mce.Arguments[1]);
                                 }
