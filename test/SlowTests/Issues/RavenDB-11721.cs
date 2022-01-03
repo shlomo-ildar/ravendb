@@ -91,8 +91,8 @@ namespace SlowTests.Issues
                             };
                     const string expected = "from 'Users' as u " +
                                             "where u.Name = $p0 " +
-                                            "load u.AddressId as address " +
-                                            "select { Name : u.Name, Country : address.Country }";
+                                            "load u?.AddressId as address " +
+                                            "select { Name : u?.Name, Country : address?.Country }";
                     for (int i = 0; i < 3; i++)
                     {
                         Assert.Equal(expected, q.ToString());
