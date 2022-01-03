@@ -31,17 +31,40 @@ namespace Raven.Client.Util
         private const string DefaultAliasPrefix = "__rvn";
 
         public static void WriteObjectPropertyAccess(JavascriptConversionContext context, ContextAction obj, WriterAction access,
-            WrapperAction objWrapper = null, bool addDot = false)
+            WrapperAction objWrapper = null, Expression expression = null, bool addDot = false)
         {
-            ContextAction accessCtx = access == null ? null : context =>
-            {
-                var writer = context.GetWriter();
-                access(writer);
-            };
-            WriteObjectPropertyAccess(context, obj, accessCtx,  objWrapper, addDot);
+                WriteObjectPropertyAccess(context, obj, new WriterAction[] {access},  objWrapper, expression, addDot);
         }
 
-        public static void WriteObjectPropertyAccess(JavascriptConversionContext context, ContextAction obj, ContextAction access, WrapperAction objWrapper = null, bool addDot = false)
+        public static void WriteObjectPropertyAccess(JavascriptConversionContext context, ContextAction obj, ContextAction access, 
+            WrapperAction objWrapper = null, Expression expression = null, bool addDot = false)
+        {
+            WriteObjectPropertyAccess(context, obj, new ContextAction[] {access},  objWrapper, expression, addDot);
+        }
+
+        public static void WriteObjectPropertyAccess(JavascriptConversionContext context, ContextAction obj, WriterAction[] accesses,
+            WrapperAction objWrapper = null, Expression expression = null, bool addDot = false)
+        {
+            var accessesCtx = new ContextAction[accesses.Length];
+            int i = 0;
+            foreach (var access in accesses)
+            {
+                ContextAction accessCtx = access == null
+                    ? null
+                    : context =>
+                    {
+                        var writer = context.GetWriter();
+                        access(writer);
+                    };
+
+                accessesCtx[i++] = accessCtx;
+            }
+
+            WriteObjectPropertyAccess(context, obj, accessesCtx,  objWrapper, expression, addDot);
+        }
+
+        public static void WriteObjectPropertyAccess(JavascriptConversionContext context, ContextAction obj, ContextAction[] accesses, 
+            WrapperAction objWrapper = null, Expression expression = null, bool addDot = false)
         {
             void WriteObjWrapper(ContextAction obj)
             {
@@ -56,19 +79,29 @@ namespace Raven.Client.Util
 
             WriteObjWrapper(obj);
 
-            if (access == null)
+            if (accesses == null)
                 return;
 
             bool useOptionalChaining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).UseOptionalChanining;
             var optChaining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
 
-            if (useOptionalChaining)
+            using (expression != null ? writer.Operation(expression) : null)
             {
-                writer.Write(optChaining);
-                if (addDot)
-                    writer.Write(".");
+                foreach (var access in accesses)
+                {
+                    if (access == null)
+                        continue;
+
+                    if (useOptionalChaining)
+                    {
+                        writer.Write(optChaining);
+                        if (addDot)
+                            writer.Write(".");
+                    }
+
+                    access(context);
+                }
             }
-            access(context);
         }
         
         public class CustomMethods : JavascriptConversionExtension
@@ -385,6 +418,7 @@ namespace Raven.Client.Util
 
                 var optChaining = ((PropertyNameConventionJSMetadataProvider)context.Options.CustomMetadataProvider).OptionalChanining;
 
+                ContextAction obj;
                 string newName;
                 switch (methodName)
                 {
@@ -396,7 +430,7 @@ namespace Raven.Client.Util
                                 break;
                             }
 
-                            ContextAction obj = context =>
+                            obj = context =>
                             {
                                 context.Visitor.Visit(methodCallExpression.Arguments[0]);
                             };
@@ -405,13 +439,10 @@ namespace Raven.Client.Util
 
                             WriterAction access = writer =>
                             {
-                                using (writer.Operation(methodCallExpression))
-                                {
-                                    writer.Write(".length");
-                                }
+                                writer.Write(".length");
                             };
                             
-                            WriteObjectPropertyAccess(context, obj, access);
+                            WriteObjectPropertyAccess(context, obj, access, expression: methodCallExpression);
                             writer.Write(" > 0");
                             return;
                         }
@@ -517,20 +548,18 @@ namespace Raven.Client.Util
                         {
                             WriterAction access = writer =>
                             {
-                                using (writer.Operation(methodCallExpression))
+                                if (methodCallExpression.Arguments.Count > 1)
                                 {
-                                    if (methodCallExpression.Arguments.Count > 1)
-                                    {
-                                        writer.Write(".find");
-                                        context.Visitor.Visit(methodCallExpression.Arguments[1]);
-                                        return;
-                                    }
-
-                                    writer.Write("[0]");
+                                    writer.Write(".find");
+                                    context.Visitor.Visit(methodCallExpression.Arguments[1]);
+                                    return;
                                 }
+
+                                writer.Write("[0]");
                             };
                             
-                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access, addDot: methodCallExpression.Arguments.Count <= 1);
+                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access, 
+                                expression: methodCallExpression, addDot: methodCallExpression.Arguments.Count <= 1);
                             return;
                         }
                     case "Last":
@@ -538,49 +567,41 @@ namespace Raven.Client.Util
                         {
                             WriterAction access = writer =>
                             {
-                                using (writer.Operation(methodCallExpression))
+                                if (methodCallExpression.Arguments.Count > 1)
                                 {
-                                    if (methodCallExpression.Arguments.Count > 1)
-                                    {
-                                        writer.Write(".slice().reverse().find");
-                                        context.Visitor.Visit(methodCallExpression.Arguments[1]);
-                                        return;
-                                    }
-
-                                    // arrayExpr.slice([-1])[0] will get the last value
-                                    writer.Write(".slice(-1)[0]");
+                                    writer.Write(".slice().reverse().find");
+                                    context.Visitor.Visit(methodCallExpression.Arguments[1]);
+                                    return;
                                 }
+
+                                // arrayExpr.slice([-1])[0] will get the last value
+                                writer.Write(".slice(-1)[0]");
                             };
 
-                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access);
+                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access, expression: methodCallExpression);
                             return;
                         }
                     case "ElementAt":
                         {
                             WriterAction access = writer =>
                             {
-                                using (writer.Operation(methodCallExpression))
-                                {
-                                    writer.Write("[");
-                                    context.Visitor.Visit(methodCallExpression.Arguments[1]);
-                                    writer.Write("]");
-                                }
+                                writer.Write("[");
+                                context.Visitor.Visit(methodCallExpression.Arguments[1]);
+                                writer.Write("]");
                             };
 
-                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access, addDot: true);
+                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access, 
+                                expression: methodCallExpression, addDot: true);
                             return;
                         }
                     case "Reverse":
                         {
                             WriterAction access = writer =>
                             {
-                                using (writer.Operation(methodCallExpression))
-                                {
-                                    writer.Write(".slice().reverse()");
-                                }
+                                writer.Write(".slice().reverse()");
                             };
 
-                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access);
+                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access, expression: methodCallExpression);
                             return;
                         }
                     case "Max":
@@ -597,32 +618,26 @@ namespace Raven.Client.Util
                         {
                             WriterAction access = writer =>
                             {
-                                using (writer.Operation(methodCallExpression))
-                                {
-                                    writer.Write(".slice(");
-                                    context.Visitor.Visit(methodCallExpression.Arguments[1]);
-                                    writer.Write(", ");
-                                    context.Visitor.Visit(methodCallExpression.Arguments[0]);
-                                    writer.Write($"{optChaining}.length)");
-                                }
+                                writer.Write(".slice(");
+                                context.Visitor.Visit(methodCallExpression.Arguments[1]);
+                                writer.Write(", ");
+                                context.Visitor.Visit(methodCallExpression.Arguments[0]);
+                                writer.Write($"{optChaining}.length)");
                             };
 
-                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access);
+                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access, expression: methodCallExpression);
                             return;
                         }
                     case "Take":
                         {
                             WriterAction access = writer =>
                             {
-                                using (writer.Operation(methodCallExpression))
-                                {
-                                    writer.Write(".slice(0, ");
-                                    context.Visitor.Visit(methodCallExpression.Arguments[1]);
-                                    writer.Write(")");
-                                }
+                                writer.Write(".slice(0, ");
+                                context.Visitor.Visit(methodCallExpression.Arguments[1]);
+                                writer.Write(")");
                             };
 
-                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access);
+                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access, expression: methodCallExpression);
                             return;
                         }
                     case "Distinct":
@@ -683,7 +698,7 @@ namespace Raven.Client.Util
                                         member.Member.Name != "Key" && member.Member.Name != "Value")
                                         return;
 
-                                    ContextAction obj = context =>
+                                    obj = context =>
                                     {
                                         context.Visitor.Visit(methodCallExpression.Arguments[0]);
                                     };
@@ -695,19 +710,21 @@ namespace Raven.Client.Util
                                         writer.Write(")");
                                     };
 
-                                    WriterAction access = writer =>
-                                    {
-                                        if (member.Member.Name == "Value")
+                                    WriterAction access1 = member.Member.Name == "Value" ?
+                                        writer =>
                                         {
                                             writer.Write(".map(function(k){return ");
                                             context.Visitor.Visit(methodCallExpression.Arguments[0]);
                                             writer.Write($"[k]}}){optChaining}");
                                         }
-
+                                        : null;
+                                    
+                                    WriterAction access2 = writer =>
+                                    {
                                         writer.Write(".reduce(function(a, b) { return a.concat(b);},[])");
                                     };
                                     
-                                    WriteObjectPropertyAccess(context, obj, access, objWrapper);
+                                    WriteObjectPropertyAccess(context, obj, new WriterAction[] {access1, access2}, objWrapper);
                                 }
                                 else
                                 {
@@ -728,20 +745,17 @@ namespace Raven.Client.Util
                         {
                             WriterAction access = writer =>
                             {
-                                using (writer.Operation(methodCallExpression))
+                                if (methodCallExpression.Arguments.Count > 1)
                                 {
-                                    if (methodCallExpression.Arguments.Count > 1)
-                                    {
-                                        writer.Write(".filter");
-                                        context.Visitor.Visit(methodCallExpression.Arguments[1]);
-                                        writer.Write(optChaining);
-                                    }
-
-                                    writer.Write(".length");
+                                    writer.Write(".filter");
+                                    context.Visitor.Visit(methodCallExpression.Arguments[1]);
+                                    writer.Write(optChaining);
                                 }
+
+                                writer.Write(".length");
                             };
 
-                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access);
+                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access, expression: methodCallExpression);
                             return;
                         }
                     case "OrderBy":
@@ -779,28 +793,27 @@ namespace Raven.Client.Util
                     }
                 };
 
+                WriterAction accessHead = null;
                 if (methodCallExpression.Object != null)
                 {
-                    WriterAction access = writer =>
+                    accessHead = writer =>
                     {
                         writer.Write($".{newName}");
                         writer.Write("(");
                         context.Visitor.Visit(methodCallExpression.Arguments[0]);
                         writer.Write(")");
-
-                        accessTail(writer);
                     };
 
-                    WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Object), access);
+                    obj = context => context.Visitor.Visit(methodCallExpression.Object);
                 }
                 else
                 {
                     // When having no other arguments, don't call the function, when it's a .map operation
                     // .Sum()/.Average()/.Select() for example can be called without arguments, which means,
                     // map all, though .map() without arguments returns an empty list
-                    WriterAction access = writer =>
+                    if (newName != "map" || methodCallExpression.Arguments.Count > 1)
                     {
-                        if (newName != "map" || methodCallExpression.Arguments.Count > 1)
+                        accessHead = writer =>
                         {
                             writer.Write($".{newName}");
                             writer.Write("(");
@@ -810,68 +823,65 @@ namespace Raven.Client.Util
                             }
 
                             writer.Write(")");
-                        }
-
-                        accessTail(writer);
-                    };
+                        };
+                    }
                     
-                    WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access);
+                    obj = context => context.Visitor.Visit(methodCallExpression.Arguments[0]);
                 }
+
+                WriteObjectPropertyAccess(context, obj, new WriterAction[] {accessHead, accessTail});
             }
 
             private static void OrderByToSort(JavascriptConversionContext context, MethodCallExpression methodCallExpression, bool desc = false)
             {
                 WriterAction access = writer =>
                 {
-                    using (writer.Operation(methodCallExpression))
+                    string path = null;
+                    var isNumber = false;
+                    if (methodCallExpression.Arguments.Count == 2 &&
+                        methodCallExpression.Arguments[1] is LambdaExpression lambda)
                     {
-                        string path = null;
-                        var isNumber = false;
-                        if (methodCallExpression.Arguments.Count == 2 &&
-                            methodCallExpression.Arguments[1] is LambdaExpression lambda)
+                        if (lambda.Body is MemberExpression memberExpression)
                         {
-                            if (lambda.Body is MemberExpression memberExpression)
-                            {
-                                path = GetMemberPath(memberExpression);
+                            path = GetMemberPath(memberExpression);
 
-                                isNumber = _numericTypes.Contains(memberExpression.Type);
-                            }
-                            else if (lambda.Body is BinaryExpression be && be.NodeType == ExpressionType.ArrayIndex &&
-                                     be.Right is ConstantExpression ce && be.Left is MemberExpression member)
-                            {
-                                // e.g. entry.Values[0]
-                                var memberPath = GetMemberPath(member);
-                                path = $"{memberPath}[{ce.Value}]";
-                                isNumber = _numericTypes.Contains(be.Type);
-                            }
+                            isNumber = _numericTypes.Contains(memberExpression.Type);
                         }
-
-                        writer.Write(".sort(");
-                        if (path != null)
+                        else if (lambda.Body is BinaryExpression be && be.NodeType == ExpressionType.ArrayIndex &&
+                                 be.Right is ConstantExpression ce && be.Left is MemberExpression member)
                         {
-                            writer.Write("function (a, b){ return ");
-
-                            if (isNumber)
-                            {
-                                writer.Write(desc
-                                    ? $"b.{path} - a.{path}"
-                                    : $"a.{path} - b.{path}");
-                            }
-                            else
-                            {
-                                writer.Write(desc
-                                    ? $"((a.{path} < b.{path}) ? 1 : (a.{path} > b.{path})? -1 : 0)"
-                                    : $"((a.{path} < b.{path}) ? -1 : (a.{path} > b.{path})? 1 : 0)");
-                            }
-
-                            writer.Write(";}");
+                            // e.g. entry.Values[0]
+                            var memberPath = GetMemberPath(member);
+                            path = $"{memberPath}[{ce.Value}]";
+                            isNumber = _numericTypes.Contains(be.Type);
                         }
-
-                        writer.Write(")");
                     }
+
+                    writer.Write(".sort(");
+                    if (path != null)
+                    {
+                        writer.Write("function (a, b){ return ");
+
+                        if (isNumber)
+                        {
+                            writer.Write(desc
+                                ? $"b.{path} - a.{path}"
+                                : $"a.{path} - b.{path}");
+                        }
+                        else
+                        {
+                            writer.Write(desc
+                                ? $"((a.{path} < b.{path}) ? 1 : (a.{path} > b.{path})? -1 : 0)"
+                                : $"((a.{path} < b.{path}) ? -1 : (a.{path} > b.{path})? 1 : 0)");
+                        }
+
+                        writer.Write(";}");
+                    }
+
+                    writer.Write(")");
                 };
 
-                WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access);
+                WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access, expression: methodCallExpression);
             }
 
             private static string GetMemberPath(MemberExpression memberExpression)
@@ -888,35 +898,32 @@ namespace Raven.Client.Util
 
             private static void HandleMaxOrMin(JavascriptConversionContext context, MethodCallExpression methodCallExpression, bool max = false)
             {
-                WriterAction access = writer =>
-                {
-                    var maxOrMin = max ? "Raven_Max" : "Raven_Min";
-                    using (writer.Operation(methodCallExpression))
+                var maxOrMin = max ? "Raven_Max" : "Raven_Min";
+                WriterAction access1 = (methodCallExpression.Arguments.Count > 1) ?
+                    writer =>
                     {
-                        if (methodCallExpression.Arguments.Count > 1)
-                        {
-                            writer.Write(".map");
-                            context.Visitor.Visit(methodCallExpression.Arguments[1]);
-                        }
-
-                        writer.Write($".reduce(function(a, b) {{ return {maxOrMin}(a, b);}}, null)");
+                        writer.Write(".map");
+                        context.Visitor.Visit(methodCallExpression.Arguments[1]);
                     }
+                    : null;
+
+                WriterAction access2 = writer =>
+                {
+                    writer.Write($".reduce(function(a, b) {{ return {maxOrMin}(a, b);}}, null)");
                 };
 
-                WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access);
+                WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), 
+                    new WriterAction[] {access1, access2}, expression: methodCallExpression);
             }
 
             private static void HandleCount(JavascriptConversionContext context, Expression expression)
             {
                 WriterAction access = writer =>
                 {
-                    using (writer.Operation(expression))
-                    {
-                        writer.Write(".length");
-                    }
+                    writer.Write(".length");
                 };
 
-                WriteObjectPropertyAccess(context, context => context.Visitor.Visit(expression), access);
+                WriteObjectPropertyAccess(context, context => context.Visitor.Visit(expression), access, expression: expression);
             }
 
             public static bool IsCollection(Type type)
