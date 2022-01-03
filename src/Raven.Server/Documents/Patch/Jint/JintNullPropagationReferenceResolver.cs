@@ -34,6 +34,8 @@ namespace Raven.Server.Documents.Patch.Jint
                 value = engine.Invoke(ScriptRunner.SingleRun.GetMetadataMethod, boi);
                 return true;
             }
+            
+            // [shlomo] fixed test FilteredMinAndMaxProjectionAgainstEmptyCollection by switching off reduce processing as it seemed to cause searching reduce property on null value
             /*if (reference.GetReferencedName() == "reduce" &&
                 value.IsArray() && value.AsArray().Length == 0)
             {
