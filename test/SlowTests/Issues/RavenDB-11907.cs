@@ -113,7 +113,7 @@ namespace SlowTests.Issues
                         })
                         .SingleOrDefault();
 
-                    Assert.False(doc?.HasTags);
+                    Assert.False(doc?.HasTags ?? false);
                 }
             }
         }
@@ -125,7 +125,7 @@ namespace SlowTests.Issues
                 OriginalData = Array.Empty<string>();
             }
 
-            public bool HasTags { get; set; }
+            public bool? HasTags { get; set; }
             public string[] OriginalData { get; set; }
             public string[] FilteredData { get; set; }
 
