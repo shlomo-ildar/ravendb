@@ -18,7 +18,10 @@ namespace Raven.Server.Documents.Patch.Jint
             var name = reference.GetReferencedName()?.AsString();
             if (_args == null || name == null || name.StartsWith('$') == false)
             {
-                value = name == "length" ? 0 : Null.Instance;
+                if (name == "length")
+                    value = 0;
+                else //if (!TryGetCallable(engine, reference, out value))
+                    value = Null.Instance;
                 return true;
             }
 
@@ -54,11 +57,6 @@ namespace Raven.Server.Documents.Patch.Jint
 
         public bool TryGetCallable(Engine engine, object callee, out JsValue value)
         {
-            // fixed for compatibility the case of calling non-existing method by disabling TryGetCallable (test SmallLogTransformerTest)
-            // (as old Jint version hasn't actually called it, when the new one has started to call it and it stopped throwing as before)
-            value = JsValue.Undefined;
-            return false;
-            
             if (callee is Reference reference)
             {
                 var baseValue = reference.GetBase();
@@ -91,8 +89,12 @@ namespace Raven.Server.Documents.Patch.Jint
                 }
             }
 
-            value = new ClrFunctionInstance(engine, "function", (thisObj, values) => thisObj);
-            return true;
+            // fixed for compatibility the case of calling non-existing method by disabling TryGetCallable (test SmallLogTransformerTest)
+            // (as old Jint version hasn't actually called it, when the new one has started to call it and it stopped throwing as before)
+            value = JsValue.Undefined;
+            return false;
+            //value = new ClrFunctionInstance(engine, "function", (thisObj, values) => thisObj);
+            //return true;
         }
 
         public bool CheckCoercible(JsValue value)
