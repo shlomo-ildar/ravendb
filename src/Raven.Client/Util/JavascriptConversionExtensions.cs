@@ -768,7 +768,6 @@ namespace Raven.Client.Util
                                 {
                                     writer.Write(".filter");
                                     context.Visitor.Visit(methodCallExpression.Arguments[1]);
-                                    writer.Write(optChaining);
                                 }
                                 : null;
 
