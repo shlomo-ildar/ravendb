@@ -193,7 +193,18 @@ namespace Raven.Client.Documents.Session
 
             var valueToUse = AddTypeNameToValueIfNeeded(path.Body.Type, value);
 
-            var patchRequest = new PatchRequest {Script = $"this.{pathScript} = args.val_{_valsCount};", Values = {[$"val_{_valsCount}"] = valueToUse}};
+            var thisPos = 0;
+            for (int i = 0; i < pathScript.Length; i++)
+            {
+                if (pathScript[i] != '(')
+                {
+                    thisPos++;
+                    break;
+                }
+            }
+
+            pathScript = pathScript.Insert(thisPos+1, "this.");
+            var patchRequest = new PatchRequest {Script = $"{pathScript} = args.val_{_valsCount};", Values = {[$"val_{_valsCount}"] = valueToUse}};
 
             _valsCount++;
 
