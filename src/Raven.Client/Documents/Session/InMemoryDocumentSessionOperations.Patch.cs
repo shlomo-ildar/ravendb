@@ -202,8 +202,8 @@ namespace Raven.Client.Documents.Session
                     break;
                 }
             }
-
             pathScript = pathScript.Insert(thisPos+1, "this.");
+            
             var patchRequest = new PatchRequest {Script = $"{pathScript} = args.val_{_valsCount};", Values = {[$"val_{_valsCount}"] = valueToUse}};
 
             _valsCount++;
