@@ -851,14 +851,15 @@ namespace Raven.Client.Util
                     // When having no other arguments, don't call the function, when it's a .map operation
                     // .Sum()/.Average()/.Select() for example can be called without arguments, which means,
                     // map all, though .map() without arguments returns an empty list
-                    if (newName != "map" || methodCallExpression.Arguments.Count > 1)
+                    accessHead = writer =>
                     {
-                        accessHead = writer =>
+                        if (isArrayFunc)
                         {
-                            if (isArrayFunc)
-                            {
-                                writer.Write("?[])");
-                            }
+                            writer.Write("?[])");
+                        }
+
+                        if (newName != "map" || methodCallExpression.Arguments.Count > 1)
+                        {
                             writer.Write($".{newName}");
                             writer.Write("(");
                             if (methodCallExpression.Arguments.Count > 1)
@@ -867,8 +868,8 @@ namespace Raven.Client.Util
                             }
 
                             writer.Write(")");
-                        };
-                    }
+                        }
+                    };
                     
                     obj = context =>
                     {
