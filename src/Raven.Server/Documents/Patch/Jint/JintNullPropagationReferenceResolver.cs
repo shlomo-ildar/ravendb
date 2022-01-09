@@ -18,10 +18,7 @@ namespace Raven.Server.Documents.Patch.Jint
             var name = reference.GetReferencedName()?.AsString();
             if (_args == null || name == null || name.StartsWith('$') == false)
             {
-                if (name == "length")
-                    value = 0;
-                else //if (!TryGetCallable(engine, reference, out value))
-                    value = Null.Instance;
+                value = name == "length" ? 0 : Null.Instance;
                 return true;
             }
 
