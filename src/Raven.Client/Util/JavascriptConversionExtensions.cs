@@ -812,12 +812,11 @@ namespace Raven.Client.Util
                     }
                     : null;
 
-                WriterAction accessTailContains = methodName == "Contains"
-                    ? writer =>
-                    {
+                WriterAction processContains = writer =>
+                {
+                    if (methodName == "Contains")
                         writer.Write(">=0");
-                    }
-                    : null;
+                };
 
                 bool isArrayFunc = useOptChaining && (newName == "reduce" || newName == "concat" || newName == "some" || newName == "every" || newName == "map" || newName == "filter" || newName == "reverse");
                 
@@ -834,6 +833,8 @@ namespace Raven.Client.Util
                         writer.Write("(");
                         context.Visitor.Visit(methodCallExpression.Arguments[0]);
                         writer.Write(")");
+
+                        processContains(writer);
                     };
 
                     obj = context =>
@@ -870,6 +871,8 @@ namespace Raven.Client.Util
 
                             writer.Write(")");
                         }
+                        
+                        processContains(writer);
                     };
                     
                     obj = context =>
@@ -884,7 +887,7 @@ namespace Raven.Client.Util
                     };
                 }
 
-                WriteObjectPropertyAccess(context, obj, new WriterAction[] {accessHead, accessTailSum, accessTailContains});
+                WriteObjectPropertyAccess(context, obj, new WriterAction[] {accessHead, accessTailSum});
             }
 
             private static void OrderByToSort(JavascriptConversionContext context, MethodCallExpression methodCallExpression, bool desc = false)
