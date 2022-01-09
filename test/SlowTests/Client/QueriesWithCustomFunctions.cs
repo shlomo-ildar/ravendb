@@ -3761,7 +3761,7 @@ from 'Orders' as o load o?.Company as company select output(o, company)", query.
 
                         Assert.Equal("from 'Documents' as d where (id() in ($p0)) and (d.Deleted = $p1) " +
                                      "select { Id : id(d), Deleted : d?.Deleted, " +
-                                     "Values : d?.SubDocuments?.filter(function(x){return $p2.length===0||$p3?.indexOf(x?.TargetId)>=0;})?.map(function(x){return {TargetId:x?.TargetId,TargetValue:x?.TargetValue};}) }"
+                                     "Values : ((((d?.SubDocuments??[]).filter(function(x){return ($p2?.length??0)===0||($p3?.indexOf(x?.TargetId)>=0);}))??[]).map(function(x){return {TargetId:x?.TargetId,TargetValue:x?.TargetValue};})) }"
                                      , projection.ToString());
 
                         var result = projection.ToList();
@@ -3816,7 +3816,7 @@ from 'Orders' as o load o?.Company as company select output(o, company)", query.
 
                         Assert.Equal("from 'Documents' as d where (id() in ($p0)) and (d.Deleted = $p1) " +
                                      "select { Id : id(d), Deleted : d?.Deleted, " +
-                                     "Values : d?.SubDocuments?.filter(function(x){return $p2?.length===0||$p3?.indexOf(x?.TargetId)>=0;})?.map(function(x){return {TargetId:x?.TargetId,TargetValue:x?.TargetValue};}) }"
+                                     "Values : ((((d?.SubDocuments??[]).filter(function(x){return ($p2?.length??0)===0||($p3?.indexOf(x?.TargetId)>=0);}))??[]).map(function(x){return {TargetId:x?.TargetId,TargetValue:x?.TargetValue};})) }"
                             , projection.ToString());
 
                         var result = projection.ToList();
@@ -3867,7 +3867,7 @@ from 'Orders' as o load o?.Company as company select output(o, company)", query.
 
                         Assert.Equal("from 'Documents' as d where (id() in ($p0)) and (d.Deleted = $p1) " +
                                      "select { Id : id(d), Deleted : d?.Deleted, " +
-                                     "Values : d?.SubDocuments?.filter(function(x){return $p2==null||x?.TargetId===$p3;})?.map(function(x){return {TargetId:x?.TargetId,TargetValue:x?.TargetValue};}) }"
+                                     "Values : ((((d?.SubDocuments??[]).filter(function(x){return $p2==null||x?.TargetId===$p3;}))??[]).map(function(x){return {TargetId:x?.TargetId,TargetValue:x?.TargetValue};})) }"
                             , projection.ToString());
 
                         var result = projection.ToList();
