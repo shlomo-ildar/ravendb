@@ -804,11 +804,18 @@ namespace Raven.Client.Util
                 }
 
 
-                WriterAction accessTail = methodName == "Sum"
+                WriterAction accessTailSum = methodName == "Sum"
                     ? writer =>
                     {
                         reduceInitial = "0";
                         writer.Write($".reduce(function(a, b) {{ return a + b; }}, {reduceInitial})");
+                    }
+                    : null;
+
+                WriterAction accessTailContains = methodName == "Contains"
+                    ? writer =>
+                    {
+                        writer.Write(">=0");
                     }
                     : null;
 
@@ -827,11 +834,6 @@ namespace Raven.Client.Util
                         writer.Write("(");
                         context.Visitor.Visit(methodCallExpression.Arguments[0]);
                         writer.Write(")");
-
-                        if (methodName == "Contains")
-                        {
-                            writer.Write(">=0");
-                        }
                     };
 
                     obj = context =>
@@ -882,7 +884,7 @@ namespace Raven.Client.Util
                     };
                 }
 
-                WriteObjectPropertyAccess(context, obj, new WriterAction[] {accessHead, accessTail});
+                WriteObjectPropertyAccess(context, obj, new WriterAction[] {accessHead, accessTailSum, accessTailContains});
             }
 
             private static void OrderByToSort(JavascriptConversionContext context, MethodCallExpression methodCallExpression, bool desc = false)
