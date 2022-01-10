@@ -6,10 +6,12 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Jint.Native;
 using V8.Net;
 using Raven.Server.Extensions.V8;
 using Raven.Client;
 using Raven.Client.Documents.Indexes.Spatial;
+using Raven.Client.Documents.Operations.TimeSeries;
 using Raven.Client.Documents.Session.TimeSeries;
 using Raven.Client.Exceptions;
 using Raven.Client.Exceptions.Documents;
@@ -44,7 +46,7 @@ namespace Raven.Server.Documents.Patch
             var s = arg.AsString;
             fixed (char* pValue = s)
             {
-                var result = LazyStringParser.TryParseDateTime(pValue, s.Length, out DateTime dt, out _);
+                var result = LazyStringParser.TryParseDateTime(pValue, s.Length, out DateTime dt, out _, properlyParseThreeDigitsMilliseconds: true);
                 if (result != LazyStringParser.Result.DateTime)
                     ThrowInvalidDateArgument();
 
@@ -65,9 +67,9 @@ namespace Raven.Server.Documents.Patch
 
             return TimeSeriesRetriever.ParseDateTime(arg.AsString);
         }
-        
-        private static string GetTypes(InternalHandle value) => $"JintType({value.ValueType}) .NETType({value.GetType().Name})";
-        
+
+        private static string GetTypes(InternalHandle value) => $"V8Type({value.ValueType}) .NETType({value.GetType().Name})";
+
         public partial class SingleRun
         {
             public V8Engine ScriptEngineV8;
@@ -148,6 +150,7 @@ namespace Raven.Server.Documents.Patch
 
                     var obj = ScriptEngineV8.CreateObject();
                     obj.SetProperty("append", AppendTimeSeries.V8.Item.Clone());
+                    obj.SetProperty("increment", IncrementTimeSeries.V8.Item.Clone());
                     obj.SetProperty("delete", DeleteRangeTimeSeries.V8.Item.Clone());
                     obj.SetProperty("get", GetRangeTimeSeries.V8.Item.Clone());
                     obj.SetProperty("getStats", GetStatsTimeSeries.V8.Item.Clone());
@@ -228,23 +231,8 @@ namespace Raven.Server.Documents.Patch
                         try
                         {
                             var jsValues = args[1];
-                            Memory<double> values;
-                            if (jsValues.IsArray)
-                            {
-                                valuesBuffer = ArrayPool<double>.Shared.Rent((int)jsValues.ArrayLength);
-                                FillDoubleArrayFromJsArray(valuesBuffer, jsValues, signature);
-                                values = new Memory<double>(valuesBuffer, 0, (int)jsValues.ArrayLength);
-                            }
-                            else if (jsValues.IsNumberOrIntEx)
-                            {
-                                valuesBuffer = ArrayPool<double>.Shared.Rent(1);
-                                valuesBuffer[0] = jsValues.AsDouble;
-                                values = new Memory<double>(valuesBuffer, 0, 1);
-                            }
-                            else
-                            {
-                                throw new ArgumentException($"{signature}: The values should be an array but got {GetTypes(jsValues)}");
-                            }
+
+                            GetTimeSeriesValuesV8(jsValues, ref valuesBuffer, signature, out var values);
 
                             var tss = _database.DocumentsStorage.TimeSeriesStorage;
                             var newSeries = tss.Stats.GetStats(_docsCtx, id, timeSeries).Count == 0;
@@ -268,7 +256,7 @@ namespace Raven.Server.Documents.Patch
                                 id,
                                 CollectionName.GetCollectionName(doc),
                                 timeSeries,
-                                new[] { toAppend }, 
+                                new[] { toAppend },
                                 AppendOptionsForScript);
 
                             if (DebugMode)
@@ -294,6 +282,110 @@ namespace Raven.Server.Documents.Patch
                 catch (Exception e) 
                 {
                     return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
+                }
+            }
+
+            private InternalHandle IncrementTimeSeriesV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
+            {
+                try
+                {
+                    using (var document = self.GetProperty("doc"))
+                    using (var name = self.GetProperty("name"))
+                    {
+                        AssertValidDatabaseContext("timeseries(doc, name).increment");
+
+                        const string signature1Args = "timeseries(doc, name).increment(values)";
+                        const string signature2Args = "timeseries(doc, name).increment(timestamp, values)";
+
+                        string signature;
+                        DateTime timestamp;
+                        InternalHandle valuesArg;
+
+                        switch (args.Length)
+                        {
+                            case 1:
+                                signature = signature1Args;
+                                timestamp = DateTime.UtcNow.EnsureMilliseconds();
+                                valuesArg = args[0];
+                                break;
+                            case 2:
+                                signature = signature2Args;
+                                timestamp = GetTimeSeriesDateArg(args[0], signature, "timestamp");
+                                valuesArg = args[1];
+                                break;
+                            default:
+                                throw new ArgumentException(
+                                    $"There is no overload with {args.Length} arguments for this method should be {signature1Args} or {signature2Args}");
+                        }
+
+                        var (id, doc) = GetIdAndDocFromArg(document, _timeSeriesSignature);
+
+                        string timeSeries = GetStringArg(name, _timeSeriesSignature, "name");
+
+                        double[] valuesBuffer = null;
+                        try
+                        {
+                            GetTimeSeriesValuesV8(valuesArg, ref valuesBuffer, signature, out var values);
+
+                            var tss = _database.DocumentsStorage.TimeSeriesStorage;
+                            var newSeries = tss.Stats.GetStats(_docsCtx, id, timeSeries).Count == 0;
+
+                            if (newSeries)
+                            {
+                                DocumentTimeSeriesToUpdate ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                                DocumentTimeSeriesToUpdate.Add(id);
+                            }
+
+                            var toIncrement = new TimeSeriesOperation.IncrementOperation {Values = valuesBuffer, ValuesLength = values.Length, Timestamp = timestamp};
+
+                            tss.IncrementTimestamp(
+                                _docsCtx,
+                                id,
+                                CollectionName.GetCollectionName(doc),
+                                timeSeries,
+                                new[] { toIncrement },
+                                AppendOptionsForScript);
+
+                            if (DebugMode)
+                            {
+                                DebugActions.IncrementTimeSeries.Add(new DynamicJsonValue
+                                {
+                                    ["Name"] = timeSeries, ["Timestamp"] = timestamp, ["Values"] = values.ToArray().Cast<object>(), ["Created"] = newSeries
+                                });
+                            }
+                        }
+                        finally
+                        {
+                            if (valuesBuffer != null)
+                                ArrayPool<double>.Shared.Return(valuesBuffer);
+                        }
+                    }
+
+                    return InternalHandle.Empty;
+                }
+                catch (Exception e) 
+                {
+                    return engine.CreateError(e.ToString(), JSValueType.ExecutionError);
+                }
+            }
+
+            private void GetTimeSeriesValuesV8(InternalHandle jsValues, ref double[] valuesBuffer, string signature, out Memory<double> values)
+            {
+                if (jsValues.IsArray)
+                {
+                    valuesBuffer = ArrayPool<double>.Shared.Rent((int)jsValues.ArrayLength);
+                    FillDoubleArrayFromJsArray(valuesBuffer, jsValues, signature);
+                    values = new Memory<double>(valuesBuffer, 0, (int)jsValues.ArrayLength);
+                }
+                else if (jsValues.IsNumberOrIntEx)
+                {
+                    valuesBuffer = ArrayPool<double>.Shared.Rent(1);
+                    valuesBuffer[0] = jsValues.AsDouble;
+                    values = new Memory<double>(valuesBuffer, 0, 1);
+                }
+                else
+                {
+                    throw new ArgumentException($"{signature}: The values should be an array but got {GetTypes(jsValues)}");
                 }
             }
 
@@ -752,7 +844,7 @@ namespace Raven.Server.Documents.Patch
                         return boi.Blittable.ToString();
                     }
 
-                    using (var blittable =  JsBlittableBridgeV8.Translate(_jsonCtx, ScriptEngineV8, obj, isRoot: !recursive))
+                    using (var blittable = JsBlittableBridgeV8.Translate(_jsonCtx, ScriptEngineV8, obj, isRoot: !recursive))
                     {
                         return blittable.ToString();
                     }
@@ -776,7 +868,7 @@ namespace Raven.Server.Documents.Patch
                     throw new InvalidOperationException("Raven_ExplodeArgs(this, args) - must be called with 2 arguments");
                 if (args[1].IsObject && args[1].BoundObject is BlittableObjectInstanceV8 boi)
                 {
-                    //_refResolverJint.ExplodeArgsOn(args[0], boi);
+                    //_refResolverV8.ExplodeArgsOn(args[0], boi);
                     return self;
                 }
                 if (args[1].IsNull || args[1].IsUndefined)
@@ -896,13 +988,13 @@ namespace Raven.Server.Documents.Patch
                     return ScriptEngineV8.CreateNullValue();
 
                 IncludeRevisionsChangeVectors ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                
+
                 foreach (InternalHandle arg in args)
                 {
                     switch (arg.ValueType)
                     {
                         case JSValueType.String:
-                            if (DateTime.TryParseExact(arg.ToString(), DefaultFormat.DateTimeFormatsToRead, CultureInfo.InvariantCulture,DateTimeStyles.AssumeUniversal, out var dateTime))
+                            if (DateTime.TryParseExact(arg.ToString(), DefaultFormat.DateTimeFormatsToRead, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var dateTime))
                             {
                                 IncludeRevisionByDateTimeBefore = dateTime.ToUniversalTime();
                                 continue;
@@ -924,10 +1016,10 @@ namespace Raven.Server.Documents.Patch
                             break;
                     }
                 }
-                
+
                 return ScriptEngineV8.CreateNullValue();
             }
-            
+
             private InternalHandle LoadDocumentByPathV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
             {
                 try
@@ -1509,7 +1601,7 @@ namespace Raven.Server.Documents.Patch
                         var s = args[0].AsString;
                         fixed (char* pValue = s)
                         {
-                            var result = LazyStringParser.TryParseDateTime(pValue, s.Length, out DateTime dt, out _);
+                            var result = LazyStringParser.TryParseDateTime(pValue, s.Length, out DateTime dt, out _, properlyParseThreeDigitsMilliseconds: true);
                             switch (result)
                             {
                                 case LazyStringParser.Result.DateTime:
@@ -1594,7 +1686,7 @@ namespace Raven.Server.Documents.Patch
                 if (firstParam.IsBinder && firstParam.BoundObject is BlittableObjectInstance selfInstance)
                 {
                     var secondParam = args[1];
-                    if (secondParam.IsObject && secondParam.Object is V8Function lambda) // Jint: is ScriptFunctionInstance lambda)
+                    if (secondParam.IsObject && secondParam.Object is V8Function lambda) // V8: is ScriptFunctionInstance lambda)
                     {
                         var functionAst = lambda.FunctionDeclaration;
                         string propName = functionAst.TryGetFieldFromSimpleLambdaExpression();
