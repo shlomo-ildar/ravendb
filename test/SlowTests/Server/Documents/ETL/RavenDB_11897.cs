@@ -14,8 +14,7 @@ namespace SlowTests.Server.Documents.ETL
         {
         }
 
-        // TODO [shlomo] temporary switched off the test as it hangs
-        //[Theory]
+        [Theory]
         [InlineData(@"
     
     function deleteDocumentsOfUsersBehavior(docId) {
