@@ -98,7 +98,7 @@ from 'Users' as u where u.LastName = $p0 select output(u)", query.ToString());
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(u, $p0, $p1) {
-    var detailId = ""d""+u?.Name?.[1]+""ta""+u?.LastName?.[4]+""ls""+$p0+u?.DetailShortId+""-""+$p1;
+    var detailId = ""d""+(u?.Name?.[1])+""ta""+(u?.LastName?.[4])+""ls""+$p0+u?.DetailShortId+""-""+$p1;
     return { Name : u?.Name, DetailId : detailId, Detail : load(detailId) };
 }
 from 'Users' as u select output(u, $p0, $p1)", query.ToString());

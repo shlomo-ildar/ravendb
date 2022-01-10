@@ -127,7 +127,7 @@ namespace SlowTests.Issues
                         });
 
                     Assert.Equal("from 'Bookings' as x where x.FirstName = $p0 " +
-                                 $"select {{ StartDate : toStringWithFormat(x?.Start, \"{culture.Name}\") }}"
+                                 $"select {{ StartDate : toStringWithFormat(x?.Start, '{culture.Name}') }}"
                         , query.ToString());
 
                     var result = query.Single();
@@ -166,7 +166,7 @@ namespace SlowTests.Issues
                         });
 
                     Assert.Equal("from 'Bookings' as x where x.FirstName = $p0 " +
-                                 $"select {{ StartDate : toStringWithFormat(x?.Start, \"dd.MM.yyyy\", \"{CultureInfo.CurrentCulture.Name}\") }}"
+                                 $"select {{ StartDate : toStringWithFormat(x?.Start, \"dd.MM.yyyy\", '{CultureInfo.CurrentCulture.Name}') }}"
                         , query.ToString());
 
                     var result = query.Single();
@@ -322,7 +322,7 @@ namespace SlowTests.Issues
                         });
 
                     Assert.Equal("from 'Bookings' as x where x.FirstName = $p0 " +
-                                 $"select {{ Number : toStringWithFormat(x?.Number, \"{CultureInfo.CurrentCulture.Name}\") }}"
+                                 $"select {{ Number : toStringWithFormat(x?.Number, '{CultureInfo.CurrentCulture.Name}') }}"
                         , query.ToString());
 
                     var result = query.Single();
@@ -361,7 +361,7 @@ namespace SlowTests.Issues
                         });
 
                     Assert.Equal("from 'Bookings' as x where x.FirstName = $p0 " +
-                                 $"select {{ Number : toStringWithFormat(x?.Number, \"000\", \"{CultureInfo.CurrentCulture.Name}\") }}"
+                                 $"select {{ Number : toStringWithFormat(x?.Number, \"000\", '{CultureInfo.CurrentCulture.Name}') }}"
                         , query.ToString());
 
                     var result = query.Single();
