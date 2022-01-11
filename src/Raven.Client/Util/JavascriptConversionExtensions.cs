@@ -577,11 +577,25 @@ namespace Raven.Client.Util
                     case "Last":
                     case "LastOrDefault":
                         {
+                            obj = context =>
+                            {
+                                var writer = context.GetWriter();
+                                if (methodCallExpression.Arguments.Count > 1)
+                                {
+                                    if (useOptChaining)
+                                        writer.Write("(");
+                                }
+                                context.Visitor.Visit(methodCallExpression.Arguments[0]);
+                            };
+
                             WriterAction access = writer =>
                             {
                                 if (methodCallExpression.Arguments.Count > 1)
                                 {
-                                    writer.Write(".slice().reverse().find");
+                                    writer.Write(".slice().reverse()");
+                                    if (useOptChaining)
+                                        writer.Write("??[])");
+                                    writer.Write(".find");
                                     context.Visitor.Visit(methodCallExpression.Arguments[1]);
                                     return;
                                 }
@@ -590,7 +604,7 @@ namespace Raven.Client.Util
                                 writer.Write(".slice(-1)[0]");
                             };
 
-                            WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access, expression: methodCallExpression);
+                            WriteObjectPropertyAccess(context, obj, access, expression: methodCallExpression);
                             return;
                         }
                     case "ElementAt":
@@ -636,21 +650,25 @@ namespace Raven.Client.Util
                                 context.Visitor.Visit(methodCallExpression.Arguments[1]);
                                 writer.Write(", ");
                                 context.Visitor.Visit(methodCallExpression.Arguments[0]);
-                                writer.Write($"{optChaining}.length)");
+                                writer.Write($"{optChaining}.length");
                                 if (useOptChaining)
                                     writer.Write("??0");
+                                writer.Write($")");
                             };
 
                             WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access, expression: methodCallExpression);
                             return;
                         }
                     case "Take":
-                        {
+                      {
+                            useOptChaining = false; // as we don't have slice function modification in Jint reference resolver
                             WriterAction access = writer =>
                             {
                                 writer.Write(".slice(0, ");
                                 context.Visitor.Visit(methodCallExpression.Arguments[1]);
                                 writer.Write(")");
+                                if (useOptChaining)
+                                    writer.Write("?[]");
                             };
 
                             WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), access, expression: methodCallExpression);
@@ -731,7 +749,7 @@ namespace Raven.Client.Util
                                         {
                                             writer.Write(".map(function(k){return ");
                                             context.Visitor.Visit(methodCallExpression.Arguments[0]);
-                                            writer.Write($"[k]}}){optChaining}");
+                                            writer.Write($"[k]}})");
                                         }
                                         : null;
                                     
