@@ -627,7 +627,7 @@ namespace Raven.Server.Documents.Patch
                 try
                 {
                     GenericSortTwoElementArray(args);
-                    return args[0];
+                    return args[0].IsNull ? args[1] : args[0];
                 }
                 catch (Exception e) 
                 {

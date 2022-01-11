@@ -581,7 +581,7 @@ namespace Raven.Server.Documents.Patch
             private JsValue Raven_MinJint(JsValue self, JsValue[] args)
             {
                 GenericSortTwoElementArray(args);
-                return args[0];
+                return args[0].IsNull() ? args[1] : args[0];
             }
 
             private JsValue IncludeDocJint(JsValue self, JsValue[] args)
