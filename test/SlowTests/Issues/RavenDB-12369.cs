@@ -55,8 +55,8 @@ namespace SlowTests.Issues
                     var result = q.First();
 
                     Assert.Equal("from 'Orders' as x select " +
-                                 "{ SortedLines : x?.Lines?.sort(" +
-                                 "function (a, b){ return a.Quantity - b.Quantity;}) }"
+                                 "{ SortedLines : (x?.Lines?.sort(" +
+                                 "function (a, b){ return a.Quantity - b.Quantity;})) }"
                         , q.ToString());
 
                     Assert.Equal(10, result.SortedLines[0].Quantity);
@@ -102,9 +102,9 @@ namespace SlowTests.Issues
                     });
 
                     Assert.Equal("from 'Orders' as x select { " +
-                                 "SortedLines : x?.Lines?.sort(function (a, b){ " +
+                                 "SortedLines : (x?.Lines?.sort(function (a, b){ " +
                                  "return ((a.ProductName < b.ProductName) " +
-                                 "? -1 : (a.ProductName > b.ProductName)? 1 : 0);}) }"
+                                 "? -1 : (a.ProductName > b.ProductName)? 1 : 0);})) }"
                         , q.ToString());
 
                     var result = q.First();
@@ -158,9 +158,9 @@ namespace SlowTests.Issues
                     });
 
                     Assert.Equal("from 'MultiOrders' as x select { " +
-                                 "SortedOrdersByDate : x?.Orders?.sort(function (a, b){ " +
+                                 "SortedOrdersByDate : (x?.Orders?.sort(function (a, b){ " +
                                  "return ((a.OrderedAt < b.OrderedAt) " +
-                                 "? -1 : (a.OrderedAt > b.OrderedAt)? 1 : 0);}) }"
+                                 "? -1 : (a.OrderedAt > b.OrderedAt)? 1 : 0);})) }"
                         , q.ToString());
 
                     var result = q.First();
@@ -219,8 +219,8 @@ namespace SlowTests.Issues
                         OrderedBy = x.Info.OrderBy(i => i.Address.ZipCode).ToList()
                     });
                     Assert.Equal("from 'MultiOrders' as x select { " +
-                                 "OrderedBy : x?.Info?.sort(" +
-                                 "function (a, b){ return a.Address.ZipCode - b.Address.ZipCode;}) }"
+                                 "OrderedBy : (x?.Info?.sort(" +
+                                 "function (a, b){ return a.Address.ZipCode - b.Address.ZipCode;})) }"
                         , q.ToString());
 
                     var result = q.First();
@@ -277,9 +277,9 @@ namespace SlowTests.Issues
                         OrderedBy = x.Info.OrderBy(i => i.Address.City).ToList()
                     });
                     Assert.Equal("from 'MultiOrders' as x select { " +
-                                 "OrderedBy : x?.Info?.sort(function (a, b){ " +
+                                 "OrderedBy : (x?.Info?.sort(function (a, b){ " +
                                  "return ((a.Address.City < b.Address.City) " +
-                                 "? -1 : (a.Address.City > b.Address.City)? 1 : 0);}) }"
+                                 "? -1 : (a.Address.City > b.Address.City)? 1 : 0);})) }"
                         , q.ToString());
 
                     var result = q.First();
@@ -329,8 +329,8 @@ namespace SlowTests.Issues
                     var result = q.First();
 
                     Assert.Equal("from 'Orders' as x select " +
-                                 "{ OrderByDescending : x?.Lines?.sort(" +
-                                 "function (a, b){ return b.Quantity - a.Quantity;}) }"
+                                 "{ OrderByDescending : (x?.Lines?.sort(" +
+                                 "function (a, b){ return b.Quantity - a.Quantity;})) }"
                         , q.ToString());
 
                     Assert.Equal(30, result.OrderByDescending[0].Quantity);
@@ -376,9 +376,9 @@ namespace SlowTests.Issues
                     });
 
                     Assert.Equal("from 'Orders' as x select { " +
-                                 "OrderByDescending : x?.Lines?.sort(function (a, b){ " +
+                                 "OrderByDescending : (x?.Lines?.sort(function (a, b){ " +
                                  "return ((a.ProductName < b.ProductName) " +
-                                 "? 1 : (a.ProductName > b.ProductName)? -1 : 0);}) }"
+                                 "? 1 : (a.ProductName > b.ProductName)? -1 : 0);})) }"
                         , q.ToString());
 
                     var result = q.First();

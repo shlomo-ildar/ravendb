@@ -158,9 +158,9 @@ namespace SlowTests.Issues
                         });
 
                     var queryString = query.ToString();
-                    Assert.Equal("from 'People' as x select { BirthDay : x?.BirthDate!=null?new Date(Date.parse(x?.BirthDate))?.getDate():null, " +
-                                 "BirthMonth : x?.BirthDate!=null?new Date(Date.parse(x?.BirthDate))?.getMonth()+1:null, " +
-                                 "BirthYear : x?.BirthDate!=null?new Date(Date.parse(x?.BirthDate))?.getFullYear():null }", queryString);
+                    Assert.Equal("from 'People' as x select { BirthDay : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getDate()):null, " +
+                                 "BirthMonth : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getMonth()+1):null, " +
+                                 "BirthYear : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getFullYear()):null }", queryString);
 
                     var list = query.ToList();
                     Assert.Equal(1, list.Count);

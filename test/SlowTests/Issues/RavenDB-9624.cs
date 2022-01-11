@@ -191,7 +191,7 @@ namespace SlowTests.Issues
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(__alias0) {
     var order = __alias0;
-    var sum = order?.Lines?.map(function(l){return l?.PricePerUnit*l?.Quantity;}).reduce(function(a, b) { return a + b; }, 0);
+    var sum = (((order?.Lines??[]).map(function(l){return l?.PricePerUnit*l?.Quantity;}))?.reduce(function(a, b) { return a + b; }, 0));
     return { Sum : sum };
 }
 from 'Orders' as __alias0 where __alias0.Company = $p0 select output(__alias0)", query.ToString());
@@ -272,8 +272,8 @@ from 'Orders' as __alias0 where __alias0.Company = $p0 select output(__alias0)",
     var include = order?.Company;
     var _load = load(include);
     var update = load(_load?.EmployeesIds);
-    var sum = order?.Lines?.map(function(l){return l?.PricePerUnit*l?.Quantity*_load?.AccountsReceivable;}).reduce(function(a, b) { return a + b; }, 0);
-    return { Company : _load, Sum : sum, Employees : update?.map(function(e){return e?.FirstName;}) };
+    var sum = (((order?.Lines??[]).map(function(l){return l?.PricePerUnit*l?.Quantity*_load?.AccountsReceivable;}))?.reduce(function(a, b) { return a + b; }, 0));
+    return { Company : _load, Sum : sum, Employees : ((update??[]).map(function(e){return e?.FirstName;})) };
 }
 from 'Orders' as __alias0 select output(__alias0)", query.ToString());
 
@@ -436,7 +436,7 @@ from 'Orders' as o load o?.Company as __alias0 select output(o, __alias0)".Repla
 @"declare function output(o, __alias0) {
     var update = __alias0;
     var employees = load(update?.EmployeesIds);
-    return { Company : update?.Name, Employees : employees?.map(function(e){return e?.FirstName;}) };
+    return { Company : update?.Name, Employees : ((employees??[]).map(function(e){return e?.FirstName;})) };
 }
 from 'Orders' as o load o?.Company as __alias0 select output(o, __alias0)", query.ToString());
 
@@ -491,7 +491,7 @@ from 'Orders' as o load o?.Company as __alias0 select output(o, __alias0)", quer
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(o) {
-    var _function = o?.Lines?.map(function(l){return l?.PricePerUnit*l?.Quantity;}).reduce(function(a, b) { return a + b; }, 0);
+    var _function = (((o?.Lines??[]).map(function(l){return l?.PricePerUnit*l?.Quantity;}))?.reduce(function(a, b) { return a + b; }, 0));
     return { Sum : _function };
 }
 from 'Orders' as o select output(o)", query.ToString());
@@ -552,7 +552,7 @@ from 'Orders' as o select output(o)", query.ToString());
 @"declare function output(o, _function) {
     var _super = _function?.AccountsReceivable;
     var _var = load(_function?.EmployeesIds);
-    return { Company : _function, Number : _super, Employees : _var?.map(function(e){return e?.FirstName;}) };
+    return { Company : _function, Number : _super, Employees : ((_var??[]).map(function(e){return e?.FirstName;})) };
 }
 from 'Orders' as o load o?.Company as _function select output(o, _function)", query.ToString());
 
@@ -632,7 +632,7 @@ from 'Orders' as o load o?.Company as _function select output(o, _function)", qu
                     var result = query.ToList();
 
                     Assert.Equal("from 'Orders' as o select " +
-                                 "{ Update : o?.Company?.substr(10), Include : o?.Employee?.substr(10) }", query.ToString());
+                                 "{ Update : (o?.Company?.substr(10)), Include : (o?.Employee?.substr(10)) }", query.ToString());
 
                     Assert.Equal("1-A", result[0].Update);
                     Assert.Equal("1-A", result[0].Include);
