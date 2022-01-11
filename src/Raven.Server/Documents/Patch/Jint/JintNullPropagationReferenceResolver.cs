@@ -58,7 +58,7 @@ namespace Raven.Server.Documents.Patch.Jint
             {
                 var baseValue = reference.GetBase();
 
-                if (baseValue.IsUndefined() ||
+                if (baseValue.IsUndefined() || baseValue.IsNull() ||
                     baseValue.IsArray() && baseValue.AsArray().Length == 0)
                 {
                     var name = reference.GetReferencedName().AsString();
