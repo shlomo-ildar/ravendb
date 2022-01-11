@@ -844,7 +844,7 @@ namespace Raven.Client.Util
                     {
                         if (isArrayFunc)
                         {
-                            writer.Write("[])");
+                            writer.Write("?[])");
                         }
                         writer.Write($".{newName}");
                         writer.Write("(");
@@ -874,7 +874,7 @@ namespace Raven.Client.Util
                     {
                         if (isArrayFunc)
                         {
-                            writer.Write("[])");
+                            writer.Write("?[])");
                         }
 
                         if (newName != "map" || methodCallExpression.Arguments.Count > 1)
