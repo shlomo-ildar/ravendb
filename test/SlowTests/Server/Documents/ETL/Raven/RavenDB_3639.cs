@@ -44,7 +44,7 @@ namespace SlowTests.Server.Documents.ETL.Raven
                     session.SaveChanges();
                 }
 
-                etlDone.Wait(TimeSpan.FromSeconds(60));
+                etlDone.Wait(TimeSpan.FromSeconds(30));
 
                 using (var session = slave.OpenSession())
                 {
