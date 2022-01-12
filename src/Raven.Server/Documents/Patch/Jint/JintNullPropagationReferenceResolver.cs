@@ -35,13 +35,12 @@ namespace Raven.Server.Documents.Patch.Jint
                 return true;
             }
             
-            // [shlomo] fixed test FilteredMinAndMaxProjectionAgainstEmptyCollection by switching off reduce processing as it seemed to cause searching reduce property on null value
-            /*if (reference.GetReferencedName() == "reduce" &&
+            if (reference.GetReferencedName() == "reduce" &&
                 value.IsArray() && value.AsArray().Length == 0)
             {
-                value = Null.Instance;
+                value = Null.Instance; // substituting reduce base value from [] to null (afterwards, reduce is replaced in TryGetCallable to set default initial value to null)
                 return true;
-            }*/
+            }
 
             if (value is DynamicJsNullJint)
             {
