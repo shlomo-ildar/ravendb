@@ -25,6 +25,11 @@ namespace SlowTests.Verifications
 
         }
 
+        private class DocumentDivided
+        {
+            public double a { get; set; }
+        }
+
         private class DocumentName
         {
             public string Id { get; set; }
@@ -130,10 +135,8 @@ namespace SlowTests.Verifications
                 {
                     var cntr = 0;
                     sw.Restart();
-                    Assert.Throws<InvalidOperationException>(() =>
-                    {
-                        var ravenQueryable = session.Advanced
-                        .RawQuery<Document>(@"
+
+                    var script = @"
 declare function get(d){
     if(d.Num == 0) {
         return {}.DoesNotExistsAndWillThrow();
@@ -142,23 +145,48 @@ declare function get(d){
 }
 from index 'Document/Index' as d
 select get(d)
-");
-                        using (var enumerator = session.Advanced.Stream(ravenQueryable))
-                        {
-                            enumerator.MoveNext();
-                            sw.Stop();
-                            Trace.WriteLine("Time to first result with transformer: " + sw.Elapsed);
-                            cntr++;
-                            while (enumerator.MoveNext())
-                            {
-                                sw.Restart();
-                                Trace.WriteLine("Time to first result with transformer: " + sw.Elapsed);
-                                cntr++;
-                            }
-                        }
-                    });
-                    Assert.True(cntr == 10, $"{cntr} == 10");
+";
+                    var ravenQueryable = session.Advanced
+                        .RawQuery<DocumentDivided>(script);
+                    
+                    using (var enumerator = session.Advanced.Stream(ravenQueryable))
+                    {
+                        bool more = enumerator.MoveNext();
+                        sw.Stop();
+                        Trace.WriteLine("Time to first result with transformer: " + sw.Elapsed);
+                        Assert.True(more);
 
+                        while (more)
+                        {
+                            sw.Restart();
+                            Trace.WriteLine("Time to first result with transformer: " + sw.Elapsed);
+
+                            if (cntr != 10)
+                            {
+                                Assert.Equal(100.0 / (10 - cntr), enumerator.Current.Document.a);
+                            }
+                            else if (jsEngineType != "V8")
+                            {
+                                Assert.Equal(0, enumerator.Current.Document.a);
+                            }
+
+                            cntr++;
+                            
+                            if (jsEngineType == "V8" && cntr == 10)
+                            {
+                                Assert.Throws<InvalidOperationException>(() =>
+                                {
+                                    more = enumerator.MoveNext();
+                                });
+                            }
+                            else
+                            {
+                                more = enumerator.MoveNext();
+                            }
+
+                        }
+                    }
+                    Assert.True(cntr == 11, $"{cntr} == 11");
                 }
 
             }
