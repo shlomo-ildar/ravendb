@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Orders;
 using Raven.Client.Documents.Indexes;
 using Raven.Client.Documents.Operations.Indexes;
@@ -59,21 +60,23 @@ namespace SlowTests.Issues
 
         private class Companies_With_Attachments_JavaScript : AbstractJavaScriptIndexCreationTask
         {
-            public Companies_With_Attachments_JavaScript()
+            public Companies_With_Attachments_JavaScript(string jsEngineType)
             {
+                var optChaining = ""; //jsEngineType == "V8" ? "?" : "";
+            
                 Maps = new HashSet<string>
                 {
-                    @"map('Companies', function (company) {
+                    @$"map('Companies', function (company) {{
 var attachment = loadAttachment(company, company.ExternalId);
-return {
+return {{
     CompanyName: company.Name,
-    AttachmentName: attachment.Name,
-    AttachmentContentType: attachment.ContentType,
-    AttachmentHash: attachment.Hash,
-    AttachmentSize: attachment.Size,
-    AttachmentContent: attachment.getContentAsString('utf8')
-};
-})"
+    AttachmentName: attachment{optChaining}.Name,
+    AttachmentContentType: attachment{optChaining}.ContentType,
+    AttachmentHash: attachment{optChaining}.Hash,
+    AttachmentSize: attachment{optChaining}.Size,
+    AttachmentContent: attachment{optChaining}.getContentAsString('utf8')
+}};
+}})"
                 };
             }
         }
@@ -507,12 +510,13 @@ return attachments.map(attachment => ({
         }
 
         // [shlomo] is going to work after upgrading jint-ravendb
-        [Fact]
-        public void Can_Index_Attachments_JavaScript()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Index_Attachments_JavaScript(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
-                var index = new Companies_With_Attachments_JavaScript();
+                var index = new Companies_With_Attachments_JavaScript(jsEngineType);
                 index.Execute(store);
 
                 store.Maintenance.Send(new StopIndexingOperation());
@@ -694,10 +698,11 @@ return attachments.map(attachment => ({
             }
         }
 
-        [Fact]
-        public void Can_Index_Multiple_Attachments_JavaScript()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Index_Multiple_Attachments_JavaScript(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var index = new Companies_With_Multiple_Attachments_JavaScript();
                 index.Execute(store);
