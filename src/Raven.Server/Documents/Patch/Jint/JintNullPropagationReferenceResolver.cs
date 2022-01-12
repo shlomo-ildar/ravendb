@@ -18,7 +18,7 @@ namespace Raven.Server.Documents.Patch.Jint
             var name = reference.GetReferencedName()?.AsString();
             if (_args == null || name == null || name.StartsWith('$') == false)
             {
-                value = name == "length" ? 0 : Null.Instance;
+                value = name == "length" ? 0 : reference.GetBase();
                 return true;
             }
 
@@ -42,7 +42,7 @@ namespace Raven.Server.Documents.Patch.Jint
                 return true;
             }
 
-            if (value is DynamicJsNullJint)
+            if (value is DynamicJsNullJint dn && dn.IsExplicitNull)
             {
                 value = DynamicJsNullJint.ImplicitNullJint;
                 return true;
@@ -58,7 +58,7 @@ namespace Raven.Server.Documents.Patch.Jint
                 var baseValue = reference.GetBase();
 
                 if (baseValue.IsUndefined() || baseValue.IsNull() ||
-                    baseValue.IsArray() && baseValue.AsArray().Length == 0)
+                    (baseValue.IsArray() && baseValue.AsArray().Length == 0))
                 {
                     var name = reference.GetReferencedName().AsString();
                     switch (name)
@@ -87,10 +87,10 @@ namespace Raven.Server.Documents.Patch.Jint
 
             // fixed for compatibility the case of calling non-existing method by disabling TryGetCallable (test SmallLogTransformerTest)
             // (as old Jint version hasn't actually called it, when the new one has started to call it and it stopped throwing as before)
-            value = JsValue.Undefined;
-            return false;
-            //value = new ClrFunctionInstance(engine, "function", (thisObj, values) => thisObj);
-            //return true;
+            //value = JsValue.Undefined;
+            //return false;
+            value = new ClrFunctionInstance(engine, "function", (thisObj, values) => thisObj);
+            return true;
         }
 
         public bool CheckCoercible(JsValue value)
