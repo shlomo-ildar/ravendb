@@ -104,7 +104,7 @@ namespace SlowTests.Issues
                     Assert.Equal("from 'Orders' as x select { " +
                                  "SortedLines : (x?.Lines?.sort(function (a, b){ " +
                                  "return ((a.ProductName < b.ProductName) " +
-                                 "? -1 : (a.ProductName > b.ProductName)? 1 : 0);})) }"
+                                 "? -1 : (a.ProductName > b.ProductName) ? 1 : 0);})) }"
                         , q.ToString());
 
                     var result = q.First();
@@ -279,7 +279,7 @@ namespace SlowTests.Issues
                     Assert.Equal("from 'MultiOrders' as x select { " +
                                  "OrderedBy : (x?.Info?.sort(function (a, b){ " +
                                  "return ((a.Address.City < b.Address.City) " +
-                                 "? -1 : (a.Address.City > b.Address.City)? 1 : 0);})) }"
+                                 "? -1 : (a.Address.City > b.Address.City) ? 1 : 0);})) }"
                         , q.ToString());
 
                     var result = q.First();
@@ -378,7 +378,7 @@ namespace SlowTests.Issues
                     Assert.Equal("from 'Orders' as x select { " +
                                  "OrderByDescending : (x?.Lines?.sort(function (a, b){ " +
                                  "return ((a.ProductName < b.ProductName) " +
-                                 "? 1 : (a.ProductName > b.ProductName)? -1 : 0);})) }"
+                                 "? 1 : (a.ProductName > b.ProductName) ? -1 : 0);})) }"
                         , q.ToString());
 
                     var result = q.First();
