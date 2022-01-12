@@ -2959,10 +2959,10 @@ from 'Orders' as o load o?.Employee as employee select output(o, employee)", que
                                  "LastOrDefaultWithPredicate : ((u?.Roles?.slice().reverse()??[]).find(function(x){return x!==\"4\";})), " +
                                  "Take : (u?.Roles?.slice(0, 2)), " +
                                  "Skip : (u?.Roles?.slice(2, u?.Roles?.length??0)), " +
-                                 "Max : (u?.Roles?.reduce(function(a, b) { return Raven_Max(a, b);})), " +
-                                 "MaxWithSelector : ((u?.Details?.map(function(d){return d?.Number;}))?.reduce(function(a, b) { return Raven_Max(a, b);})), " +
-                                 "Min : (u?.Roles?.reduce(function(a, b) { return Raven_Min(a, b);})), " +
-                                 "MinWithSelector : ((u?.Details?.map(function(d){return d?.Number;}))?.reduce(function(a, b) { return Raven_Min(a, b);})), " +
+                                 "Max : (u?.Roles?.reduce(function(a, b) { return Raven_Max(a, b);}, null)), " +
+                                 "MaxWithSelector : ((u?.Details?.map(function(d){return d?.Number;}))?.reduce(function(a, b) { return Raven_Max(a, b);}, null)), " +
+                                 "Min : (u?.Roles?.reduce(function(a, b) { return Raven_Min(a, b);}, null)), " +
+                                 "MinWithSelector : ((u?.Details?.map(function(d){return d?.Number;}))?.reduce(function(a, b) { return Raven_Min(a, b);}, null)), " +
                                  "Reverse : (u?.Roles?.slice().reverse()??[]), " +
                                  "IndexOf : (u?.Roles?.indexOf(\"3\")), " +
                                  "Concat : ((u?.Roles??[]).concat($p0)), " +
