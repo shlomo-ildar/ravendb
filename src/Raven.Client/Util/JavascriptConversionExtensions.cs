@@ -984,7 +984,7 @@ namespace Raven.Client.Util
 
                 WriterAction access2 = writer =>
                 {
-                    writer.Write($".reduce(function(a, b) {{ return {maxOrMin}(a, b);}})");
+                    writer.Write($".reduce(function(a, b) {{ return {maxOrMin}(a, b);}}, null)");
                 };
 
                 WriteObjectPropertyAccess(context, context => context.Visitor.Visit(methodCallExpression.Arguments[0]), 
