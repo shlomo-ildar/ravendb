@@ -337,6 +337,8 @@ var process = {
         }
 
         // ------------------------------------------ internal implementation
+        private ObjectTemplate _implicitNullTemplate;
+        private ObjectTemplate _explicitNullTemplate;
         private DynamicJsNullV8? _implicitNull;
         private DynamicJsNullV8? _explicitNull;
 
@@ -378,8 +380,13 @@ var process = {
         
         public void InitializeGlobal()
         {
-            _implicitNull = new DynamicJsNullV8(this, isExplicitNull: false);
-            _explicitNull = new DynamicJsNullV8(this, isExplicitNull: true);
+            _implicitNullTemplate = CreateObjectTemplate();
+            _implicitNull = _implicitNullTemplate.CreateObject<DynamicJsNullV8>();
+            _implicitNull.SetKind(false);
+
+            _explicitNullTemplate = CreateObjectTemplate();
+            _explicitNull = _explicitNullTemplate.CreateObject<DynamicJsNullV8>();
+            _implicitNull.SetKind(true);
 
             ExecuteWithReset(ExecEnvCodeV8, "ExecEnvCode");
 
