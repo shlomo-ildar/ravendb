@@ -506,6 +506,7 @@ return attachments.map(attachment => ({
             }
         }
 
+        // [shlomo] is going to work after upgrading jint-ravendb
         [Fact]
         public void Can_Index_Attachments_JavaScript()
         {
