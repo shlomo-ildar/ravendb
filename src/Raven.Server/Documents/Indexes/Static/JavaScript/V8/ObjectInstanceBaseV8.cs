@@ -74,11 +74,12 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript.V8
 
         public abstract InternalHandle NamedPropertyGetterOnce(V8EngineEx engine, ref string propertyName);
 
-        public InternalHandle NamedPropertyGetter(V8EngineEx engine, ref string propertyName)
+        public InternalHandle NamedPropertyGetter(V8EngineEx engineEx, ref string propertyName)
         {
+            
             if (!_properties.TryGetValue(propertyName, out InternalHandle jsValue))
             {
-                jsValue = NamedPropertyGetterOnce((V8EngineEx)engine, ref propertyName);
+                jsValue = NamedPropertyGetterOnce(EngineEx, ref propertyName);
                 if (!jsValue.IsEmpty)
                 {
                     using (jsValue)
@@ -87,7 +88,7 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript.V8
             }
 
             if (jsValue.IsEmpty)
-                return IsImplicitNull ? EngineEx.ImplicitNullV8 : jsValue;
+                return IsImplicitNull ? engineEx.ImplicitNullV8.Clone().Clone() : jsValue;
 
             return jsValue.Clone();
         }

@@ -363,7 +363,7 @@ namespace Raven.Server.Utils
                     {
                         if (valueV8.IsNull)
                         {
-                            if (forIndexing && valueV8.BoundObject is DynamicJsNullV8 dynamicJsNull)
+                            if (forIndexing && valueV8.IsObject && valueV8.Object is DynamicJsNullV8 dynamicJsNull)
                                 return dynamicJsNull.IsExplicitNull ? DynamicNullObject.ExplicitNull : DynamicNullObject.Null;
 
                             return null;

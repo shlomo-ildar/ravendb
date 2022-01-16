@@ -342,8 +342,8 @@ var process = {
         private DynamicJsNullV8? _implicitNull;
         private DynamicJsNullV8? _explicitNull;
 
-        public InternalHandle ImplicitNullV8 => _implicitNull?.CreateHandle() ?? InternalHandle.Empty;
-        public InternalHandle ExplicitNullV8 => _explicitNull?.CreateHandle() ?? InternalHandle.Empty;
+        public InternalHandle ImplicitNullV8 => base.CreateNullValue(); // _implicitNull?.CreateHandle() ?? InternalHandle.Empty; // [shlomo] as DynamicJsNullV8 can't work as in Jint
+        public InternalHandle ExplicitNullV8 => base.CreateNullValue(); // _explicitNull?.CreateHandle() ?? InternalHandle.Empty; // [shlomo] as DynamicJsNullV8 can't work as in Jint
         
         public JsHandle ImplicitNull => new(ImplicitNullV8);
         public JsHandle ExplicitNull => new(ExplicitNullV8);
