@@ -575,9 +575,7 @@ return attachments.map(attachment => ({
                     Assert.Equal(IndexingFields.NullValue, terms[0]);
 
                 terms = store.Maintenance.Send(new GetTermsOperation(index.IndexName, nameof(Companies_With_Attachments.Result.AttachmentContentStream), fromValue: null));
-                Assert.Equal(termsCount, terms.Length);
-                if (termsCount > 0)
-                    Assert.Equal(IndexingFields.NullValue, terms[0]);
+                Assert.Equal(0, terms.Length); // as there is no this field at all
 
                 store.Maintenance.Send(new StopIndexingOperation());
 
