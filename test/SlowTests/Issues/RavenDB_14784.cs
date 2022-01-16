@@ -10,6 +10,7 @@ using Raven.Client.Documents.Operations.Indexes;
 using Tests.Infrastructure.Operations;
 using Xunit;
 using Xunit.Abstractions;
+using IndexingFields = Raven.Client.Constants.Documents.Indexing.Fields;
 
 namespace SlowTests.Issues
 {
@@ -62,7 +63,7 @@ namespace SlowTests.Issues
         {
             public Companies_With_Attachments_JavaScript(string jsEngineType)
             {
-                var optChaining = ""; //jsEngineType == "V8" ? "?" : "";
+                var optChaining = jsEngineType == "V8" ? "?" : "";
             
                 Maps = new HashSet<string>
                 {
@@ -509,7 +510,7 @@ return attachments.map(attachment => ({
             }
         }
 
-        // [shlomo] is going to work after upgrading jint-ravendb
+        // [shlomo] jint version is going to work after upgrading jint-ravendb
         [Theory]
         [JavaScriptEngineClassData]
         public void Can_Index_Attachments_JavaScript(string jsEngineType)
@@ -548,23 +549,35 @@ return attachments.map(attachment => ({
                 Assert.Equal(1, terms.Length);
                 Assert.Equal("hr", terms[0]);
 
+                var termsCount = jsEngineType == "V8" ? 1 : 0;
+                
                 terms = store.Maintenance.Send(new GetTermsOperation(index.IndexName, nameof(Companies_With_Attachments.Result.AttachmentName), fromValue: null));
-                Assert.Equal(0, terms.Length);
+                Assert.Equal(termsCount, terms.Length);
 
                 terms = store.Maintenance.Send(new GetTermsOperation(index.IndexName, nameof(Companies_With_Attachments.Result.AttachmentContentType), fromValue: null));
-                Assert.Equal(0, terms.Length);
+                Assert.Equal(termsCount, terms.Length);
+                if (termsCount > 0)
+                    Assert.Equal(IndexingFields.NullValue, terms[0]);
 
                 terms = store.Maintenance.Send(new GetTermsOperation(index.IndexName, nameof(Companies_With_Attachments.Result.AttachmentHash), fromValue: null));
-                Assert.Equal(0, terms.Length);
+                Assert.Equal(termsCount, terms.Length);
+                if (termsCount > 0)
+                    Assert.Equal(IndexingFields.NullValue, terms[0]);
 
                 terms = store.Maintenance.Send(new GetTermsOperation(index.IndexName, nameof(Companies_With_Attachments.Result.AttachmentSize), fromValue: null));
-                Assert.Equal(0, terms.Length);
+                Assert.Equal(termsCount, terms.Length);
+                if (termsCount > 0)
+                    Assert.Equal(IndexingFields.NullValue, terms[0]);
 
                 terms = store.Maintenance.Send(new GetTermsOperation(index.IndexName, nameof(Companies_With_Attachments.Result.AttachmentContent), fromValue: null));
-                Assert.Equal(0, terms.Length);
+                Assert.Equal(termsCount, terms.Length);
+                if (termsCount > 0)
+                    Assert.Equal(IndexingFields.NullValue, terms[0]);
 
                 terms = store.Maintenance.Send(new GetTermsOperation(index.IndexName, nameof(Companies_With_Attachments.Result.AttachmentContentStream), fromValue: null));
-                Assert.Equal(0, terms.Length);
+                Assert.Equal(termsCount, terms.Length);
+                if (termsCount > 0)
+                    Assert.Equal(IndexingFields.NullValue, terms[0]);
 
                 store.Maintenance.Send(new StopIndexingOperation());
 
