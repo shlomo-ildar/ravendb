@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -65,10 +66,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void CanUseCount2()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanUseCount2(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -104,10 +106,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void CanUseCount3()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanUseCount3(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {

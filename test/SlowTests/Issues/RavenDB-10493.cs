@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -17,10 +18,11 @@ namespace SlowTests.Issues
             public DateTime? DateTime;
         }
 
-        [Fact]
-        public void CanTranslateDateTimeMinValueMaxValue()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanTranslateDateTimeMinValueMaxValue(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
