@@ -89,9 +89,14 @@ namespace Raven.Server.Documents.Patch.Jint
                     value = new ClrFunctionInstance(engine, "function", (thisObj, values) => thisObj);
                     return true;
                 }
+
+                value = baseValue;
+            }
+            else
+            {
+                value = JsValue.Undefined;
             }
 
-            value = JsValue.Undefined;
             return false;
         }
 
