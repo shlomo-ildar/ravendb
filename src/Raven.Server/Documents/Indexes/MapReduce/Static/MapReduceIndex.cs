@@ -104,75 +104,81 @@ namespace Raven.Server.Documents.Indexes.MapReduce.Static
 
             if (outputReduceToCollection.Equals(definition.PatternReferencesCollectionName, StringComparison.OrdinalIgnoreCase))
                 throw new IndexInvalidException($"Collection defined in {nameof(definition.PatternReferencesCollectionName)} must not be the same as in {nameof(definition.OutputReduceToCollection)}. Collection name: '{outputReduceToCollection}'");
-
-            var collections = index.Maps.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
-            if (collections.Contains(Constants.Documents.Collections.AllDocumentsCollection))
-                throw new IndexInvalidException($"It is forbidden to create the '{definition.Name}' index " +
-                                                $"which would output reduce results to documents in the '{outputReduceToCollection}' collection, " +
-                                                $"as this index is mapping all documents " +
-                                                $"and this will result in an infinite loop.");
-
-            foreach (var referencedCollection in index.ReferencedCollections)
+            
+            bool allowRecursiveDependencies = bool.Parse(definition.Configuration.GetValue("AllowRecursiveDependencies") ?? "false");
+            if (!allowRecursiveDependencies)
             {
-                foreach (var collectionName in referencedCollection.Value)
-                {
-                    collections.Add(collectionName.Name);
-                }
-            }
-
-            if (collections.Contains(outputReduceToCollection))
-                throw new IndexInvalidException($"It is forbidden to create the '{definition.Name}' index " +
-                                                $"which would output reduce results to documents in the '{outputReduceToCollection}' collection, " +
-                                                $"as this index is mapping or referencing the '{outputReduceToCollection}' collection " +
-                                                $"and this will result in an infinite loop.");
-
-            var indexes = database.IndexStore.GetIndexes()
-                .Where(x => x.Type.IsStatic() && x.Type.IsMapReduce())
-                .Cast<MapReduceIndex>()
-                .Where(mapReduceIndex =>
-                {
-                    // we have handling for side by side indexing with OutputReduceToCollection so we're checking only other indexes
-
-                    string existingIndexName = mapReduceIndex.Name.Replace(Constants.Documents.Indexing.SideBySideIndexNamePrefix, string.Empty,
-                        StringComparison.OrdinalIgnoreCase);
-
-                    string newIndexName = definition.Name.Replace(Constants.Documents.Indexing.SideBySideIndexNamePrefix, string.Empty,
-                        StringComparison.OrdinalIgnoreCase);
-
-                    return string.IsNullOrWhiteSpace(mapReduceIndex.Definition.OutputReduceToCollection) == false && string.Equals(existingIndexName, newIndexName, StringComparison.OrdinalIgnoreCase) == false;
-                })
-                .ToList();
-
-            foreach (var otherIndex in indexes)
-            {
-                if (otherIndex.Definition.OutputReduceToCollection.Equals(outputReduceToCollection, StringComparison.OrdinalIgnoreCase))
-                {
+                var collections = index.Maps.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
+                if (collections.Contains(Constants.Documents.Collections.AllDocumentsCollection))
                     throw new IndexInvalidException($"It is forbidden to create the '{definition.Name}' index " +
                                                     $"which would output reduce results to documents in the '{outputReduceToCollection}' collection, " +
-                                                    $"as there is another index named '{otherIndex.Name}' " +
-                                                    $"which also output reduce results to documents in the same '{outputReduceToCollection}' collection. " +
-                                                    $"{nameof(IndexDefinition.OutputReduceToCollection)} must by set to unique value for each index or be null.");
-                }
+                                                    $"as this index is mapping all documents " +
+                                                    $"and this will result in an infinite loop.");
 
-                var otherIndexCollections = new HashSet<string>(otherIndex.Collections);
-
-                foreach (var referencedCollection in otherIndex.GetReferencedCollections())
+                foreach (var referencedCollection in index.ReferencedCollections)
                 {
                     foreach (var collectionName in referencedCollection.Value)
                     {
-                        otherIndexCollections.Add(collectionName.Name);
+                        collections.Add(collectionName.Name);
                     }
                 }
 
-                if (otherIndexCollections.Contains(outputReduceToCollection) &&
-                    CheckIfThereIsAnIndexWhichWillOutputReduceDocumentsWhichWillBeUsedAsMapOnTheSpecifiedIndex(otherIndex, collections, indexes, out string description))
-                {
-                    description += Environment.NewLine + $"--> {definition.Name}: {string.Join(",", collections)} => *{outputReduceToCollection}*";
+                if (collections.Contains(outputReduceToCollection))
                     throw new IndexInvalidException($"It is forbidden to create the '{definition.Name}' index " +
                                                     $"which would output reduce results to documents in the '{outputReduceToCollection}' collection, " +
-                                                    $"as '{outputReduceToCollection}' collection is consumed by other index in a way that would " +
-                                                    $"lead to an infinite loop." +
-                                                    Environment.NewLine + description);
+                                                    $"as this index is mapping or referencing the '{outputReduceToCollection}' collection " +
+                                                    $"and this will result in an infinite loop.");
+
+                var indexes = database.IndexStore.GetIndexes()
+                    .Where(x => x.Type.IsStatic() && x.Type.IsMapReduce())
+                    .Cast<MapReduceIndex>()
+                    .Where(mapReduceIndex =>
+                    {
+                        // we have handling for side by side indexing with OutputReduceToCollection so we're checking only other indexes
+
+                        string existingIndexName = mapReduceIndex.Name.Replace(Constants.Documents.Indexing.SideBySideIndexNamePrefix, string.Empty,
+                            StringComparison.OrdinalIgnoreCase);
+
+                        string newIndexName = definition.Name.Replace(Constants.Documents.Indexing.SideBySideIndexNamePrefix, string.Empty,
+                            StringComparison.OrdinalIgnoreCase);
+
+                        return string.IsNullOrWhiteSpace(mapReduceIndex.Definition.OutputReduceToCollection) == false &&
+                               string.Equals(existingIndexName, newIndexName, StringComparison.OrdinalIgnoreCase) == false;
+                    })
+                    .ToList();
+
+                foreach (var otherIndex in indexes)
+                {
+                    if (otherIndex.Definition.OutputReduceToCollection.Equals(outputReduceToCollection, StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new IndexInvalidException($"It is forbidden to create the '{definition.Name}' index " +
+                                                        $"which would output reduce results to documents in the '{outputReduceToCollection}' collection, " +
+                                                        $"as there is another index named '{otherIndex.Name}' " +
+                                                        $"which also output reduce results to documents in the same '{outputReduceToCollection}' collection. " +
+                                                        $"{nameof(IndexDefinition.OutputReduceToCollection)} must by set to unique value for each index or be null.");
+                    }
+
+                    var otherIndexCollections = new HashSet<string>(otherIndex.Collections);
+
+                    foreach (var referencedCollection in otherIndex.GetReferencedCollections())
+                    {
+                        foreach (var collectionName in referencedCollection.Value)
+                        {
+                            otherIndexCollections.Add(collectionName.Name);
+                        }
+                    }
+
+                    if (otherIndexCollections.Contains(outputReduceToCollection) &&
+                        CheckIfThereIsAnIndexWhichWillOutputReduceDocumentsWhichWillBeUsedAsMapOnTheSpecifiedIndex(otherIndex, collections, indexes,
+                            out string description))
+                    {
+                        description += Environment.NewLine + $"--> {definition.Name}: {string.Join(",", collections)} => *{outputReduceToCollection}*";
+                        throw new IndexInvalidException($"It is forbidden to create the '{definition.Name}' index " +
+                                                        $"which would output reduce results to documents in the '{outputReduceToCollection}' collection, " +
+                                                        $"as '{outputReduceToCollection}' collection is consumed by other index in a way that would " +
+                                                        $"lead to an infinite loop." +
+                                                        Environment.NewLine + description);
+                    }
                 }
             }
 
