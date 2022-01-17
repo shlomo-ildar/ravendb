@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Raven.Tests.Core.Utils.Entities;
 using Xunit;
 using Xunit.Abstractions;
@@ -12,10 +13,11 @@ namespace SlowTests.Issues
         {
         }
 
-        [Fact]
-        public void Can_Load_Inside_Let_With_Argument_Predefined_in_Let()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Load_Inside_Let_With_Argument_Predefined_in_Let(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
