@@ -165,14 +165,10 @@ select get(d)
                             {
                                 Assert.Equal(100.0 / (10 - cntr), enumerator.Current.Document.a);
                             }
-                            else if (jsEngineType != "V8")
-                            {
-                                Assert.Equal(0, enumerator.Current.Document.a);
-                            }
 
                             cntr++;
                             
-                            if (jsEngineType == "V8" && cntr == 10)
+                            if (cntr == 10)
                             {
                                 Assert.Throws<InvalidOperationException>(() =>
                                 {
