@@ -63,7 +63,7 @@ namespace SlowTests.Issues
         {
             public Companies_With_Attachments_JavaScript(string jsEngineType)
             {
-                var optChaining = jsEngineType == "V8" ? "?" : "";
+                var optChaining = jsEngineType == "Jint" ? "" : "?";
             
                 Maps = new HashSet<string>
                 {
@@ -549,7 +549,7 @@ return attachments.map(attachment => ({
                 Assert.Equal(1, terms.Length);
                 Assert.Equal("hr", terms[0]);
 
-                var termsCount = jsEngineType == "V8" ? 1 : 0;
+                var termsCount = jsEngineType == "Jint" ? 0 : 1;
                 
                 terms = store.Maintenance.Send(new GetTermsOperation(index.IndexName, nameof(Companies_With_Attachments.Result.AttachmentName), fromValue: null));
                 Assert.Equal(termsCount, terms.Length);
