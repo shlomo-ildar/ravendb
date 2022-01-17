@@ -416,6 +416,12 @@ namespace Raven.Server.Config.Categories
         [ConfigurationEntry("Indexing.TimeSinceLastQueryAfterWhichDeepCleanupCanBeExecutedInMin", ConfigurationEntryScope.ServerWideOrPerDatabaseOrPerIndex)]
         public TimeSetting TimeSinceLastQueryAfterWhichDeepCleanupCanBeExecuted { get; set; }
 
+        [Description("Indicate if index may have recursive dependencies on other indexes")]
+        [DefaultValue(false)]
+        [IndexUpdateType(IndexUpdateType.Refresh)]
+        [ConfigurationEntry("Indexing.AllowRecursiveDependencies", ConfigurationEntryScope.ServerWideOrPerDatabaseOrPerIndex)]
+        public bool AllowRecursiveDependencies { get; protected set; }
+
         protected override void ValidateProperty(PropertyInfo property)
         {
             base.ValidateProperty(property);
