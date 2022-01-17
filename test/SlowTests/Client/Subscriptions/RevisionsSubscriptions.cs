@@ -293,15 +293,17 @@ select { Id: id(d.Current), Age: d.Current.Age }
             using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
 
+                var optChaining = jsEngineType == "Jint" ? "" : "?";
+            
                 var subscriptionId = await store.Subscriptions.CreateAsync(new SubscriptionCreationOptions
                 {
-                    Query = @"
-declare function match(d){
-    return d.Current.Age > d.Previous.Age;
-}
+                    Query = @$"
+declare function match(d){{
+    return d.Current{optChaining}.Age > d.Previous{optChaining}.Age;
+}}
 from Users (Revisions = true) as d
 where match(d)
-select { Id: id(d.Current), Age: d.Current.Age }
+select {{ Id: id(d.Current), Age: d.Current{optChaining}.Age }}
 "
                 });
 
