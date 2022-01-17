@@ -83,10 +83,16 @@ namespace Raven.Server.Documents.Patch.Jint
                             return true;
                     }
                 }
+                
+                if (baseValue is DynamicJsNullJint)
+                {
+                    value = new ClrFunctionInstance(engine, "function", (thisObj, values) => thisObj);
+                    return true;
+                }
             }
 
-            value = new ClrFunctionInstance(engine, "function", (thisObj, values) => thisObj);
-            return true;
+            value = JsValue.Undefined;
+            return false;
         }
 
         public bool CheckCoercible(JsValue value)
