@@ -218,7 +218,7 @@ load e.ReportsTo r
 select {     
     A: e.FirstName +' '+e.LastName, 
     B: r.FirstName +' ' + r.LastName 
-} ", "Oscar Aharon-Eini", "null null")]
+} ", "Oscar Aharon-Eini", "undefined undefined")]
         [InlineData(@"
 declare function name(e) {
     if( e == null)
