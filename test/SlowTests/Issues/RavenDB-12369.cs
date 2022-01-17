@@ -160,7 +160,7 @@ namespace SlowTests.Issues
                     Assert.Equal("from 'MultiOrders' as x select { " +
                                  "SortedOrdersByDate : (x?.Orders?.sort(function (a, b){ " +
                                  "return ((a.OrderedAt < b.OrderedAt) " +
-                                 "? -1 : (a.OrderedAt > b.OrderedAt)? 1 : 0);})) }"
+                                 "? -1 : (a.OrderedAt > b.OrderedAt) ? 1 : 0);})) }"
                         , q.ToString());
 
                     var result = q.First();
