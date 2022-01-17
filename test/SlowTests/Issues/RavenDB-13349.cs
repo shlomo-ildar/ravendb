@@ -121,7 +121,7 @@ namespace SlowTests.Issues
                             Foo = "foo" + x.Age
                         });
 
-                    Assert.Contains("CityName : x?.user_address?.city_name", query.ToString());
+                    Assert.Contains("CityName : ((x?.user_address)?.city_name)", query.ToString());
 
                     var result = await query.ToListAsync();
 
