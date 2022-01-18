@@ -1,4 +1,5 @@
 ﻿using System;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents.Operations;
 using Raven.Tests.Core.Utils.Entities;
 using SlowTests.Server.Documents.ETL;
@@ -63,10 +64,11 @@ loadToPeople(person);
             }
         }
 
-        [Fact]
-        public void CanDeleteEverything()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanDeleteEverything(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 store.Maintenance.Send(new CreateSampleDataOperation());
 

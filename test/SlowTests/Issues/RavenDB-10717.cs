@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -17,10 +18,11 @@ namespace SlowTests.Issues
             public DateTime Birthday { get; set; }
         }
 
-        [Fact]
-        public void CanUseDateTimeParametersInQuery()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanUseDateTimeParametersInQuery(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {

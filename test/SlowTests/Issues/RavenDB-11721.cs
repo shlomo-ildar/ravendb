@@ -3,6 +3,7 @@ using System.Linq;
 using Raven.Tests.Core.Utils.Entities;
 using Xunit;
 using System.Threading.Tasks;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents.Queries;
 using Raven.Client.Documents;
 using Xunit.Abstractions;
@@ -15,10 +16,11 @@ namespace SlowTests.Issues
         {
         }
 
-        [Fact]
-        public void CanSwitchFromDocumentQueryToStronglyTypedProjection()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanSwitchFromDocumentQueryToStronglyTypedProjection(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var s = store.OpenSession())
                 {
@@ -63,10 +65,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public async Task AsyncCanSwitchFromDocumentQueryToStronglyTypedProjection()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task AsyncCanSwitchFromDocumentQueryToStronglyTypedProjection(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var s = store.OpenAsyncSession())
                 {

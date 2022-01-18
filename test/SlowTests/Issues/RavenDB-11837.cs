@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents.Operations;
 using Raven.Client.Documents.Queries;
 using Raven.Client.Exceptions.Documents;
@@ -14,10 +15,11 @@ namespace SlowTests.Issues
         {
         }
 
-        [Fact]
-        public void CanApplyCounterToAnotherDocument()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanApplyCounterToAnotherDocument(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var testDoc = new TestDoc
                 {
@@ -90,10 +92,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void CanDeleteCounterFromAnotherDocument()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanDeleteCounterFromAnotherDocument(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var testDoc1 = new TestDoc
                 {
@@ -151,10 +154,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void ThrowIfCounterDoesntExist()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void ThrowIfCounterDoesntExist(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var testDoc1 = new TestDoc
                 {

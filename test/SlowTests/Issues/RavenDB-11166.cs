@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using FastTests;
+using FastTests.Server.JavaScript;
 using FastTests.Utils;
 using Raven.Client.Documents.Subscriptions;
 using Sparrow.Server;
@@ -149,10 +150,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public async Task CanUseSubscriptionRevisionsWithIncludesViaJavaScript()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task CanUseSubscriptionRevisionsWithIncludesViaJavaScript(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 await RevisionsHelper.SetupRevisions(Server.ServerStore, store.Database);
                 using (var session = store.OpenSession())
@@ -226,10 +228,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public async Task CanUseSubscriptionWithIncludesViaJavaScript()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task CanUseSubscriptionWithIncludesViaJavaScript(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {

@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Linq;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents.Indexes;
 using Raven.Server.Utils;
 using Xunit;
@@ -15,10 +16,11 @@ namespace SlowTests.Issues
         {
         }
 
-        [Fact]
-        public void SearchBooking_ProjectionWithDateTimeToStringAndFormat_ReturnsResult()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void SearchBooking_ProjectionWithDateTimeToStringAndFormat_ReturnsResult(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 // Arrange  
                 store.ExecuteIndex(new BookingIndex());
@@ -59,10 +61,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void DateToStringWithInvariantCulture()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void DateToStringWithInvariantCulture(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var start = DateTime.Parse("2018-01-01T11:11:11");
 
@@ -97,12 +100,12 @@ namespace SlowTests.Issues
                 }
             }
         }
-
-
-        [Fact]
-        public void DateToStringWithCurrentCulture()
+        
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void DateToStringWithCurrentCulture(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var start = DateTime.Parse("2018-01-01T11:11:11");
 
@@ -140,10 +143,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void DateToStringWithFormatAndCurrentCulture()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void DateToStringWithFormatAndCurrentCulture(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var start = DateTime.Parse("2018-01-01T11:11:11");
 
@@ -180,10 +184,11 @@ namespace SlowTests.Issues
         }
 
 
-        [Fact]
-        public void DateToStringWithFormatAndInvariantCulture()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void DateToStringWithFormatAndInvariantCulture(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var start = DateTime.Parse("2018-01-01T11:11:11");
 
@@ -219,10 +224,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void NumberToStringWithFormat()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void NumberToStringWithFormat(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var num = 12345000;
 
@@ -257,10 +263,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void NumberToStringWithInvariantCulture()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void NumberToStringWithInvariantCulture(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var num = 12345000;
 
@@ -296,10 +303,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void NumberToStringWithCurrentCulture()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void NumberToStringWithCurrentCulture(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var num = 12345000;
 
@@ -335,10 +343,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void NumberToStringWithFormatAndCulture()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void NumberToStringWithFormatAndCulture(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var num = 12345000;
 

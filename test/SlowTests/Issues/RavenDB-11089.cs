@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Standard;
 using Newtonsoft.Json.Serialization;
@@ -318,8 +319,9 @@ namespace SlowTests.Issues
             public string FullName { get; set; }
         }
 
-        [Fact]
-        public void Can_Project_Into_Class()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Project_Into_Class(string jsEngineType)
         {
             using (var store = GetDocumentStore(options: new Options
             {
@@ -333,7 +335,8 @@ namespace SlowTests.Issues
                         }
                     };
                     ss.Conventions.PropertyNameConverter = mi => FirstCharToLower(mi.Name);
-                }
+                },
+                ModifyDatabaseRecord = Options.ModifyForJavaScriptEngine(jsEngineType)
             }))
             {
                 using (var session = store.OpenSession())
@@ -363,8 +366,9 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void Can_Project_Into_Class_With_Let()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Project_Into_Class_With_Let(string jsEngineType)
         {
             using (var store = GetDocumentStore(options: new Options
             {
@@ -378,7 +382,8 @@ namespace SlowTests.Issues
                         }
                     };
                     ss.Conventions.PropertyNameConverter = mi => FirstCharToLower(mi.Name);
-                }
+                },
+                ModifyDatabaseRecord = Options.ModifyForJavaScriptEngine(jsEngineType)
             }))
             {
                 using (var session = store.OpenSession())
@@ -667,8 +672,9 @@ from 'Users' as user select output(user)", queryAsString);
             }
         }
 
-        [Fact]
-        public void PatchOnEnumShouldWork()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void PatchOnEnumShouldWork(string jsEngineType)
         {
             using (var store = GetDocumentStore(options: new Options
             {
@@ -682,7 +688,8 @@ from 'Users' as user select output(user)", queryAsString);
                         }
                     };
                     ss.Conventions.PropertyNameConverter = mi => FirstCharToLower(mi.Name);
-                }
+                },
+                ModifyDatabaseRecord = Options.ModifyForJavaScriptEngine(jsEngineType)
             }))
             {
                 string id;
@@ -744,8 +751,9 @@ from 'Users' as user select output(user)", queryAsString);
 
         private string FirstCharToLower(string str) => $"{Char.ToLower(str[0])}{str.Substring(1)}";
 
-        [Fact]
-        public void CanPatch()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanPatch(string jsEngineType)
         {
             var stuff = new Stuff[3];
             stuff[0] = new Stuff { Key = 6 };
@@ -763,7 +771,8 @@ from 'Users' as user select output(user)", queryAsString);
                         }
                     };
                     ss.Conventions.PropertyNameConverter = mi => FirstCharToLower(mi.Name);
-                }
+                },
+                ModifyDatabaseRecord = Options.ModifyForJavaScriptEngine(jsEngineType)
             }))
             {
                 using (var session = store.OpenSession())
@@ -842,8 +851,9 @@ from 'Users' as user select output(user)", queryAsString);
             }
         }
 
-        [Fact]
-        public void CanPatchComplex()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanPatchComplex(string jsEngineType)
         {
             var stuff = new Stuff[3];
             stuff[0] = new Stuff { Key = 6 };
@@ -861,7 +871,8 @@ from 'Users' as user select output(user)", queryAsString);
                         }
                     };
                     ss.Conventions.PropertyNameConverter = mi => FirstCharToLower(mi.Name);
-                }
+                },
+                ModifyDatabaseRecord = Options.ModifyForJavaScriptEngine(jsEngineType)
             }))
             {
                 using (var session = store.OpenSession())
@@ -1062,8 +1073,9 @@ from 'Users' as user select output(user)", queryAsString);
             }
         }
 
-        [Fact]
-        public void CanAddToArray()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanAddToArray(string jsEngineType)
         {
             var stuff = new Stuff[1];
             stuff[0] = new Stuff { Key = 6 };
@@ -1081,7 +1093,8 @@ from 'Users' as user select output(user)", queryAsString);
                         }
                     };
                     ss.Conventions.PropertyNameConverter = mi => FirstCharToLower(mi.Name);
-                }
+                },
+                ModifyDatabaseRecord = Options.ModifyForJavaScriptEngine(jsEngineType)
             }))
             {
                 using (var session = store.OpenSession())
@@ -1134,8 +1147,9 @@ from 'Users' as user select output(user)", queryAsString);
             }
         }
 
-        [Fact]
-        public void CanRemoveFromArray()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanRemoveFromArray(string jsEngineType)
         {
             var stuff = new Stuff[2];
             stuff[0] = new Stuff { Key = 6 };
@@ -1154,7 +1168,8 @@ from 'Users' as user select output(user)", queryAsString);
                         }
                     };
                     ss.Conventions.PropertyNameConverter = mi => FirstCharToLower(mi.Name);
-                }
+                },
+                ModifyDatabaseRecord = Options.ModifyForJavaScriptEngine(jsEngineType)
             }))
             {
                 using (var session = store.OpenSession())
@@ -1183,8 +1198,9 @@ from 'Users' as user select output(user)", queryAsString);
             }
         }
 
-        [Fact]
-        public void CanIncrement()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanIncrement(string jsEngineType)
         {
             Stuff[] s = new Stuff[3];
             s[0] = new Stuff { Key = 6 };
@@ -1202,7 +1218,8 @@ from 'Users' as user select output(user)", queryAsString);
                         }
                     };
                     ss.Conventions.PropertyNameConverter = mi => FirstCharToLower(mi.Name);
-                }
+                },
+                ModifyDatabaseRecord = Options.ModifyForJavaScriptEngine(jsEngineType)
             }))
             {
                 using (var session = store.OpenSession())
@@ -1236,8 +1253,9 @@ from 'Users' as user select output(user)", queryAsString);
             }
         }
 
-        [Fact]
-        public void ShouldMergePatchCalls()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void ShouldMergePatchCalls(string jsEngineType)
         {
             var stuff = new Stuff[3];
             stuff[0] = new Stuff { Key = 6 };
@@ -1257,7 +1275,8 @@ from 'Users' as user select output(user)", queryAsString);
                         }
                     };
                     ss.Conventions.PropertyNameConverter = mi => FirstCharToLower(mi.Name);
-                }
+                },
+                ModifyDatabaseRecord = Options.ModifyForJavaScriptEngine(jsEngineType)
             }))
             {
                 using (var session = store.OpenSession())
