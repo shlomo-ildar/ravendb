@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Amazon.SimpleNotificationService.Model;
+using Jint;
 using Jint.Native;
 using Raven.Client.Exceptions.Documents;
 using Raven.Client.Exceptions.Documents.Patching;
@@ -393,6 +395,7 @@ namespace Raven.Server.Documents.Patch
             }
 
             private JsHandle[] _args = Array.Empty<JsHandle>();
+            private bool _argsSet;
 
             private void SetArgs(JsonOperationContext jsonCtx, string method, object[] args)
             {
@@ -407,28 +410,47 @@ namespace Raven.Server.Documents.Patch
                     _args[i] = TranslateToJs(jsonCtx, args[i], false);
                 }
 
-                if (_jsEngineType == JavaScriptEngineType.Jint)
+                _argsSet = method != QueryMetadata.SelectOutput &&
+                           _args.Length == 2 && _args[1].IsObject;
+                if (_argsSet)
                 {
-                    if (method != QueryMetadata.SelectOutput &&
-                        _args.Length == 2 &&
-                        _args[1].IsObject &&
-                        _args[1].Object is PatchJint.BlittableObjectInstanceJint boi)
+                    switch (_jsEngineType)
                     {
-                        _refResolverJint.ExplodeArgsOn(null, boi);
+                        case JavaScriptEngineType.Jint:
+                            if (_args[1].Object is PatchJint.BlittableObjectInstanceJint boi)
+                                _refResolverJint.ExplodeArgsOn(null, boi);
+                            break;
+                        case JavaScriptEngineType.V8:
+                            SetArgsV8();
+                            break;
+                        default:
+                            throw new NotSupportedException($"Not supported JS engine kind '{_jsEngineType}'.");
                     }
                 }
             }
 
             private void DisposeArgs()
             {
+                if (_argsSet)
+                {
+                    switch (_jsEngineType)
+                    {
+                        case JavaScriptEngineType.Jint:
+                            DisposeArgsJint();
+                            break;
+                        case JavaScriptEngineType.V8:
+                            DisposeArgsV8();
+                            break;
+                        default:
+                            throw new NotSupportedException($"Not supported JS engine kind '{_jsEngineType}'.");
+                    }
+                }
+
                 for (int i = 0; i < _args.Length; ++i)
                 {
                     _args[i].Dispose();
                 }
                 Array.Clear(_args, 0, _args.Length);
-                
-                if (_jsEngineType == JavaScriptEngineType.Jint)
-                    DisposeArgsJint();
             }
             
             private static readonly TimeSeriesStorage.AppendOptions AppendOptionsForScript = new TimeSeriesStorage.AppendOptions

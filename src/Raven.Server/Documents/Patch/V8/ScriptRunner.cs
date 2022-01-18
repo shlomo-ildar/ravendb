@@ -1785,6 +1785,52 @@ namespace Raven.Server.Documents.Patch
                 var jsException = new JavaScriptException(e.Message, e);
                 return jsException;
             }
+
+            private void SetArgsV8()
+            {
+                if (_args[1].Object is BlittableObjectInstanceV8 boi)
+                {
+                    var global = ScriptEngineV8.GlobalObject;
+                    foreach (var propertyNameOrig in boi.EnumerateOwnPropertiesUnordered())
+                    {
+                        var propertyName = "$" + propertyNameOrig;
+                        if (global.HasProperty(propertyName))
+                        {
+                            var jsonString = ScriptEngineHandle.JsonStringify.V8.Item.StaticCall(global.GetProperty(propertyName));
+                            throw new ArgumentException(
+                                $"Can't set argument '{propertyName}' as property on global object as it already exists with value: {jsonString}");
+                        }
+
+                        var desc = boi.GetOwnProperty(propertyNameOrig);
+                        if (desc != null)
+                        {
+                            if (!global.SetProperty(propertyName, desc.ValueCopy()))
+                            {
+                                throw new JavaScriptException($"Failed to set property {propertyName} on global object");
+                            }
+                        }
+                    }
+                }
+            }
+            
+            private void DisposeArgsV8()
+            {
+                if (_args[1].Object is BlittableObjectInstanceV8 boi)
+                {
+                    var global = ScriptEngineV8.GlobalObject;
+                    foreach (var propertyNameOrig in boi.EnumerateOwnPropertiesUnordered())
+                    {
+                        var propertyName = "$" + propertyNameOrig;
+                        if (global.HasProperty(propertyName))
+                        {
+                            if (!global.DeleteProperty(propertyName))
+                            {
+                                throw new JavaScriptException($"Failed to delete property {propertyName} on global object");
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
