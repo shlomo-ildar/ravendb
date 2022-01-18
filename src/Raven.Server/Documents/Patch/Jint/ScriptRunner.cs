@@ -1557,6 +1557,12 @@ namespace Raven.Server.Documents.Patch
                 return javaScriptException;
             }
             
+            private void SetArgsJint()
+            {
+                if (_args.Length > 1 && _args[1].Object is BlittableObjectInstanceJint boi)
+                    _refResolverJint.ExplodeArgsOn(null, boi);
+            }
+            
             private void DisposeArgsJint()
             {
                 _refResolverJint.ExplodeArgsOn(null, null);

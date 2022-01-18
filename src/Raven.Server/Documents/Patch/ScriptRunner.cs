@@ -395,7 +395,6 @@ namespace Raven.Server.Documents.Patch
             }
 
             private JsHandle[] _args = Array.Empty<JsHandle>();
-            private bool _argsSet;
 
             private void SetArgs(JsonOperationContext jsonCtx, string method, object[] args)
             {
@@ -410,15 +409,13 @@ namespace Raven.Server.Documents.Patch
                     _args[i] = TranslateToJs(jsonCtx, args[i], false);
                 }
 
-                _argsSet = method != QueryMetadata.SelectOutput &&
-                           _args.Length == 2 && _args[1].IsObject;
-                if (_argsSet)
+                if (method != QueryMetadata.SelectOutput &&
+                    _args.Length == 2 && _args[1].IsObject)
                 {
                     switch (_jsEngineType)
                     {
                         case JavaScriptEngineType.Jint:
-                            if (_args[1].Object is PatchJint.BlittableObjectInstanceJint boi)
-                                _refResolverJint.ExplodeArgsOn(null, boi);
+                            SetArgsJint();
                             break;
                         case JavaScriptEngineType.V8:
                             SetArgsV8();
@@ -431,19 +428,16 @@ namespace Raven.Server.Documents.Patch
 
             private void DisposeArgs()
             {
-                if (_argsSet)
+                switch (_jsEngineType)
                 {
-                    switch (_jsEngineType)
-                    {
-                        case JavaScriptEngineType.Jint:
-                            DisposeArgsJint();
-                            break;
-                        case JavaScriptEngineType.V8:
-                            DisposeArgsV8();
-                            break;
-                        default:
-                            throw new NotSupportedException($"Not supported JS engine kind '{_jsEngineType}'.");
-                    }
+                    case JavaScriptEngineType.Jint:
+                        DisposeArgsJint();
+                        break;
+                    case JavaScriptEngineType.V8:
+                        DisposeArgsV8();
+                        break;
+                    default:
+                        throw new NotSupportedException($"Not supported JS engine kind '{_jsEngineType}'.");
                 }
 
                 for (int i = 0; i < _args.Length; ++i)
