@@ -265,8 +265,9 @@ namespace Raven.Server.Documents.Indexes.Static
                     {
                         BlittableJsonReaderObject.PropertyDetails prop = default;
                         values[0].GetPropertyByIndex(index, ref prop);
-
-                        return EngineHandle.FromObjectGen(prop.Value);
+                        if (_jsIndexUtils.GetValue(prop.Value, out JsHandle jsValueHandle, isMapReduce: true) == false)
+                            throw new InvalidOperationException("Can't convert key value to JS: {prop.Value}");
+                        return jsValueHandle;
                     }
 
                     return EngineHandle.CreateNullValue();
