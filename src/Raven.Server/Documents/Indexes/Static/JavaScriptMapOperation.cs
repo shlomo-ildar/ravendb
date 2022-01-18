@@ -157,7 +157,17 @@ namespace Raven.Server.Documents.Indexes.Static
                         throw new JavaScriptIndexFuncException($"Failed to execute {MapString}", new Exception($"Entry item is not document: {jsItem.ToString()}"));
                 }
                 
-                _resolver?.ExplodeArgsOn(null, null);
+                switch (_engineHandle.EngineType) // TODO [shlomo] why there is no SetArgs in indexes?
+                {
+                    case JavaScriptEngineType.Jint:
+                        _resolver.ExplodeArgsOn(null, null);
+                        break;
+                    case JavaScriptEngineType.V8:
+                        //DisposeArgsV8(); 
+                        break;
+                    default:
+                        throw new NotSupportedException($"Not supported JS engine kind '{_engineHandle.EngineType}'.");
+                }
             }
         }
         
