@@ -868,7 +868,7 @@ namespace Raven.Server.Documents.Patch
                     throw new InvalidOperationException("Raven_ExplodeArgs(this, args) - must be called with 2 arguments");
                 if (args[1].IsObject && args[1].BoundObject is BlittableObjectInstanceV8 boi)
                 {
-                    //_refResolverV8.ExplodeArgsOn(args[0], boi);
+                    SetArgsV8();
                     return self;
                 }
                 if (args[1].IsNull || args[1].IsUndefined)
@@ -1788,7 +1788,7 @@ namespace Raven.Server.Documents.Patch
 
             private void SetArgsV8()
             {
-                if (_args[1].Object is BlittableObjectInstanceV8 boi)
+                if (_args.Length > 1 && _args[1].Object is BlittableObjectInstanceV8 boi)
                 {
                     var global = ScriptEngineV8.GlobalObject;
                     foreach (var propertyNameOrig in boi.EnumerateOwnPropertiesUnordered())
@@ -1815,7 +1815,7 @@ namespace Raven.Server.Documents.Patch
             
             private void DisposeArgsV8()
             {
-                if (_args[1].Object is BlittableObjectInstanceV8 boi)
+                if (_args.Length > 1 && _args[1].Object is BlittableObjectInstanceV8 boi)
                 {
                     var global = ScriptEngineV8.GlobalObject;
                     foreach (var propertyNameOrig in boi.EnumerateOwnPropertiesUnordered())
