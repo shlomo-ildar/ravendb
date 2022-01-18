@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using FastTests;
 using FastTests.Server.JavaScript;
 using Raven.Client.Documents.Operations;
@@ -6,6 +7,7 @@ using Raven.Client.Documents.Queries;
 using Raven.Client.Exceptions.Documents;
 using Xunit;
 using Xunit.Abstractions;
+using JavaScriptException = Raven.Client.Exceptions.Documents.Patching.JavaScriptException;
 
 namespace SlowTests.Issues
 {
@@ -171,7 +173,14 @@ namespace SlowTests.Issues
                     session.SaveChanges();
                 }
 
-                Assert.Throws<DocumentDoesNotExistException>(() =>
+                var exceptionType = jsEngineType switch
+                {
+                    "Jint" => typeof(DocumentDoesNotExistException),
+                    "V8" => typeof(JavaScriptException),
+                    _ => throw new NotSupportedException($"Not supported JS engine kind '{jsEngineType}'.")
+                };
+                ;
+                Assert.Throws(exceptionType, () =>
                 {
                     store.Operations
                         .Send(new PatchOperation(testDoc1.Id, null, new PatchRequest
@@ -180,7 +189,7 @@ namespace SlowTests.Issues
                         }));
                 });
 
-                Assert.Throws<DocumentDoesNotExistException>(() =>
+                Assert.Throws(exceptionType, () =>
                 {
                     store.Operations
                         .Send(new PatchOperation(testDoc1.Id, null, new PatchRequest
