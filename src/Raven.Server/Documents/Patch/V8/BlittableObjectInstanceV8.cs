@@ -477,7 +477,7 @@ namespace Raven.Server.Documents.Patch.V8
             return null;
         }
 
-        private IEnumerable<string> EnumerateOwnPropertiesAux()
+        public IEnumerable<string> EnumerateOwnPropertiesUnordered()
         {
             _CheckIsNotDisposed($"EnumerateOwnPropertiesAux");
 
@@ -503,7 +503,7 @@ namespace Raven.Server.Documents.Patch.V8
 
         public IEnumerable<string> EnumerateOwnProperties()
         {
-            return EnumerateOwnPropertiesAux().OrderBy(s => s); // TODO [shlomo] transfer Jint fix for issue RavenDB-17312
+            return EnumerateOwnPropertiesUnordered().OrderBy(s => s); // TODO [shlomo] transfer Jint fix for issue RavenDB-17312
         }
 
         public InternalHandle EnumerateOwnPropertiesJsV8()
