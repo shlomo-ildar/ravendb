@@ -111,6 +111,13 @@ namespace Raven.Server.Documents.Indexes.Static.Utils
             }
         }
 
+        public JsHandle GetValueOrThrow(object item, bool isMapReduce = false, bool keepAlive = false)
+        {
+            if (GetValue(item, out JsHandle jsValueHandle, isMapReduce: true) == false)
+                throw new InvalidOperationException($"Can't convert value to JS: {item}");
+            return jsValueHandle;
+        }
+
         public bool GetValue(object item, out JsHandle jsItem, bool isMapReduce = false, bool keepAlive = false)
         {
             jsItem = JsHandle.Empty;
