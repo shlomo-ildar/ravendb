@@ -1793,18 +1793,25 @@ namespace Raven.Server.Documents.Patch
                     var global = ScriptEngineV8.GlobalObject;
                     foreach (var propertyNameOrig in boi.EnumerateOwnPropertiesUnordered())
                     {
-                        var propertyName = "$" + propertyNameOrig;
-                        if (global.HasProperty(propertyName))
-                        {
-                            var jsonString = ScriptEngineHandle.JsonStringify.V8.Item.StaticCall(global.GetProperty(propertyName));
-                            throw new ArgumentException(
-                                $"Can't set argument '{propertyName}' as property on global object as it already exists with value: {jsonString}");
-                        }
-
                         var desc = boi.GetOwnProperty(propertyNameOrig);
                         if (desc != null)
                         {
-                            if (!global.SetProperty(propertyName, desc.ValueCopy()))
+                            var valueNew = desc.ValueCopy();
+                            var propertyName = "$" + propertyNameOrig;
+                            if (global.HasProperty(propertyName))
+                            {
+                                var vaguePrev = global.GetProperty(propertyName);
+                                if (ReferenceEquals(vaguePrev.Object, valueNew.Object))
+                                    return; // ExplodeArgsOn can be called after SetArgs in ScriptRunner, in this case we can just skip repeated setting
+                                else
+                                {
+                                    var valueNewStr = ScriptEngineHandle.JsonStringify.V8.Item.StaticCall(valueNew);
+                                    var valuePrevStr = ScriptEngineHandle.JsonStringify.V8.Item.StaticCall(vaguePrev);
+                                    throw new ArgumentException($"Can't set argument '{propertyName}' as property on global object as it already exists with value {valuePrevStr}, new value {valueNewStr}");
+                                }
+                            }
+
+                            if (!global.SetProperty(propertyName, valueNew))
                             {
                                 throw new JavaScriptException($"Failed to set property {propertyName} on global object");
                             }
