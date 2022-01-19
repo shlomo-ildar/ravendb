@@ -117,6 +117,12 @@ namespace Raven.Server.Documents.Indexes.Static.Utils
             string changeVector = null;
             DateTime? lastModified = null;
 
+            if (item == null)
+            {
+                jsItem = EngineHandle.CreateNullValue();
+                return true;
+            }
+
             switch (item)
             {
                 case DynamicBlittableJson dbj:
@@ -167,8 +173,18 @@ namespace Raven.Server.Documents.Indexes.Static.Utils
                 }
             }
 
-            jsItem.Dispose(); // is not necessary as should be empty
-            return false;
+            try
+            {
+                jsItem = EngineHandle.FromObjectGen(item);
+                jsItem.ThrowOnError();
+            }
+            catch (Exception e)
+            {
+                jsItem.Dispose();
+                return false;
+            }
+
+            return true;
         }
 
         public JsHandle StringifyObject(JsHandle jsValue)
