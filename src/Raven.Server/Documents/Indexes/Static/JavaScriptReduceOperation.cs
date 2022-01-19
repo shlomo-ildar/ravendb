@@ -265,9 +265,7 @@ namespace Raven.Server.Documents.Indexes.Static
                     {
                         BlittableJsonReaderObject.PropertyDetails prop = default;
                         values[0].GetPropertyByIndex(index, ref prop);
-                        if (_jsIndexUtils.GetValue(prop.Value, out JsHandle jsValueHandle, isMapReduce: true) == false)
-                            throw new InvalidOperationException("Can't convert key value to JS: {prop.Value}");
-                        return jsValueHandle;
+                        return _jsIndexUtils.GetValueOrThrow(prop.Value, isMapReduce: true);
                     }
 
                     return EngineHandle.CreateNullValue();
@@ -301,7 +299,7 @@ namespace Raven.Server.Documents.Indexes.Static
                                 return boi.CreateJsHandle(true);
                             }))(doc),
                             LazyNumberValue lnv => EngineHandle.CreateValue(lnv.ToDouble(CultureInfo.InvariantCulture)),
-                            _ => EngineHandle.FromObjectGen(value)
+                            _ => _jsIndexUtils.GetValueOrThrow(value, isMapReduce: true)
                         };
 
                         jsRes.SetProperty(propertyName, jsValue);
