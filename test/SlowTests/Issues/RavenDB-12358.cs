@@ -1,5 +1,6 @@
 ﻿using FastTests;
 using System.Linq;
+using FastTests.Server.JavaScript;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -23,10 +24,11 @@ namespace SlowTests.Issues
             public object SomeProp;
         }
 
-        [Fact]
-        public void ProjectionReturnsAllNull()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void ProjectionReturnsAllNull(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var s = store.OpenSession())
                 {
@@ -52,10 +54,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void TestHasValue()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void TestHasValue(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var s = store.OpenSession())
                 {

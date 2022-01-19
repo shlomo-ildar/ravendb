@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents.Indexes;
 using Xunit;
 using Xunit.Abstractions;
@@ -47,10 +48,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void JsProjectionIdFromMapReduceIndex()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void JsProjectionIdFromMapReduceIndex(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 new DocumentIndex().Execute(store);
 

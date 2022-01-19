@@ -2,6 +2,7 @@
 using FastTests;
 using Raven.Client.Documents;
 using System.Linq;
+using FastTests.Server.JavaScript;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -54,10 +55,11 @@ namespace SlowTests.Issues
 
         }
 
-        [Fact]
-        public void CanProjectHasValuePropertyOfNullable()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanProjectHasValuePropertyOfNullable(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 Setup(store);
 
@@ -81,10 +83,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void CanProjectHasValuePropertyOfNullable2()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanProjectHasValuePropertyOfNullable2(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 Setup(store);
                 using (var s = store.OpenSession())
@@ -107,10 +110,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void TestGreaterThanOrEqualToZero()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void TestGreaterThanOrEqualToZero(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 Setup(store);
 
@@ -135,10 +139,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void NullableDateTimeProjection()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void NullableDateTimeProjection(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var newSession = store.OpenSession())
                 {

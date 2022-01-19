@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents.Linq;
 using Raven.Client.Documents.Queries;
 using Xunit;
@@ -26,10 +27,11 @@ namespace SlowTests.Issues
             public string Id { get; set; }
         }
 
-        [Fact]
-        public void CanUseLetClauseWithConditionalLoad()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanUseLetClauseWithConditionalLoad(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 var inputDocumentId = "ravenDocuments/1";
                 var externalDocumentId = "ravenDocuments/100";

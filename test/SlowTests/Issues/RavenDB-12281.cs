@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents.Linq;
 using Xunit;
 using Xunit.Abstractions;
@@ -24,10 +25,11 @@ namespace SlowTests.Issues
             Success
         }
 
-        [Fact]
-        public void EnumComparisonWithLet()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void EnumComparisonWithLet(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 string id = "docs/1";
 
