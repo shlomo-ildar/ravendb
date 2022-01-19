@@ -187,13 +187,14 @@ namespace SlowTests.Issues
                     session.SaveChanges();
                 }
 
+                var optChaining = jsEngineType == "Jint" ? "" : "?";
                 var id = store.Subscriptions.Create(new SubscriptionCreationOptions
                 {
-                    Query = @"declare function f(d) { 
+                    Query = @$"declare function f(d) {{ 
                                 include(d.Current.Owner);
-                                include(d.Previous.Owner);
+                                include(d.Previous{optChaining}.Owner);
                                 return d;
-                            }
+                            }}
                             from Dogs (Revisions = true) as dog
                             select f(dog)
                             "
