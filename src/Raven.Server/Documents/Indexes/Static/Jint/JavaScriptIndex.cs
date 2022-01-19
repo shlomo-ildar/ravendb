@@ -162,7 +162,7 @@ namespace Raven.Server.Documents.Indexes.Static
             }
 
             object doc = CurrentIndexingScope.Current.LoadDocument(null, args[0].AsString(), args[1].AsString());
-            if (JsIndexUtils.GetValue(doc, out var itemHandle))
+            if (!(doc is DynamicNullObject) && JsIndexUtils.GetValue(doc, out var itemHandle))
                 return itemHandle.Jint.Item;
 
             return DynamicJsNullJint.ImplicitNullJint;

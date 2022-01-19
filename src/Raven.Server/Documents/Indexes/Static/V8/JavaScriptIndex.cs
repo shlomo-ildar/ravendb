@@ -224,7 +224,7 @@ namespace Raven.Server.Documents.Indexes.Static
                 CheckIsStringV8(args[1], args[0], $"{argsMsgPrefix}second");
 
                 object doc = CurrentIndexingScope.Current.LoadDocument(null, args[0].AsString, args[1].AsString);
-                if (JsIndexUtils.GetValue(doc, out JsHandle jsItemHandle, keepAlive: true))
+                if (!(doc is DynamicNullObject) && JsIndexUtils.GetValue(doc, out JsHandle jsItemHandle, keepAlive: true))
                     return jsItemHandle.V8.Item;
 
                 return EngineExV8.ImplicitNullV8.Clone();
