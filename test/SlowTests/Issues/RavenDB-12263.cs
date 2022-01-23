@@ -117,8 +117,7 @@ namespace SlowTests.Issues
                         select 
                         {
                             IdOfTraversalStart : id(Buddy), 
-                            LikesPath : RecursiveLikes.map(x => x.PathElement).join('>>'), 
-                            IdOfTraversalEnd : id(TraversalDestination)
+                            LikesPath : RecursiveLikes.map(x => x.PathElement).join('>>')
                         }
                     ").ToList();
                     
