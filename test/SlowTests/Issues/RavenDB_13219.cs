@@ -1,5 +1,6 @@
 ﻿using System;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Orders;
 using Raven.Client.Documents.Operations;
 using Raven.Client.Exceptions;
@@ -14,10 +15,11 @@ namespace SlowTests.Issues
         {
         }
 
-        [Fact]
-        public void ShouldNotBeAbleToCreateCountersWithoutNames()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void ShouldNotBeAbleToCreateCountersWithoutNames(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
