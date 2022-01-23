@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using FastTests;
 using Xunit;
 using System.Linq;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents.Queries;
 using Tests.Infrastructure.Entities;
 using Xunit.Abstractions;
@@ -17,10 +18,11 @@ namespace SlowTests.Issues
         }
 
 
-        [Fact]
-        public void CanSelectLoadsInsideLetClause()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanSelectLoadsInsideLetClause(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -108,8 +110,9 @@ from 'Orders' as doc select output(doc)", q.ToString());
         }
 
 
-        [Fact]
-        public void CanSelectLoadsInsideLetClause_complex()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanSelectLoadsInsideLetClause_complex(string jsEngineType)
         {
             using (var store = GetDocumentStore())
             {

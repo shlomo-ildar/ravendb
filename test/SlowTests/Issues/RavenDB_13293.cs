@@ -194,6 +194,7 @@ namespace SlowTests.Issues
             }.Initialize())
             {
                 var doc = new DatabaseRecord(databaseName);
+                Options.ModifyForJavaScriptEngine(jsEngineType).Invoke(doc);
                 var databaseResult = await store.Maintenance.Server.SendAsync(new CreateDatabaseOperation(doc, clusterSize));
                 myNodesList.AddRange(databaseResult.Topology.AllNodes);
 

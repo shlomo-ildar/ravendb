@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Newtonsoft.Json;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Linq;
@@ -98,10 +99,11 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public async Task Query_with_nested_JsonPropertyName_inside_js_projection()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Query_with_nested_JsonPropertyName_inside_js_projection(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenAsyncSession())
                 {
