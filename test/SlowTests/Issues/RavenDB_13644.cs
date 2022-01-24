@@ -16,6 +16,7 @@ using Raven.Server.ServerWide.Context;
 using Tests.Infrastructure.Operations;
 using Xunit;
 using Xunit.Abstractions;
+using IndexingFields = Raven.Client.Constants.Documents.Indexing.Fields;
 
 namespace SlowTests.Issues
 {
@@ -53,6 +54,8 @@ namespace SlowTests.Issues
         {
             using (var store = jsEngineType == null ? GetDocumentStore() : GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
+                var termsCountNull = jsEngineType is null or "Jint" ? 0 : 1;
+
                 var index = new TIndex();
                 var indexName = index.IndexName;
                 index.Execute(store);
@@ -92,7 +95,9 @@ namespace SlowTests.Issues
                 Assert.False(staleness.IsStale);
 
                 terms = store.Maintenance.Send(new GetTermsOperation(indexName, "City", null));
-                Assert.Equal(0, terms.Length);
+                Assert.Equal(termsCountNull, terms.Length);
+                if (termsCountNull > 0)
+                    Assert.Contains(IndexingFields.NullValue, terms);
 
                 store.Maintenance.Send(new StopIndexingOperation());
 
@@ -209,7 +214,9 @@ namespace SlowTests.Issues
                 Assert.False(staleness.IsStale);
 
                 terms = store.Maintenance.Send(new GetTermsOperation(indexName, "City", null));
-                Assert.Equal(1, terms.Length);
+                Assert.Equal(1 + termsCountNull, terms.Length);
+                if (termsCountNull > 0)
+                    Assert.Contains(IndexingFields.NullValue, terms);
                 Assert.Contains("torun", terms);
 
                 // live add compare without stopping indexing
@@ -262,6 +269,8 @@ namespace SlowTests.Issues
         {
             using (var store = jsEngineType == null ? GetDocumentStore() : GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
+                var termsCountNull = jsEngineType is null or "Jint" ? 0 : 1;
+
                 var index = new TIndex();
                 var indexName = index.IndexName;
                 index.Execute(store);
@@ -286,8 +295,6 @@ namespace SlowTests.Issues
                     session.SaveChanges();
                 }
 
-                var termsCount = jsEngineType == "Jint" ? 0 : 1;
-
                 staleness = store.Maintenance.Send(new GetIndexStalenessOperation(indexName));
                 Assert.True(staleness.IsStale);
                 Assert.Equal(1, staleness.StalenessReasons.Count);
@@ -303,7 +310,9 @@ namespace SlowTests.Issues
                 Assert.False(staleness.IsStale);
 
                 terms = store.Maintenance.Send(new GetTermsOperation(indexName, "City", null));
-                Assert.Equal(termsCount, terms.Length);
+                Assert.Equal(termsCountNull, terms.Length);
+                if (termsCountNull > 0)
+                    Assert.Contains(IndexingFields.NullValue, terms);
 
                 store.Maintenance.Send(new StopIndexingOperation());
 
@@ -420,7 +429,9 @@ namespace SlowTests.Issues
                 Assert.False(staleness.IsStale);
 
                 terms = store.Maintenance.Send(new GetTermsOperation(indexName, "City", null));
-                Assert.Equal(1, terms.Length);
+                Assert.Equal(1 + termsCountNull, terms.Length);
+                if (termsCountNull > 0)
+                    Assert.Contains(IndexingFields.NullValue, terms);
                 Assert.Contains("torun", terms);
 
                 // live add compare without stopping indexing
@@ -473,6 +484,8 @@ namespace SlowTests.Issues
         {
             using (var store = jsEngineType == null ? GetDocumentStore() : GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
+                var termsCountNull = jsEngineType is null or "Jint" ? 0 : 1;
+
                 var index = new TIndex();
                 var indexName = index.IndexName;
                 index.Execute(store);
@@ -526,8 +539,6 @@ namespace SlowTests.Issues
 
                 WaitForIndexing(store);
 
-                var termsCount = jsEngineType == "Jint" ? 0 : 1;
-
                 using (var session = store.OpenSession())
                 {
                     var terms = session.Query<MapIndexResult, TIndex>()
@@ -538,7 +549,9 @@ namespace SlowTests.Issues
                     Assert.False(statistics.IsStale);
                     Assert.True(statistics.DurationInMs >= 0); // not from cache
                     Assert.NotEqual(previousResultEtag, statistics.ResultEtag);
-                    Assert.Equal(termsCount, terms.Length);
+                    Assert.Equal(termsCountNull, terms.Length);
+                    if (termsCountNull > 0)
+                        Assert.Contains(null, terms);
 
                     previousResultEtag = statistics.ResultEtag;
                 }
@@ -563,7 +576,9 @@ namespace SlowTests.Issues
                     Assert.True(statistics.IsStale);
                     Assert.True(statistics.DurationInMs >= 0); // not from cache
                     Assert.NotEqual(previousResultEtag, statistics.ResultEtag);
-                    Assert.Equal(termsCount, terms.Length);
+                    Assert.Equal(termsCountNull, terms.Length);
+                    if (termsCountNull > 0)
+                        Assert.Contains(null, terms);
 
                     previousResultEtag = statistics.ResultEtag;
                 }
@@ -727,7 +742,9 @@ namespace SlowTests.Issues
                     Assert.False(statistics.IsStale);
                     Assert.True(statistics.DurationInMs >= 0); // not from cache
                     Assert.NotEqual(previousResultEtag, statistics.ResultEtag);
-                    Assert.Equal(1, terms.Length);
+                    Assert.Equal(1 + termsCountNull, terms.Length);
+                    if (termsCountNull > 0)
+                        Assert.Contains(null, terms);
                     Assert.Contains("Torun", terms);
 
                     previousResultEtag = statistics.ResultEtag;

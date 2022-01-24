@@ -114,7 +114,7 @@ from 'Orders' as doc select output(doc)", q.ToString());
         [JavaScriptEngineClassData]
         public void CanSelectLoadsInsideLetClause_complex(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
