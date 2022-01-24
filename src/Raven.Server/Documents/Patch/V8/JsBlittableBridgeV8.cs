@@ -42,57 +42,50 @@ namespace Raven.Server.Documents.Patch.V8
             _writer.WriteObjectEnd();
         }
 
-        private void WriteJsonValue(object parent, bool isRoot, bool filterProperties, string propertyName, object value)
+        private void WriteJsonValue(InternalHandle jsParent, bool isRoot, bool filterProperties, string propertyName, InternalHandle jsValue)
         {
-            if (value is InternalHandle jsValue)
+            jsValue.ThrowOnError();
+
+            if (jsValue.IsBoolean)
+                _writer.WriteValue(jsValue.AsBoolean);
+            else if (jsValue.IsUndefined || jsValue.IsNull)
+                _writer.WriteValueNull();
+            else if (jsValue.IsStringEx)
+                _writer.WriteValue(jsValue.AsString);
+            else if (jsValue.IsDate)
             {
-                jsValue.ThrowOnError();
+                var date = jsValue.AsDate;
+                _writer.WriteValue(date.ToString(DefaultFormat.DateTimeOffsetFormatsToWrite));
+            }
+            else if (jsValue.IsInt32)
+                WriteNumber(jsParent.BoundObject, propertyName, jsValue.AsInt32);
+            else if (jsValue.IsNumberEx)
+                WriteNumber(jsParent.BoundObject, propertyName, jsValue.AsDouble);
+            else if (jsValue.IsArray)
+                WriteArray(jsValue);
+            else if (jsValue.IsObject)
+            {
+                if (isRoot)
+                    filterProperties = string.Equals(propertyName, Constants.Documents.Metadata.Key, StringComparison.Ordinal);
 
-                if (jsValue.IsBoolean)
-                    _writer.WriteValue(jsValue.AsBoolean);
-                else if (jsValue.IsUndefined || jsValue.IsNull)
-                    _writer.WriteValueNull();
-                else if (jsValue.IsStringEx)
-                    _writer.WriteValue(jsValue.AsString);
-                else if (jsValue.IsDate)
+                object target = jsValue.BoundObject;
+                if (target != null)
                 {
-                    var date = jsValue.AsDate;
-                    _writer.WriteValue(date.ToString(DefaultFormat.DateTimeOffsetFormatsToWrite));
-                }
-                else if (jsValue.IsInt32)
-                    WriteNumber(parent, propertyName, jsValue.AsInt32);
-                else if (jsValue.IsNumberEx)
-                    WriteNumber(parent, propertyName, jsValue.AsDouble);
-                else if (jsValue.IsArray)
-                    WriteArray(jsValue);
-                else if (jsValue.IsObject)
-                {
-                    if (isRoot)
-                        filterProperties = string.Equals(propertyName, Constants.Documents.Metadata.Key, StringComparison.Ordinal);
-
-                    object target = jsValue.BoundObject;
-                    if (target != null)
+                    if (target is LazyNumberValue)
                     {
-                        if (target is LazyNumberValue)
-                        {
-                            _writer.WriteValue(BlittableJsonToken.LazyNumber, target);
-                        }
-                        else if (target is LazyStringValue)
-                        {
-                            _writer.WriteValue(BlittableJsonToken.String, target);
-                        }
-                        else if (target is LazyCompressedStringValue)
-                        {
-                            _writer.WriteValue(BlittableJsonToken.CompressedString, target);
-                        }
-                        else if (target is long)
-                        {
-                            _writer.WriteValue(BlittableJsonToken.Integer, (long)target);
-                        }
-                        else
-                        {
-                            WriteNestedObject(jsValue, filterProperties);
-                        }
+                        _writer.WriteValue(BlittableJsonToken.LazyNumber, target);
+                    }
+                    else if (target is LazyStringValue)
+                    {
+                        _writer.WriteValue(BlittableJsonToken.String, target);
+                    }
+                    else if (target is LazyCompressedStringValue)
+                    {
+                        _writer.WriteValue(BlittableJsonToken.CompressedString, target);
+                    }
+                    else if (target is long)
+                    {
+                        _writer.WriteValue(BlittableJsonToken.Integer, (long)target);
                     }
                     else
                     {
@@ -101,8 +94,16 @@ namespace Raven.Server.Documents.Patch.V8
                 }
                 else
                 {
-                    throw new InvalidOperationException("Unknown type: " + jsValue.ValueType);
+                    WriteNestedObject(jsValue, filterProperties);
                 }
+            }
+        }
+
+        private void WriteJsonValue(object parent, bool isRoot, bool filterProperties, string propertyName, object value)
+        {
+            if (value is InternalHandle jsValue)
+            {
+                WriteJsonValue((InternalHandle)parent, isRoot, filterProperties, propertyName, jsValue);
                 return;
             }
             WriteValue(parent, isRoot, propertyName, value);
@@ -405,7 +406,7 @@ namespace Raven.Server.Documents.Patch.V8
                     obj.Blittable.GetPropertyByIndex(propIndex, ref prop);
 
                     IBlittableObjectProperty modifiedValue = default;
-                    var key = prop.Name;
+                    var key = prop.Name.ToString();
                     var existInObject = obj.TryGetValue(key, out modifiedValue, out bool isDeleted);
 
                     if (isDeleted)
