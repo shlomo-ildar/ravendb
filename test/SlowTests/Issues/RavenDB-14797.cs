@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Raven.Client;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Indexes;
@@ -15,10 +16,11 @@ namespace SlowTests.Issues
         {
         }
 
-        [Fact]
-        public void ShouldWork()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void ShouldWork(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 new MapReduceWithOutputToCollection().Execute(store);
                 new JavaIndex().Execute(store);
@@ -61,10 +63,11 @@ namespace SlowTests.Issues
         }
 
         // RavenDB-14884
-        [Fact]
-        public void CanCompileScriptWithSwitch()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void CanCompileScriptWithSwitch(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 new Index_Rows().Execute(store);
                 var id = "row/1";

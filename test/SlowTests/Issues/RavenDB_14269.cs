@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents;
 using Xunit;
 using Xunit.Abstractions;
@@ -14,10 +15,11 @@ namespace SlowTests.Issues
         {
         }
 
-        [Fact]
-        public async Task JsConverterShouldNotStripValueOrKeyFromDictionaryEntity()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task JsConverterShouldNotStripValueOrKeyFromDictionaryEntity(string jsEngineType)
         {
-            using var store = GetDocumentStore();
+            using var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType));
             using var session = store.OpenAsyncSession();
 
             var u1 = new User

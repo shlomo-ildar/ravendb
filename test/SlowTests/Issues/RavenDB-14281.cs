@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Queries;
 using Xunit;
@@ -17,10 +18,11 @@ namespace SlowTests.Issues
         }
 
 
-        [Fact]
-        public async Task Can_Generate_Correct_Javascript_Projection_for_IDictionary()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task Can_Generate_Correct_Javascript_Projection_for_IDictionary(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             using (var session = store.OpenAsyncSession())
             {
                 await session.StoreAsync(
