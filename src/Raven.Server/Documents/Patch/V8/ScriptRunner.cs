@@ -1800,13 +1800,13 @@ namespace Raven.Server.Documents.Patch
                             var propertyName = "$" + propertyNameOrig;
                             if (global.HasProperty(propertyName))
                             {
-                                var vaguePrev = global.GetProperty(propertyName);
-                                if (ReferenceEquals(vaguePrev.Object, valueNew.Object))
+                                var valuePrev = global.GetProperty(propertyName);
+                                if (ReferenceEquals(valuePrev.Object, valueNew.Object))
                                     return; // ExplodeArgsOn can be called after SetArgs in ScriptRunner, in this case we can just skip repeated setting
                                 else
                                 {
                                     var valueNewStr = ScriptEngineHandle.JsonStringify.V8.Item.StaticCall(valueNew);
-                                    var valuePrevStr = ScriptEngineHandle.JsonStringify.V8.Item.StaticCall(vaguePrev);
+                                    var valuePrevStr = ScriptEngineHandle.JsonStringify.V8.Item.StaticCall(valuePrev);
                                     throw new ArgumentException($"Can't set argument '{propertyName}' as property on global object as it already exists with value {valuePrevStr}, new value {valueNewStr}");
                                 }
                             }
