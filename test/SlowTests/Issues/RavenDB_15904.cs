@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Orders;
 using Raven.Client.Documents.Indexes;
 using Raven.Client.Exceptions;
@@ -18,10 +19,11 @@ namespace SlowTests.Issues
         {
         }
 
-        [Fact]
-        public void ShouldThrowBetterErrorOnInvalidJavaScriptDate()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void ShouldThrowBetterErrorOnInvalidJavaScriptDate(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 new Times().Execute(store);
 
