@@ -96,7 +96,7 @@ namespace SlowTests.Issues
         ParentId: user.NestedItems.NestedItemId,
         ParentName: user.NestedItems.NestedItemName,
         ChildDocument: {
-            Name: user.Name,
+            Name: user.UserName,
             Id: id(user),
             Etag: user.Etag,
             Type: user.Type
