@@ -1259,6 +1259,16 @@ namespace FastTests
                 };
             }
             
+            public static Action<Dictionary<string, string>> ModifyConfigurationForJavaScriptEngine(string jsEngineType, Action<Dictionary<string, string>> modifyMore = null)
+            {
+                return configuration =>
+                {
+                    if (modifyMore != null)
+                        modifyMore(configuration);
+                    configuration.Add(RavenConfiguration.GetKey(x => x.JavaScript.EngineType), jsEngineType);
+                };
+            }
+            
             public string Path
             {
                 get => _path;
