@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Raven.Server.Documents.Patch;
 using V8.Net;
 
 namespace Raven.Server.Documents.Indexes.Static.JavaScript.V8
@@ -13,7 +14,7 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript.V8
         private readonly InternalHandle _item;
         private readonly InternalHandle _func;
         private readonly HashSet<InternalHandle> _results = new HashSet<InternalHandle>();
-        private readonly Queue<object> _queue = new Queue<object>();
+        private readonly Queue<NullIfEmptyEnumerableResult> _queue = new Queue<NullIfEmptyEnumerableResult>();
 
         public RecursiveJsFunctionV8(V8Engine engine, InternalHandle item, InternalHandle func)
         {
@@ -62,30 +63,34 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript.V8
             if (_item.IsUndefined)
                 return _result;
 
-            using (var jsRes = _func.Call(InternalHandle.Empty, _item))
+            using (var jsRes = _func.StaticCall(_item))
             {
                 jsRes.ThrowOnError(); // TODO check if is needed here
                 var current = NullIfEmptyEnumerable(jsRes);
-                if (current == null)
+                if (current.Kind != NullIfEmptyEnumerableKind.None)
                 {
                     using (var jsResPush = _result.StaticCall("push", _item))
                         jsResPush.ThrowOnError(); // TODO check if is needed here
                     return _result;
                 }
-
-                _queue.Enqueue(_item);
+                
+                _queue.Enqueue(new NullIfEmptyEnumerableResult
+                {
+                    Kind = NullIfEmptyEnumerableKind.Handle,
+                    Handle = _item
+                });
                 while (_queue.Count > 0)
                 {
                     current = _queue.Dequeue();
 
-                    var list = current as IEnumerable<InternalHandle>;
-                    if (list != null)
+                    if (current.Kind == NullIfEmptyEnumerableKind.Enumerable)
                     {
+                        var list = current.Enumerable;
                         foreach (InternalHandle o in list)
                             AddItem(o);
                     }
-                    else if (current is InternalHandle currentJs)
-                        AddItem(currentJs);
+                    if (current.Kind == NullIfEmptyEnumerableKind.Handle)
+                        AddItem(current.Handle);
                 }
             }
 
@@ -104,19 +109,48 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript.V8
             {
                 jsRes.ThrowOnError(); // TODO check if is needed here
                 var result = NullIfEmptyEnumerable(jsRes);
-                if (result != null)
+                if (result.Kind != NullIfEmptyEnumerableKind.None)
                     _queue.Enqueue(result);
             }
         }
 
-        private static object NullIfEmptyEnumerable(InternalHandle item)
+        private enum NullIfEmptyEnumerableKind
         {
-            if (item.IsArray == false)
-                return item;
-            if (item.ArrayLength == 0)
-                return null;
+            None = 0,
+            Handle = 1,
+            Enumerable = 2
+            
+        }
+        
+        private struct NullIfEmptyEnumerableResult
+        {
+            public NullIfEmptyEnumerableKind Kind;
+            public InternalHandle Handle;
+            public IEnumerable<InternalHandle> Enumerable;
+        }
 
-            return Yield(item);
+        private static NullIfEmptyEnumerableResult NullIfEmptyEnumerable(InternalHandle item)
+        {
+            var result = new NullIfEmptyEnumerableResult
+            {
+                Kind = NullIfEmptyEnumerableKind.None
+            };
+            if (item.IsArray == false)
+            {
+                result.Kind = NullIfEmptyEnumerableKind.Handle;
+                result.Handle = item;
+            }
+            else if (item.ArrayLength == 0)
+            {
+                result.Kind = NullIfEmptyEnumerableKind.None;
+            }
+            else
+            {
+                result.Kind = NullIfEmptyEnumerableKind.Enumerable;
+                result.Enumerable = Yield(item);
+            }
+
+            return result;
         }
 
         private static IEnumerable<InternalHandle> Yield(InternalHandle jsArray)
