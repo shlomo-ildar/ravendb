@@ -91,7 +91,7 @@ namespace Raven.Server.Documents.Patch
             return GetScriptRunnerUnlikely(jsOptions, script);
         }
 
-        private ScriptRunner GetScriptRunnerUnlikely(IJavaScriptOptions jsOptions, Key script)
+        private ScriptRunner GetScriptRunnerUnlikely(IJavaScriptOptions jsOptions, Key script) // TODO [shlomo] jsOptions should be taken into account
         {
             var value = new Lazy<ScriptRunner>(() =>
             {
