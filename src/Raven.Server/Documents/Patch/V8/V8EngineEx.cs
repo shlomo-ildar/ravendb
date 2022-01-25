@@ -106,10 +106,23 @@ var process = {
             V8Engine? engine = null;
             for (int i = items.Count - 1; i >= 0; i--)
             {
-                var h = (InternalHandle)items[i];
-                if (engine == null)
-                    engine = h.Engine;
-                h.Dispose();
+                var v8Handle = items[i] is InternalHandle ? (InternalHandle)items[i] : InternalHandle.Empty;
+                if (!v8Handle.IsEmpty)
+                {
+                    if (engine == null)
+                        engine = v8Handle.Engine;
+                    v8Handle.Dispose();
+                }
+                else
+                {
+                    var jsHandle = items[i] is JsHandle ? (JsHandle)items[i] : JsHandle.Empty;
+                    if (!jsHandle.IsEmpty)
+                    {
+                        if (engine == null)
+                            engine = (V8Engine)jsHandle.Engine;
+                        jsHandle.Dispose();
+                    }
+                }
             }
 
             engine?.ForceV8GarbageCollection();
