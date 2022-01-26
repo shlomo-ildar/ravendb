@@ -68,13 +68,13 @@ namespace Raven.Server.Documents.Indexes.Persistence.Lucene.Documents.V8
 
             if (TryGetBoostedValue(documentToProcess, out var boostedValue, out var documentBoost))
             {
-                using (boostedValue)
+                if (IsObject(boostedValue) == false)
                 {
-                    if (IsObject(boostedValue) == false)
-                        throw new InvalidOperationException($"Invalid boosted value. Expected object but got '{boostedValue.ValueType}' with value '{boostedValue}'.");
-
-                    documentToProcess = boostedValue.Object; // no need to KeepTrack() as we store Handle
+                    boostedValue.Dispose();
+                    throw new InvalidOperationException($"Invalid boosted value. Expected object but got '{boostedValue.ValueType}' with value '{boostedValue}'.");
                 }
+
+                documentToProcess = boostedValue;
             }
 
             foreach (var (propertyName, jsPropertyValue) in documentToProcess.GetOwnProperties())
