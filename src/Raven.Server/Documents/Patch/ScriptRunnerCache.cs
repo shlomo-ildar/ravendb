@@ -70,7 +70,7 @@ namespace Raven.Server.Documents.Patch
             public abstract override int GetHashCode();
         }
         
-        public ScriptRunner.ReturnRun GetScriptRunner(IJavaScriptOptions jsOptions, Key key, bool readOnly, out ScriptRunner.SingleRun patchRun)
+        public ScriptRunner.ReturnRun GetScriptRunner(IJavaScriptOptions jsOptions, Key key, bool readOnly, out ScriptRunner.SingleRun patchRun, bool executeScriptsSource = true)
         {
             if (key == null)
             {
@@ -78,7 +78,7 @@ namespace Raven.Server.Documents.Patch
                 return new ScriptRunner.ReturnRun();
             }
             var scriptRunner = GetScriptRunner(jsOptions, key);
-            var returnRun = scriptRunner.GetRunner(out patchRun);
+            var returnRun = scriptRunner.GetRunner(out patchRun, executeScriptsSource);
             patchRun.ReadOnly = readOnly;
             return returnRun;
         }

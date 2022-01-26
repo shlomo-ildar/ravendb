@@ -47,7 +47,7 @@ namespace Raven.Server.Documents.ETL
         {
             if (_behaviorFunctions != null)
             {
-                _behaviorFunctionsRun = Database.Scripts.GetScriptRunner(_jsOptions, _behaviorFunctions, true, out BehaviorsScript);
+                _behaviorFunctionsRun = Database.Scripts.GetScriptRunner(_jsOptions, _behaviorFunctions, true, out BehaviorsScript, executeScriptsSource: false);
 
                 if (debugMode)
                     BehaviorsScript.DebugMode = true;
@@ -107,6 +107,8 @@ namespace Raven.Server.Documents.ETL
             
             const string getTimeSeries = Transformation.TimeSeriesTransformation.GetTimeSeries.Name;
             EngineHandle.SetGlobalClrCallBack(getTimeSeries, (GetTimeSeriesJint, GetTimeSeriesV8));
+            
+            //BehaviorsScript.ExecuteScriptsSource();
         }
         
         protected abstract string[] LoadToDestinations { get; }

@@ -100,16 +100,16 @@ namespace Raven.Server.Documents.Patch
             TimeSeriesDeclaration.Add(func.Name, func);
         }
 
-        public ReturnRun GetRunner(out SingleRun run)
+        public ReturnRun GetRunner(out SingleRun run, bool executeScriptsSource = true)
         {
             _lastRun = DateTime.UtcNow;
             Interlocked.Increment(ref Runs);
-            Holder holder = GetSingleRunHolder();
+            Holder holder = GetSingleRunHolder(executeScriptsSource);
             run = holder.Value;
             return new ReturnRun(run, holder);
         }
 
-        public Holder GetSingleRunHolder()
+        public Holder GetSingleRunHolder(bool executeScriptsSource = true)
         {
             SingleRun run = null;
             
@@ -131,7 +131,7 @@ namespace Raven.Server.Documents.Patch
                 }
                 else
                 {
-                    holder.Value = new ScriptRunner.SingleRun(_db, _configuration, this, ScriptsSource);
+                    holder.Value = new ScriptRunner.SingleRun(_db, _configuration, this, ScriptsSource, executeScriptsSource);
                 }
             }
 
@@ -233,7 +233,9 @@ namespace Raven.Server.Documents.Patch
             protected const string _timeSeriesSignature = "timeseries(doc, name)";
             public const string GetMetadataMethod = "getMetadata";
 
-            public SingleRun(DocumentDatabase database, RavenConfiguration configuration, ScriptRunner runner, List<string> scriptsSource)
+            private List<string> _scriptsSource;
+
+            public SingleRun(DocumentDatabase database, RavenConfiguration configuration, ScriptRunner runner, List<string> scriptsSource, bool executeScriptsSource = true)
             {
                 _database = database;
                 _configuration = configuration;
@@ -241,7 +243,8 @@ namespace Raven.Server.Documents.Patch
                 _jsOptions = runner.JsOptions;
                 _jsEngineType = _jsOptions.EngineType;
 
-                InitializeEngineSpecific(scriptsSource);
+                _scriptsSource = scriptsSource; 
+                InitializeEngineSpecific(executeScriptsSource);
             }
             
             ~SingleRun()
@@ -264,7 +267,7 @@ namespace Raven.Server.Documents.Patch
                 throw new InvalidOperationException("Failed to set JS callback for Jint");
             }
                 
-            public void InitializeEngineSpecific(List<string> scriptsSource)
+            public void InitializeEngineSpecific(bool executeScriptsSource = true)
             {
                 switch (_jsEngineType)
                 {
@@ -353,17 +356,10 @@ namespace Raven.Server.Documents.Patch
                 DeleteRangeTimeSeries = CreateJsHandle((null, DeleteRangeTimeSeriesV8));
                 GetRangeTimeSeries = CreateJsHandle((null, GetRangeTimeSeriesV8));
                 GetStatsTimeSeries = CreateJsHandle((null, GetStatsTimeSeriesV8));
-                
-                foreach (var script in scriptsSource)
+
+                if (executeScriptsSource)
                 {
-                    try
-                    {
-                        ScriptEngineHandle.Execute(script);
-                    }
-                    catch (Exception e)
-                    {
-                        throw new JavaScriptParseException("Failed to parse: " + Environment.NewLine + script, e);
-                    }
+                    ExecuteScriptsSource();
                 }
 
                 foreach (var ts in _runnerBase.TimeSeriesDeclaration)
@@ -374,6 +370,21 @@ namespace Raven.Server.Documents.Patch
                             (engine, isConstructCall, self, args) => InvokeTimeSeriesFunctionV8(ts.Key, args)
                         )
                     );
+                }
+            }
+
+            public void ExecuteScriptsSource()
+            {
+                foreach (var script in _scriptsSource)
+                {
+                    try
+                    {
+                        ScriptEngineHandle.Execute(script);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new JavaScriptParseException("Failed to parse: " + Environment.NewLine + script, e);
+                    }
                 }
             }
 
