@@ -73,7 +73,7 @@ namespace Raven.Server.Documents.Indexes.Static.JavaScript.Jint
             throw new NotSupportedException();
         }
 
-        public override JsValue PreventExtensions()
+        public override bool PreventExtensions()
         {
             throw new NotSupportedException();
         }
