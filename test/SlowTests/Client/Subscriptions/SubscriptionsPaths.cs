@@ -65,7 +65,7 @@ namespace SlowTests.Client.Subscriptions
 
                 Node key;
                 Assert.True(keys.TryTake(out key, TimeSpan.FromSeconds(20)));
-                Assert.False(keys.TryTake(out key, TimeSpan.FromSeconds(1)));
+                Assert.True(keys.TryTake(out key, TimeSpan.FromSeconds(20)));
                 subscription.Dispose();
             }
         }
@@ -125,7 +125,7 @@ From Nodes as n Where areAllGrandchildsGrandchilds(n)"
 
                 object key;
                 Assert.True(keys.TryTake(out key, TimeSpan.FromSeconds(20)));
-                Assert.False(keys.TryTake(out key, TimeSpan.FromSeconds(1)));
+                Assert.True(keys.TryTake(out key, TimeSpan.FromSeconds(20)));
                 subscription.Dispose();
             }
         }
@@ -172,7 +172,7 @@ From Nodes as n Where areAllGrandchildsGrandchilds(n)"
 
                 Node key;
                 Assert.True(keys.TryTake(out key, TimeSpan.FromSeconds(20)));
-                Assert.False(keys.TryTake(out key, TimeSpan.FromSeconds(1)));
+                Assert.True(keys.TryTake(out key, TimeSpan.FromSeconds(20)));
                 subscription.Dispose();
             }
         }
