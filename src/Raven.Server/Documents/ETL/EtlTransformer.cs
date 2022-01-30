@@ -17,7 +17,8 @@ namespace Raven.Server.Documents.ETL
         where TStatsScope : AbstractEtlStatsScope<TStatsScope, TEtlPerformanceOperation>
         where TEtlPerformanceOperation : EtlPerformanceOperation
     {
-        public IJsEngineHandle EngineHandle;
+        public IJsEngineHandle BehaviorsEngineHandle;
+        public IJsEngineHandle DocumentEngineHandle;
 
         protected readonly IJavaScriptOptions _jsOptions;        
         public DocumentDatabase Database { get; }
@@ -53,14 +54,15 @@ namespace Raven.Server.Documents.ETL
                     BehaviorsScript.DebugMode = true;
             }
             
-            _returnMainRun = Database.Scripts.GetScriptRunner(_jsOptions, _mainScript, true, out DocumentScript);
+            _returnMainRun = Database.Scripts.GetScriptRunner(_jsOptions, _mainScript, true, out DocumentScript, executeScriptsSource: false);
             if (DocumentScript == null)
                 return;
 
             if (debugMode)
                 DocumentScript.DebugMode = true;
             
-            EngineHandle = DocumentScript.ScriptEngineHandle;
+            BehaviorsEngineHandle = BehaviorsScript.ScriptEngineHandle;
+            DocumentEngineHandle = DocumentScript.ScriptEngineHandle;
 
             var jsEngineType = _jsOptions.EngineType;
             switch (jsEngineType)
@@ -75,40 +77,56 @@ namespace Raven.Server.Documents.ETL
                     throw new NotSupportedException($"Not supported JS engine type '{jsEngineType}'.");
             }
 
-            EngineHandle.SetGlobalClrCallBack(Transformation.LoadTo, (LoadToFunctionTranslatorJint, LoadToFunctionTranslatorV8));
+            DocumentEngineHandle.SetGlobalClrCallBack(Transformation.LoadTo, (LoadToFunctionTranslatorJint, LoadToFunctionTranslatorV8));
 
             foreach (var collection in LoadToDestinations)
             {
                 var name = Transformation.LoadTo + collection;
-                EngineHandle.SetGlobalClrCallBack(name, 
+                DocumentEngineHandle.SetGlobalClrCallBack(name, 
                     ((Func<JsValue, JsValue[], JsValue>)((value, values) => LoadToFunctionTranslatorInnerJint(collection, value, values)),
                     (engine, isConstructCall, self, args) => LoadToFunctionTranslatorInnerV8(collection, self, args))
                 );
+                BehaviorsEngineHandle.SetGlobalClrCallBack(name, (ReturnSelfJint, ReturnSelfV8));
             }
             
-            EngineHandle.SetGlobalClrCallBack(Transformation.LoadAttachment, (LoadAttachmentJint, LoadAttachmentV8));
+            const string loadAttachment = Transformation.LoadAttachment;
+            DocumentEngineHandle.SetGlobalClrCallBack(loadAttachment, (LoadAttachmentJint, LoadAttachmentV8));
+            BehaviorsEngineHandle.SetGlobalClrCallBack(loadAttachment, (ReturnSelfJint, ReturnSelfV8));
 
             const string loadCounter = Transformation.CountersTransformation.Load;
-            EngineHandle.SetGlobalClrCallBack(loadCounter, (LoadCounterJint, LoadCounterV8));
+            DocumentEngineHandle.SetGlobalClrCallBack(loadCounter, (LoadCounterJint, LoadCounterV8));
+            BehaviorsEngineHandle.SetGlobalClrCallBack(loadCounter, (ReturnSelfJint, ReturnSelfV8));
 
             const string loadTimeSeries = Transformation.TimeSeriesTransformation.LoadTimeSeries.Name;
-            EngineHandle.SetGlobalClrCallBack(loadTimeSeries, (LoadTimeSeriesJint, LoadTimeSeriesV8));
+            DocumentEngineHandle.SetGlobalClrCallBack(loadTimeSeries, (LoadTimeSeriesJint, LoadTimeSeriesV8));
+            BehaviorsEngineHandle.SetGlobalClrCallBack(loadTimeSeries, (ReturnSelfJint, ReturnSelfV8));
 
-            EngineHandle.SetGlobalClrCallBack("getAttachments", (GetAttachmentsJint, GetAttachmentsV8));
+            const string getAttachments = "getAttachments";
+            DocumentEngineHandle.SetGlobalClrCallBack(getAttachments, (GetAttachmentsJint, GetAttachmentsV8));
+            BehaviorsEngineHandle.SetGlobalClrCallBack(getAttachments, (ReturnSelfJint, ReturnSelfV8));
 
-            EngineHandle.SetGlobalClrCallBack("hasAttachment", (HasAttachmentJint, HasAttachmentV8));
+            const string hasAttachment = "hasAttachment";
+            DocumentEngineHandle.SetGlobalClrCallBack(hasAttachment, (HasAttachmentJint, HasAttachmentV8));
+            BehaviorsEngineHandle.SetGlobalClrCallBack(hasAttachment, (ReturnSelfJint, ReturnSelfV8));
 
-            EngineHandle.SetGlobalClrCallBack("getCounters", (GetCountersJint, GetCountersV8));
+            const string getCounters = "getCounters";
+            DocumentEngineHandle.SetGlobalClrCallBack(getCounters, (GetCountersJint, GetCountersV8));
+            BehaviorsEngineHandle.SetGlobalClrCallBack(getCounters, (ReturnSelfJint, ReturnSelfV8));
 
-            EngineHandle.SetGlobalClrCallBack("hasCounter", (HasCounterJint, HasCounterV8));
+            const string hasCounter = "hasCounter";
+            DocumentEngineHandle.SetGlobalClrCallBack(hasCounter, (HasCounterJint, HasCounterV8));
+            BehaviorsEngineHandle.SetGlobalClrCallBack(hasCounter, (ReturnSelfJint, ReturnSelfV8));
             
             const string hasTimeSeries = Transformation.TimeSeriesTransformation.HasTimeSeries.Name;
-            EngineHandle.SetGlobalClrCallBack(hasTimeSeries, (HasTimeSeriesJint, HasTimeSeriesV8));
+            DocumentEngineHandle.SetGlobalClrCallBack(hasTimeSeries, (HasTimeSeriesJint, HasTimeSeriesV8));
+            BehaviorsEngineHandle.SetGlobalClrCallBack(hasTimeSeries, (ReturnSelfJint, ReturnSelfV8));
             
             const string getTimeSeries = Transformation.TimeSeriesTransformation.GetTimeSeries.Name;
-            EngineHandle.SetGlobalClrCallBack(getTimeSeries, (GetTimeSeriesJint, GetTimeSeriesV8));
+            DocumentEngineHandle.SetGlobalClrCallBack(getTimeSeries, (GetTimeSeriesJint, GetTimeSeriesV8));
+            BehaviorsEngineHandle.SetGlobalClrCallBack(getTimeSeries, (ReturnSelfJint, ReturnSelfV8));
             
-            //BehaviorsScript.ExecuteScriptsSource();
+            DocumentScript.ExecuteScriptsSource();
+            BehaviorsScript.ExecuteScriptsSource();
         }
         
         protected abstract string[] LoadToDestinations { get; }
