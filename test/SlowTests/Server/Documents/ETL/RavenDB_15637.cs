@@ -58,26 +58,30 @@ return deleted;
                 }
             }
         }
-
-        private const string _scriptShouldDelete1 = @"if(this.Age % 2 === 0)
+        
+        const string _scriptShouldDelete1 = @"{wrapper}
+if(this.Age % 2 === 0)
     return;
 if(this.Name == 'Sus')
     return;
 loadToUsers(this);
+}
 
 function deleteDocumentsBehavior(docId, collection, deleted) {
 return !deleted;
 }";
 
-        private const string _scriptShouldDelete2 = @"if(this.Age % 2 === 0)
+        const string _scriptShouldDelete2 = @"{wrapper}
+if(this.Age % 2 === 0)
     return;
 if(this.Name == 'Sus')
     return;
 loadToUsers(this);
+}
 
 function deleteDocumentsOfUsersBehavior(docId, deleted) {
 return !deleted;
-}"; 
+}";
 
         [Theory]
         [InlineData(_scriptShouldDelete1, "Jint")]
@@ -86,6 +90,10 @@ return !deleted;
         [InlineData(_scriptShouldDelete2, "V8")]
         public void ShouldDeleteDestinationDocumentWhenFilteredOutOfLoad(string script, string jsEngineType)
         {
+            bool isJint = jsEngineType == "Jint";
+            var wrapper = isJint ? "{" : "const transformDocument = () => {"; 
+            script = script.Replace("{wrapper}", wrapper);
+            
             using (var src = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             using (var dest = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
