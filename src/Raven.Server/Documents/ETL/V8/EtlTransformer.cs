@@ -21,8 +21,13 @@ namespace Raven.Server.Documents.ETL
         
         public virtual void InitializeV8()
         {
-            EngineV8Ex = _jsOptions.EngineType == JavaScriptEngineType.V8 ? (V8EngineEx)EngineHandle : null;
+            EngineV8Ex = _jsOptions.EngineType == JavaScriptEngineType.V8 ? (V8EngineEx)DocumentEngineHandle : null;
             EngineV8 = EngineV8Ex;
+        }
+
+        private InternalHandle ReturnSelfV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        {
+            return self.Clone();
         }
 
         private InternalHandle LoadToFunctionTranslatorV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback

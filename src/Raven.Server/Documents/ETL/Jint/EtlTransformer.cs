@@ -21,7 +21,12 @@ namespace Raven.Server.Documents.ETL
         
         public virtual void InitializeJint()
         {
-            EngineJintEx = _jsOptions.EngineType == JavaScriptEngineType.Jint ? (JintEngineEx)EngineHandle : null;
+            EngineJintEx = _jsOptions.EngineType == JavaScriptEngineType.Jint ? (JintEngineEx)DocumentEngineHandle : null;
+        }
+
+        private JsValue ReturnSelfJint(JsValue self, JsValue[] args)
+        {
+            return self;
         }
 
         private JsValue LoadToFunctionTranslatorJint(JsValue self, JsValue[] args)
