@@ -60,21 +60,21 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
 
             if (_transformation.IsAddingAttachments)
             {
-                _addAttachmentMethod = EngineHandle.CreateClrCallBack("addAttachment", (AddAttachmentJint, AddAttachmentV8), true);
+                _addAttachmentMethod = DocumentEngineHandle.CreateClrCallBack("addAttachment", (AddAttachmentJint, AddAttachmentV8), true);
                 _addAttachmentMethod.ThrowOnError();
             }
 
             if (_transformation.Counters.IsAddingCounters)
             {
                 const string addCounter = Transformation.CountersTransformation.Add;
-                _addCounterMethod = EngineHandle.CreateClrCallBack(addCounter, (AddCounterJint, AddCounterV8), true);
+                _addCounterMethod = DocumentEngineHandle.CreateClrCallBack(addCounter, (AddCounterJint, AddCounterV8), true);
                 _addCounterMethod.ThrowOnError();
             }
 
             if (_transformation.TimeSeries.IsAddingTimeSeries)
             {
                 const string addTimeSeries = Transformation.TimeSeriesTransformation.AddTimeSeries.Name;
-                _addTimeSeriesMethod = EngineHandle.CreateClrCallBack(addTimeSeries, (AddTimeSeriesJint, AddTimeSeriesV8), true);
+                _addTimeSeriesMethod = DocumentEngineHandle.CreateClrCallBack(addTimeSeries, (AddTimeSeriesJint, AddTimeSeriesV8), true);
                 _addTimeSeriesMethod.ThrowOnError();
             }
         }
@@ -104,7 +104,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
             var metadata = document.GetOrCreate(Constants.Documents.Metadata.Key).Handler;
 
             if (loadedToDifferentCollection || metadata.HasProperty(Constants.Documents.Metadata.Collection) == false)
-                metadata.SetProperty(Constants.Documents.Metadata.Collection, EngineHandle.CreateValue(collectionName), throwOnError: true);
+                metadata.SetProperty(Constants.Documents.Metadata.Collection, DocumentEngineHandle.CreateValue(collectionName), throwOnError: true);
 
             if (metadata.HasProperty(Constants.Documents.Metadata.Attachments))
                 metadata.DeleteProperty(Constants.Documents.Metadata.Attachments, throwOnError: true);

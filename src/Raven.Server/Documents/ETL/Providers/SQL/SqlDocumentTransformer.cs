@@ -52,12 +52,12 @@ namespace Raven.Server.Documents.ETL.Providers.SQL
         {
             base.Initialize(debugMode);
             
-            EngineHandle.SetGlobalClrCallBack("varchar",
+            DocumentEngineHandle.SetGlobalClrCallBack("varchar",
                 (((value, values) => ToVarcharTranslatorJint(VarcharFunctionCall.AnsiStringType, values)),
                 (engine, isConstructCall, self, args) => ToVarcharTranslatorV8(VarcharFunctionCall.AnsiStringType, args))
             );
 
-            EngineHandle.SetGlobalClrCallBack("nvarchar",
+            DocumentEngineHandle.SetGlobalClrCallBack("nvarchar",
                 (((value, values) => ToVarcharTranslatorJint(VarcharFunctionCall.StringType, values)),
                 (engine, isConstructCall, self, args) => ToVarcharTranslatorV8(VarcharFunctionCall.StringType, args))
             );

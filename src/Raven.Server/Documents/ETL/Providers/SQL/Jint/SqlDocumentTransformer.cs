@@ -34,7 +34,7 @@ namespace Raven.Server.Documents.ETL.Providers.SQL
 
         private JsValue ToVarcharTranslatorJint(JsValue type, JsValue[] args)
         {
-            var engineEx = (JintEngineEx)EngineHandle;
+            var engineEx = (JintEngineEx)DocumentEngineHandle;
             if (args[0].IsString() == false)
                 throw new InvalidOperationException("varchar() / nvarchar(): first argument must be a string");
 
