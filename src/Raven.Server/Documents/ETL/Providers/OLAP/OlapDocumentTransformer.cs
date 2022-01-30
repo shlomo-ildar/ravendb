@@ -54,25 +54,25 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
         {
             base.Initialize(debugMode);
             
-            EngineHandle.SetGlobalClrCallBack(Transformation.LoadTo, (LoadToFunctionTranslatorJint, LoadToFunctionTranslatorV8));
+            DocumentEngineHandle.SetGlobalClrCallBack(Transformation.LoadTo, (LoadToFunctionTranslatorJint, LoadToFunctionTranslatorV8));
 
             foreach (var table in LoadToDestinations)
             {
                 var name = Transformation.LoadTo + table;
-                EngineHandle.SetGlobalClrCallBack(name,
+                DocumentEngineHandle.SetGlobalClrCallBack(name,
                     (((self, args) => LoadToFunctionTranslatorJint(table, args)),
                     (engine, isConstructCall, self, args) => LoadToFunctionTranslatorV8(engine, table, args))
                 );
             }
 
-            EngineHandle.SetGlobalClrCallBack("partitionBy", (PartitionByJint, PartitionByV8));
-            EngineHandle.SetGlobalClrCallBack("noPartition", (NoPartitionJint, NoPartitionV8));
+            DocumentEngineHandle.SetGlobalClrCallBack("partitionBy", (PartitionByJint, PartitionByV8));
+            DocumentEngineHandle.SetGlobalClrCallBack("noPartition", (NoPartitionJint, NoPartitionV8));
 
             var customPartitionValue = _config.CustomPartitionValue != null
-                ? EngineHandle.CreateValue(_config.CustomPartitionValue)
+                ? DocumentEngineHandle.CreateValue(_config.CustomPartitionValue)
                 : JsHandle.Empty;
 
-            EngineHandle.SetGlobalProperty(CustomPartition, customPartitionValue);
+            DocumentEngineHandle.SetGlobalProperty(CustomPartition, customPartitionValue);
         }
 
         protected override string[] LoadToDestinations { get; }

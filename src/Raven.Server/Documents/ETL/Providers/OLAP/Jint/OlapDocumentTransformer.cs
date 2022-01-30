@@ -115,7 +115,7 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
             if (args.Length == 0)
                 ThrowInvalidScriptMethodCall("partitionBy(args) cannot be called with 0 arguments");
 
-            var engineEx = (JintEngineEx)EngineHandle;
+            var engineEx = (JintEngineEx)DocumentEngineHandle;
             JsValue array;
             if (args.Length == 1 && args[0].IsArray() == false)
             {
@@ -145,7 +145,7 @@ namespace Raven.Server.Documents.ETL.Providers.OLAP
 
             if (_noPartition.IsEmpty)
             {
-                var engineEx = (JintEngineEx)EngineHandle;
+                var engineEx = (JintEngineEx)DocumentEngineHandle;
                 _noPartition = new JsHandle(new ObjectInstance(engineEx));
                 _noPartition.Jint.Obj.FastAddProperty(PartitionKeys, JsValue.Null, false, true, false);
             }
