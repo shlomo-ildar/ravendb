@@ -1259,6 +1259,12 @@ namespace FastTests
                 };
             }
             
+            public Options SetJavaScriptEngine(string jsEngineType)
+            {
+                ModifyDatabaseRecord = Options.ModifyForJavaScriptEngine(jsEngineType, ModifyDatabaseRecord);
+                return this;
+            }
+
             public static Action<Dictionary<string, string>> ModifyConfigurationForJavaScriptEngine(string jsEngineType, Action<Dictionary<string, string>> modifyMore = null)
             {
                 return configuration =>
