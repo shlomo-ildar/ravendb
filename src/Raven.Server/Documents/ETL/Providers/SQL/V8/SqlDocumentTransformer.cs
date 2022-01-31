@@ -41,13 +41,13 @@ namespace Raven.Server.Documents.ETL.Providers.SQL
             if (sizeSpecified && args[1].IsInt32 == false)
                 throw new InvalidOperationException("varchar() / nvarchar(): second argument must be an integer");
 
-            InternalHandle item = EngineV8.CreateObject();
+            InternalHandle item = DocumentEngineV8.CreateObject();
             {
-                if (item.SetProperty(nameof(VarcharFunctionCall.Type), EngineV8Ex.CreateValue(type)) == false)
+                if (item.SetProperty(nameof(VarcharFunctionCall.Type), DocumentEngineV8Ex.CreateValue(type)) == false)
                     throw new InvalidOperationException($"Failed to set {nameof(VarcharFunctionCall.Type)} on item");
                 if (item.SetProperty(nameof(VarcharFunctionCall.Value), new InternalHandle(ref args[0], true)) == false)
                     throw new InvalidOperationException($"Failed to set {nameof(VarcharFunctionCall.Value)} on item");
-                if (item.SetProperty(nameof(VarcharFunctionCall.Size), sizeSpecified ? new InternalHandle(ref args[1], true) : EngineV8Ex.CreateValue(DefaultVarCharSize)) == false)
+                if (item.SetProperty(nameof(VarcharFunctionCall.Size), sizeSpecified ? new InternalHandle(ref args[1], true) : DocumentEngineV8Ex.CreateValue(DefaultVarCharSize)) == false)
                     throw new InvalidOperationException($"Failed to set {nameof(VarcharFunctionCall.Size)} on item");
             }
             return item;

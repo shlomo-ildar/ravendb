@@ -17,11 +17,11 @@ namespace Raven.Server.Documents.ETL
 {
     public abstract partial class EtlTransformer<TExtracted, TTransformed, TStatsScope, TEtlPerformanceOperation>
     {
-        protected JintEngineEx EngineJintEx;
+        protected JintEngineEx DocumentEngineJintEx;
         
         public virtual void InitializeJint()
         {
-            EngineJintEx = _jsOptions.EngineType == JavaScriptEngineType.Jint ? (JintEngineEx)DocumentEngineHandle : null;
+            DocumentEngineJintEx = _jsOptions.EngineType == JavaScriptEngineType.Jint ? (JintEngineEx)DocumentEngineHandle : null;
         }
 
         private JsValue ReturnSelfJint(JsValue self, JsValue[] args)
@@ -165,7 +165,7 @@ namespace Raven.Server.Documents.ETL
 
         private JsValue GetAttachmentsJint(JsValue self, JsValue[] args)
         {
-            var engine = EngineJintEx;
+            var engine = DocumentEngineJintEx;
             if (args.Length != 0)
                 ThrowInvalidScriptMethodCall("getAttachments() must be called without any argument");
 
@@ -216,7 +216,7 @@ namespace Raven.Server.Documents.ETL
 
         private JsValue GetCountersJint(JsValue self, JsValue[] args)
         {
-            var engine = EngineJintEx;
+            var engine = DocumentEngineJintEx;
             if (args.Length != 0)
                 ThrowInvalidScriptMethodCall("getCounters() must be called without any argument");
 
@@ -268,7 +268,7 @@ namespace Raven.Server.Documents.ETL
             const int paramsCount = Transformation.TimeSeriesTransformation.GetTimeSeries.ParamsCount;
             const string signature = Transformation.TimeSeriesTransformation.GetTimeSeries.Signature;
             
-            var engine = EngineJintEx;
+            var engine = DocumentEngineJintEx;
             if (args.Length != paramsCount)
                 ThrowInvalidScriptMethodCall($"{signature} must be called without any argument");
 

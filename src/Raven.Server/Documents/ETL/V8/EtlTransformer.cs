@@ -16,13 +16,13 @@ namespace Raven.Server.Documents.ETL
 {
     public abstract partial class EtlTransformer<TExtracted, TTransformed, TStatsScope, TEtlPerformanceOperation>
     {
-        protected V8EngineEx EngineV8Ex;
-        protected V8Engine EngineV8;
+        protected V8EngineEx DocumentEngineV8Ex;
+        protected V8Engine DocumentEngineV8;
         
         public virtual void InitializeV8()
         {
-            EngineV8Ex = _jsOptions.EngineType == JavaScriptEngineType.V8 ? (V8EngineEx)DocumentEngineHandle : null;
-            EngineV8 = EngineV8Ex;
+            DocumentEngineV8Ex = _jsOptions.EngineType == JavaScriptEngineType.V8 ? (V8EngineEx)DocumentEngineHandle : null;
+            DocumentEngineV8 = DocumentEngineV8Ex;
         }
 
         private InternalHandle ReturnSelfV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
@@ -205,7 +205,7 @@ namespace Raven.Server.Documents.ETL
 
         private InternalHandle GetAttachmentsV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
         {
-            var engineEx = EngineV8Ex;
+            var engineEx = DocumentEngineV8Ex;
             try
             {
                 if (args.Length != 0)
@@ -270,7 +270,7 @@ namespace Raven.Server.Documents.ETL
 
         private InternalHandle GetCountersV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
         {
-            var engineEx = EngineV8Ex;
+            var engineEx = DocumentEngineV8Ex;
             try
             {
                 if (args.Length != 0)
@@ -333,7 +333,7 @@ namespace Raven.Server.Documents.ETL
 
         private InternalHandle GetTimeSeriesV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
         {
-            var engineEx = EngineV8Ex;
+            var engineEx = DocumentEngineV8Ex;
             try
             {
                 const int paramsCount = Transformation.TimeSeriesTransformation.GetTimeSeries.ParamsCount;
