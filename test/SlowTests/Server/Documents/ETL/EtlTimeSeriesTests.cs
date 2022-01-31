@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using FastTests.Server.JavaScript;
 using Newtonsoft.Json;
 using Raven.Client;
 using Raven.Client.Documents;
@@ -842,18 +843,24 @@ function loadTimeSeriesOfUsersBehavior(doc, ts)
             }, 2);
         }
 
-        [Fact]
-        public async Task RavenEtlWithTimeSeries_WhenStoreDocumentTimeSeriesAndAttachment()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task RavenEtlWithTimeSeries_WhenStoreDocumentTimeSeriesAndAttachment(string jsEngineType)
         {
             const string collection = "Users";
-            const string script = @"
-var user = loadToUsers(this);
-user.addAttachment(loadAttachment('photo'));
+            string script = @"{wrapper}
+    var user = loadToUsers(this);
+    user.addAttachment(loadAttachment('photo'));
+}
 
 function loadTimeSeriesOfUsersBehavior(doc, ts)
 {
     return true;
 }";
+
+            bool isJint = jsEngineType == "Jint";
+            var wrapper = isJint ? "{" : "const transformDocument = () => {"; 
+            script = script.Replace("{wrapper}", wrapper);
 
             var time = new DateTime(2020, 04, 27);
             const string timeSeriesName = "Heartrate";
@@ -862,7 +869,7 @@ function loadTimeSeriesOfUsersBehavior(doc, ts)
             const string documentId = "users/1";
             string attachmentSourceName = "photo";
 
-            var (src, dest, _) = CreateSrcDestAndAddEtl(collection, script, collection.Length == 0, srcOptions: _options);
+            var (src, dest, _) = CreateSrcDestAndAddEtl(collection, script, collection.Length == 0, srcOptions: _options, jsEngineType: jsEngineType);
 
             using (var session = src.OpenAsyncSession())
             {
