@@ -796,6 +796,53 @@ function loadTimeSeriesOfUsersBehavior(doc, ts)
         }
 
         [Fact]
+        public async Task RavenEtlWithTimeSeries_WhenStoreDocumentTimeSeries()
+        {
+            const string collection = "Users";
+            const string script = @"
+var user = loadToUsers(this);
+
+function loadTimeSeriesOfUsersBehavior(doc, ts)
+{
+    return true;
+}";
+
+            var time = new DateTime(2020, 04, 27);
+            const string timeSeriesName = "Heartrate";
+            const string tag = "fitbit";
+            const double value = 58d;
+            const string documentId = "users/1";
+            string attachmentSourceName = "photo";
+
+            var (src, dest, _) = CreateSrcDestAndAddEtl(collection, script, collection.Length == 0, srcOptions: _options);
+
+            using (var session = src.OpenAsyncSession())
+            {
+                var entity = new User { Name = "Joe Doe" };
+                await session.StoreAsync(entity, documentId);
+                session.TimeSeriesFor(documentId, timeSeriesName).Append(time, new[] { value }, tag);
+
+                await session.SaveChangesAsync();
+            }
+
+            await AssertWaitForTimeSeriesEntry(dest, documentId, timeSeriesName, time);
+
+            using (var session = src.OpenAsyncSession())
+            {
+                session.Advanced.Patch<User, string>(documentId, x => x.Name, "Changed");
+                session.TimeSeriesFor(documentId, timeSeriesName).Append(time + TimeSpan.FromSeconds(1), new[] { value }, tag);
+                await session.SaveChangesAsync();
+            }
+
+            await AssertWaitForValueAsync(async () =>
+            {
+                using var session = dest.OpenAsyncSession();
+                var ts = await session.TimeSeriesFor(documentId, timeSeriesName).GetAsync();
+                return ts?.Length;
+            }, 2);
+        }
+
+        [Fact]
         public async Task RavenEtlWithTimeSeries_WhenStoreDocumentTimeSeriesAndAttachment()
         {
             const string collection = "Users";
