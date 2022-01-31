@@ -11,6 +11,7 @@ using Raven.Server.Documents.Patch.V8;
 using Raven.Server.Documents.TimeSeries;
 using Sparrow.Json;
 using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Documents.Indexes.Static.JavaScript.V8;
 
 namespace Raven.Server.Documents.ETL
 {
@@ -27,7 +28,7 @@ namespace Raven.Server.Documents.ETL
 
         private InternalHandle StubV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
         {
-            return self.Clone();
+            return self.Clone(); // [shlomo] another option to call properties on it is: DocumentEngineV8Ex.ImplicitNullV8;
         }
 
         private InternalHandle LoadToFunctionTranslatorV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
