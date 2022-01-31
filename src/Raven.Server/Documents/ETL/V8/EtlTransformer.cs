@@ -25,7 +25,7 @@ namespace Raven.Server.Documents.ETL
             DocumentEngineV8 = DocumentEngineV8Ex;
         }
 
-        private InternalHandle ReturnSelfV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
+        private InternalHandle StubV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
         {
             return self.Clone();
         }
