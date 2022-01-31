@@ -8,6 +8,7 @@ using Raven.Client.Documents.Attachments;
 using Raven.Client.Documents.Operations.Attachments;
 using Raven.Client.Documents.Operations.ETL;
 using Raven.Client.ServerWide.JavaScript;
+using Raven.Server.Documents.Indexes.Static.JavaScript.Jint;
 using Raven.Server.Documents.Patch;
 using Raven.Server.Documents.Patch.Jint;
 using Raven.Server.Documents.TimeSeries;
@@ -24,9 +25,9 @@ namespace Raven.Server.Documents.ETL
             DocumentEngineJintEx = _jsOptions.EngineType == JavaScriptEngineType.Jint ? (JintEngineEx)DocumentEngineHandle : null;
         }
 
-        private JsValue ReturnSelfJint(JsValue self, JsValue[] args)
+        private JsValue StubJint(JsValue self, JsValue[] args)
         {
-            return self;
+            return DynamicJsNullJint.ImplicitNullJint;
         }
 
         private JsValue LoadToFunctionTranslatorJint(JsValue self, JsValue[] args)
