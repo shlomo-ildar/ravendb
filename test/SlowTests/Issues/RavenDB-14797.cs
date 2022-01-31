@@ -24,7 +24,7 @@ namespace SlowTests.Issues
             {
                 new MapReduceWithOutputToCollection().Execute(store);
                 new JavaIndex().Execute(store);
-                new JavaWithAdditionalSourcesIndex().Execute(store);
+                new JavaWithAdditionalSourcesIndex(jsEngineType).Execute(store);
                 string entityId;
                 using (var session = store.OpenSession())
                 {
@@ -201,7 +201,7 @@ namespace SlowTests.Issues
         private class JavaWithAdditionalSourcesIndex : AbstractJavaScriptIndexCreationTask
         {
             public override string IndexName => "JavaWithAdditionalSourcesIndex";
-            public JavaWithAdditionalSourcesIndex()
+            public JavaWithAdditionalSourcesIndex(string jsEngineType)
             {
                 Maps = new HashSet<string>
                 {
@@ -224,23 +224,26 @@ namespace SlowTests.Issues
 
                 OutputReduceToCollection = @"ThirdOutput";
 
+                var optChaining = jsEngineType == "Jint" ? "" : "?.";
+                var optEmptyArray = jsEngineType == "Jint" ? "" : "?? []";
+                
                 AdditionalSources = new Dictionary<string, string>
                 {
-                    ["The Script"] = @" function includeCommunications(doc, communicationNames) {
-                                        var communications = {};
-                                        for (var idx = 0; idx < communicationNames.length; idx++) {
+                    ["The Script"] = @$" function includeCommunications(doc, communicationNames) {{
+                                        var communications = {{}};
+                                        for (var idx = 0; idx < communicationNames.length; idx++) {{
                                             var related = 'SecondOutput/References/' + communicationNames[idx];
-                                            var references = load(related, 'SecondOutput/References')['ReduceOutputs'];
+                                            var references = load(related, 'SecondOutput/References'){optChaining}['ReduceOutputs']{optEmptyArray};
 
-                                            for (var i = 0; i < references.length; i++) {
+                                            for (var i = 0; i < references.length; i++) {{
                                                 var match = load(references[i], 'SecondOutput');
-                                                if (match != null) {
+                                                if (match != null) {{
                                                     communications[match.TypeName] = match;
-                                                }
-                                            }
-                                        }
+                                                }}
+                                            }}
+                                        }}
                                         return communications;
-                                    }"
+                                    }}"
                 };
             }
         }
