@@ -84,7 +84,7 @@ namespace Raven.Server.Documents.Patch.Jint
                     }
                 }
                 
-                if (baseValue is DynamicJsNullJint)
+                //if (baseValue is DynamicJsNullJint || baseValue.IsUndefined() || baseValue.IsNull())
                 {
                     value = new ClrFunctionInstance(engine, "function", (thisObj, values) => thisObj);
                     return true;
