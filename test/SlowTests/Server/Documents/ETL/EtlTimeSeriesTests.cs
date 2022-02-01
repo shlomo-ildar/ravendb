@@ -516,8 +516,9 @@ user.addTimeSeries(loadTimeSeries('Heartrate', new Date(2020, 3, 20), new Date(2
             }, interval: _waitInterval);
         }
 
-        [Fact]
-        public async Task RavenEtlWithTimeSeries_WhenUpdateTimeSeriesOfUnloadedDocument()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public async Task RavenEtlWithTimeSeries_WhenUpdateTimeSeriesOfUnloadedDocument(string jsEngineType)
         {
             string[] collections = { "Users" };
             const string script = @"
