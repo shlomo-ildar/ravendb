@@ -21,7 +21,7 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
         
         private DictionaryCloningKeyJH<List<(string Name, Attachment Attachment)>> _addAttachments;
 
-        private DictionaryCloningKeyJH<Attachment> _loadedAttachments;
+        private Dictionary<string, Attachment> _loadedAttachments;
 
         private DictionaryCloningKeyJH<List<CounterOperation>> _countersByJsReference;
 
@@ -31,9 +31,9 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
 
         private Dictionary<LazyStringValue, Dictionary<string, TimeSeriesBatchCommandData>> _timeSeriesByDocumentId;
 
-        private DictionaryCloningKeyJH<(string Name, long Value)> _loadedCountersByJsReference;
+        private Dictionary<string, (string Name, long Value)> _loadedCountersByJsReference;
         
-        private DictionaryCloningKeyJH<(string Name, IEnumerable<SingleResult> Value)> _loadedTimeSeriesByJsReference;
+        private Dictionary<string, (string Name, IEnumerable<SingleResult> Value)> _loadedTimeSeriesByJsReference;
 
         private Dictionary<string, List<ICommandData>> _fullDocuments;
 
@@ -62,20 +62,20 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
             _deletes = null;
 
             _putsByJsReference?.Dispose();
-            _addAttachments?.Dispose();
-            _loadedAttachments?.Dispose();
-            _countersByJsReference?.Dispose();
+            _addAttachments?.Clear();
+            _loadedAttachments?.Clear();
+            _countersByJsReference?.Clear();
 
             _countersByDocumentId?.Clear();
             _countersByDocumentId = null;
 
-            _timeSeriesByJsReference?.Dispose();
+            _timeSeriesByJsReference?.Clear();
 
             _timeSeriesByDocumentId?.Clear();
             _timeSeriesByDocumentId = null;
 
-            _loadedCountersByJsReference?.Dispose();
-            _loadedTimeSeriesByJsReference?.Dispose();
+            _loadedCountersByJsReference?.Clear();
+            _loadedTimeSeriesByJsReference?.Clear();
 
             _fullDocuments?.Clear();
             _fullDocuments = null;
@@ -150,32 +150,45 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
 
         public void LoadAttachment(JsHandle attachmentReference, Attachment attachment)
         {
-            _loadedAttachments ??= new DictionaryCloningKeyJH<Attachment>();
-            _loadedAttachments.Add(attachmentReference, attachment);
+            if (!attachmentReference.IsString)
+                throw new ArgumentException($"Invalid attachmentReference type {attachmentReference.ValueType}");
+
+            _loadedAttachments ??= new Dictionary<string, Attachment>();
+            _loadedAttachments.Add(attachmentReference.AsString, attachment);
         }
 
         public void LoadCounter(JsHandle counterReference, string name, long value)
         {
-            _loadedCountersByJsReference ??= new DictionaryCloningKeyJH<(string, long)>();
-            _loadedCountersByJsReference.TryAdd(counterReference, (name, value));
+            if (!counterReference.IsString)
+                throw new ArgumentException($"Invalid attachmentReference type {counterReference.ValueType}");
+            
+            _loadedCountersByJsReference ??= new Dictionary<string, (string, long)>();
+            _loadedCountersByJsReference.TryAdd(counterReference.AsString, (name, value));
         }
         
         public void LoadTimeSeries(JsHandle reference, string name, IEnumerable<SingleResult> value)
         {
-            (_loadedTimeSeriesByJsReference ??= new DictionaryCloningKeyJH<(string, IEnumerable<SingleResult>)>())
-                .TryAdd(reference, (name, value));
+            if (!reference.IsString)
+                throw new ArgumentException($"Invalid attachmentReference type {reference.ValueType}");
+
+            (_loadedTimeSeriesByJsReference ??= new Dictionary<string, (string, IEnumerable<SingleResult>)>())
+                .TryAdd(reference.AsString, (name, value));
         }
 
         public void AddAttachment(JsHandle instance, string name, JsHandle attachmentReference)
         {
-            var attachment = _loadedAttachments[attachmentReference];
+            if (!attachmentReference.IsString)
+                throw new ArgumentException($"Invalid attachmentReference type {attachmentReference.ValueType}");
+            
+            var attachment = _loadedAttachments[attachmentReference.AsString];
 
-            _addAttachments ??= new DictionaryCloningKeyJH<List<(string, Attachment)>>();
+            _addAttachments ??= new DictionaryCloningKeyJH<List<(string Name, Attachment Attachment)>>(); //Dictionary<string, List<(string Name, Attachment Attachment)>>(); //
 
-            if (_addAttachments.TryGetValue(instance, out var attachments) == false)
+            var key = instance;
+            if (_addAttachments.TryGetValue(key, out var attachments) == false)
             {
                 attachments = new List<(string, Attachment)>();
-                _addAttachments.Add(instance, attachments);
+                _addAttachments.Add(key, attachments);
             }
 
             attachments.Add((name ?? attachment.Name, attachment));
@@ -189,7 +202,10 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
 
         public void AddCounter(JsHandle instance, JsHandle counterReference)
         {
-            var counter = _loadedCountersByJsReference[counterReference];
+            if (!counterReference.IsString)
+                throw new ArgumentException($"Invalid attachmentReference type {counterReference.ValueType}");
+            
+            var counter = _loadedCountersByJsReference[counterReference.AsString];
 
             if (_countersByJsReference == null)
                 _countersByJsReference = new DictionaryCloningKeyJH<List<CounterOperation>>();
@@ -247,9 +263,12 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
 
         public void AddTimeSeries(JsHandle instance, JsHandle timeSeriesReference)
         {
-            var (name, entries) = _loadedTimeSeriesByJsReference[timeSeriesReference];
+            if (!timeSeriesReference.IsString)
+                throw new ArgumentException($"Invalid attachmentReference type {timeSeriesReference.ValueType}");
+            
+            var (name, entries) = _loadedTimeSeriesByJsReference[timeSeriesReference.AsString];
 
-            _timeSeriesByJsReference ??= new DictionaryCloningKeyJH<Dictionary<string, TimeSeriesOperation>>();
+            _timeSeriesByJsReference ??= new DictionaryCloningKeyJH<Dictionary<string, TimeSeriesOperation>>(); //Dictionary<string, Dictionary<string, TimeSeriesOperation>>();
             if (_timeSeriesByJsReference.TryGetValue(instance, out var timeSeriesOperations) == false)
             {
                 timeSeriesOperations = new Dictionary<string, TimeSeriesOperation>();
@@ -328,28 +347,27 @@ namespace Raven.Server.Documents.ETL.Providers.Raven
                 {
                     commands.Add(new PutCommandDataWithBlittableJson(put.Value.Id, null, null, put.Value.Document));
 
-                    if (_addAttachments != null && _addAttachments.TryGetValue(put.Key, out var putAttachments))
+                    var putKey = put.Key;
+                    if (_addAttachments != null && _addAttachments.TryGetValue(putKey, out var putAttachments))
                     {
                         foreach (var addAttachment in putAttachments)
                         {
-                            commands.Add(new PutAttachmentCommandData(put.Value.Id, addAttachment.Name, addAttachment.Attachment.Stream, addAttachment.Attachment.ContentType,
+                            commands.Add(new PutAttachmentCommandData(put.Value.Id, addAttachment.Name, addAttachment.Attachment.Stream,
+                                addAttachment.Attachment.ContentType,
                                 null));
                         }
                     }
 
-                    if (_countersByJsReference != null && _countersByJsReference.TryGetValue(put.Key, out var counterOperations))
+                    if (_countersByJsReference != null && _countersByJsReference.TryGetValue(putKey, out var counterOperations))
                     {
-                        commands.Add(new CountersBatchCommandData(put.Value.Id, counterOperations)
-                        {
-                            FromEtl = true
-                        });
+                        commands.Add(new CountersBatchCommandData(put.Value.Id, counterOperations) {FromEtl = true});
                     }
-                    
-                    if (_timeSeriesByJsReference != null && _timeSeriesByJsReference.TryGetValue(put.Key, out var timeSeriesOperations))
+
+                    if (_timeSeriesByJsReference != null && _timeSeriesByJsReference.TryGetValue(putKey, out var timeSeriesOperations))
                     {
                         foreach (var (_, operation) in timeSeriesOperations)
                         {
-                            commands.Add(new TimeSeriesBatchCommandData(put.Value.Id, operation.Name, operation.Appends, operation.Deletes){FromEtl = true});
+                            commands.Add(new TimeSeriesBatchCommandData(put.Value.Id, operation.Name, operation.Appends, operation.Deletes) {FromEtl = true});
                         }
                     }
                 }
