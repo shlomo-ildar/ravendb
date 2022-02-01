@@ -23,7 +23,7 @@ namespace Raven.Server.Documents.Patch
         JintError = 3
     }
 
-    public interface IJsHandle<THost> : IDisposable, IClonable<THost>
+    public interface IJsHandle<THost> : IDisposable, IClonable<THost>, IEquatable<THost>
     {
         JsHandle Set(JsHandle value);
         

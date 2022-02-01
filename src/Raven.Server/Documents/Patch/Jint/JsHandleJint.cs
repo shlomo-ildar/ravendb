@@ -498,5 +498,23 @@ namespace Raven.Server.Documents.Patch
         {
             return Call(new JsHandle(JsValue.Null), args);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Equals(JsHandle other)
+        {
+            return Item.Equals(other.Jint.Item);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override bool Equals(object obj)
+        {
+            return obj is JsHandle other && Equals(other);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override int GetHashCode()
+        {
+            return  HashCode.Combine((int) JsHandleType.Jint, Item);
+        }
     }
 }

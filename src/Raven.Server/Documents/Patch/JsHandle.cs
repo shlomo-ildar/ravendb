@@ -842,5 +842,35 @@ namespace Raven.Server.Documents.Patch
                 _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
             };
         }
+
+        public bool Equals(JsHandle other)
+        {
+            if (Kind != other.Kind)
+                return false;
+
+            return Kind switch
+            {
+                JsHandleType.V8 => V8.Equals(other),
+                JsHandleType.Jint => Jint.Equals(other),
+                JsHandleType.JintError => JintError.Equals(other.JintError),
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
+            };
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is JsHandle other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return Kind switch
+            {
+                JsHandleType.V8 => HashCode.Combine((int) Kind, V8.Item),
+                JsHandleType.Jint => HashCode.Combine((int) Kind, Jint.Item),
+                JsHandleType.JintError => HashCode.Combine((int) Kind, JintError),
+                _ => throw new NotSupportedException($"Not supported JsHandleType '{Kind}'.")
+            };
+        }
     }
 }
