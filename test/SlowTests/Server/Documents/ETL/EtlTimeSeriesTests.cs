@@ -521,10 +521,11 @@ user.addTimeSeries(loadTimeSeries('Heartrate', new Date(2020, 3, 20), new Date(2
         public async Task RavenEtlWithTimeSeries_WhenUpdateTimeSeriesOfUnloadedDocument(string jsEngineType)
         {
             string[] collections = { "Users" };
-            const string script = @"
+            string script = @"{wrapper}
 if(this.Name.startsWith('M') === false)
     return;
 loadToUsers(this);
+}
 
 function loadTimeSeriesOfUsersBehavior(docId, timeSeries)
 {
@@ -535,6 +536,10 @@ function loadTimeSeriesOfUsersBehavior(docId, timeSeries)
 }
 "; // the month is 0-indexed
 
+            bool isJint = jsEngineType == "Jint";
+            var wrapper = isJint ? "{" : "const transformDocument = () => {"; 
+            script = script.Replace("{wrapper}", wrapper);
+            
             var times = Enumerable.Range(0, 4)
                 .Select(i => new DateTime(2020, 04, 27) + TimeSpan.FromSeconds(i))
                 .ToArray();
@@ -544,7 +549,7 @@ function loadTimeSeriesOfUsersBehavior(docId, timeSeries)
             const double value = 58d;
             var users = new[] { new User { Name = "Mar" }, new User { Name = "Nar" } };
 
-            var (src, dest, _) = CreateSrcDestAndAddEtl(collections, script, collections.Length == 0, srcOptions: _options);
+            var (src, dest, _) = CreateSrcDestAndAddEtl(collections, script, collections.Length == 0, srcOptions: _options, jsEngineType: jsEngineType);
 
             using (var session = src.OpenAsyncSession())
             {
