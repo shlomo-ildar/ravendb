@@ -57,8 +57,8 @@ namespace Raven.Server.Documents.Patch.Jint
             {
                 var baseValue = reference.GetBase();
 
-                if (baseValue.IsUndefined() || baseValue.IsNull() ||
-                    (baseValue.IsArray() && baseValue.AsArray().Length == 0))
+                var isEmpty = baseValue.IsUndefined() || baseValue.IsNull();
+                if (isEmpty || (baseValue.IsArray() && baseValue.AsArray().Length == 0))
                 {
                     var name = reference.GetReferencedName().AsString();
                     switch (name)
@@ -84,7 +84,7 @@ namespace Raven.Server.Documents.Patch.Jint
                     }
                 }
                 
-                //if (baseValue is DynamicJsNullJint || baseValue.IsUndefined() || baseValue.IsNull())
+                if (baseValue is DynamicJsNullJint || isEmpty)
                 {
                     value = new ClrFunctionInstance(engine, "function", (thisObj, values) => thisObj);
                     return true;
