@@ -54,6 +54,14 @@ namespace Raven.Server.Documents.Patch.V8
                 _writer.WriteValue(jsValue.AsString);
             else if (jsValue.IsDate)
             {
+                var primitiveValue = jsValue.AsDouble;
+                if (double.IsNaN(primitiveValue) ||
+                    primitiveValue > MaxJsDateMs ||
+                    primitiveValue < MinJsDateMs)
+                    // not a valid Date. 'ToDateTime()' will throw
+                    throw new InvalidOperationException($"Invalid 'DateInstance' on property '{propertyName}'. Date value : '{primitiveValue}'. " +
+                                                        "Note that JavaScripts 'Date' measures time as the number of milliseconds that have passed since the Unix epoch.");
+
                 var date = jsValue.AsDate;
                 _writer.WriteValue(date.ToString(DefaultFormat.DateTimeOffsetFormatsToWrite));
             }
