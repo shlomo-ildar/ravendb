@@ -1960,7 +1960,7 @@ namespace Raven.Client.Util
                         
                         bool IsUtc()
                         {
-                            return memberExpression.Member.Name == "UtcNow";
+                            return true; //memberExpression.Member.Name == "UtcNow";
                         }
                     }
                 }
