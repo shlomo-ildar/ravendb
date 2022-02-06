@@ -174,9 +174,9 @@ namespace SlowTests.Client
                         });
 
                     Assert.Equal("from 'Users' as u select { " +
-                                 "DayOfBirth : (new Date(Date.parse((u?.Birthday)))?.getDate()), " +
-                                 "MonthOfBirth : (new Date(Date.parse((u?.Birthday)))?.getMonth()+1), " +
-                                 "Age : (new Date()?.getFullYear())-(new Date(Date.parse((u?.Birthday)))?.getFullYear()) }"
+                                 "DayOfBirth : (new Date(Date.parse((u?.Birthday)))?.getUTCDate()), " +
+                                 "MonthOfBirth : (new Date(Date.parse((u?.Birthday)))?.getUTCMonth()+1), " +
+                                 "Age : (new Date()?.getUTCFullYear())-(new Date(Date.parse((u?.Birthday)))?.getUTCFullYear()) }"
                         , query.ToString());
 
                     var queryResult = query.ToList();
@@ -215,9 +215,9 @@ namespace SlowTests.Client
                         });
 
                     Assert.Equal("from 'Users' as u select { " +
-                                 "DayOfBirth : (new Date(Date.parse((u?.Birthday)))?.getDate()), " +
-                                 "MonthOfBirth : (new Date(Date.parse((u?.Birthday)))?.getMonth()+1), " +
-                                 "Age : (new Date()?.getFullYear())-(new Date(Date.parse((u?.Birthday)))?.getFullYear()) }"
+                                 "DayOfBirth : (new Date(Date.parse((u?.Birthday)))?.getUTCDate()), " +
+                                 "MonthOfBirth : (new Date(Date.parse((u?.Birthday)))?.getUTCMonth()+1), " +
+                                 "Age : (new Date()?.getUTCFullYear())-(new Date(Date.parse((u?.Birthday)))?.getUTCFullYear()) }"
                         , query.ToString());
 
                     var queryResult = await query.ToListAsync();
@@ -258,7 +258,7 @@ namespace SlowTests.Client
                         .Select(u => new { LuckyNumber = u.IdNumber / u.Birthday.Year, Active = u.IsActive ? "yes" : "no" });
 
                     Assert.Equal("from 'Users' as u select { " +
-                                 "LuckyNumber : u?.IdNumber/(new Date(Date.parse((u?.Birthday)))?.getFullYear()), " +
+                                 "LuckyNumber : u?.IdNumber/(new Date(Date.parse((u?.Birthday)))?.getUTCFullYear()), " +
                                  "Active : u?.IsActive?\"yes\":\"no\" }",
                                 query.ToString());
 
@@ -296,7 +296,7 @@ namespace SlowTests.Client
                         .Select(u => new { LuckyNumber = u.IdNumber / u.Birthday.Year, Active = u.IsActive ? "yes" : "no" });
 
                     Assert.Equal("from 'Users' as u select { " +
-                                 "LuckyNumber : u?.IdNumber/(new Date(Date.parse((u?.Birthday)))?.getFullYear()), " +
+                                 "LuckyNumber : u?.IdNumber/(new Date(Date.parse((u?.Birthday)))?.getUTCFullYear()), " +
                                  "Active : u?.IsActive?\"yes\":\"no\" }",
                         query.ToString());
 
