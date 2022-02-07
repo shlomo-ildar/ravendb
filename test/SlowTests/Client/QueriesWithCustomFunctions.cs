@@ -157,9 +157,11 @@ namespace SlowTests.Client
         {
             using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
+                var d = new DateTime(1942, 8, 1);
+                var birthday = DateTime.SpecifyKind(d, DateTimeKind.Utc);
                 using (var session = store.OpenSession())
                 {
-                    session.Store(new User { Name = "Jerry", LastName = "Garcia", Birthday = new DateTime(1942, 8, 1) }, "users/1");
+                    session.Store(new User { Name = "Jerry", LastName = "Garcia", Birthday = birthday }, "users/1");
                     session.SaveChanges();
                 }
 
@@ -181,7 +183,6 @@ namespace SlowTests.Client
 
                     var queryResult = query.ToList();
 
-                    var birthday = new DateTime(1942, 8, 1);
                     var age = DateTime.Today.Year - birthday.Year;
 
                     Assert.Equal(1, queryResult.Count);
@@ -198,9 +199,11 @@ namespace SlowTests.Client
         {
             using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
+                var d = new DateTime(1942, 8, 1);
+                var birthday = DateTime.SpecifyKind(d, DateTimeKind.Utc);
                 using (var session = store.OpenAsyncSession())
                 {
-                    await session.StoreAsync(new User { Name = "Jerry", LastName = "Garcia", Birthday = new DateTime(1942, 8, 1) }, "users/1");
+                    await session.StoreAsync(new User { Name = "Jerry", LastName = "Garcia", Birthday = birthday }, "users/1");
                     await session.SaveChangesAsync();
                 }
 
@@ -222,7 +225,6 @@ namespace SlowTests.Client
 
                     var queryResult = await query.ToListAsync();
 
-                    var birthday = new DateTime(1942, 8, 1);
                     var age = DateTime.Today.Year - birthday.Year;
 
                     Assert.Equal(1, queryResult.Count);
