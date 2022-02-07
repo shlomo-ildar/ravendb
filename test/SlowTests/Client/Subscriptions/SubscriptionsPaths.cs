@@ -102,16 +102,17 @@ namespace SlowTests.Client.Subscriptions
                     session.SaveChanges();
                 }
 
+                var optEmptyArray = jsEngineType == "Jint" ? "" : "?? []";
                 var subscriptionID = store.Subscriptions.Create(new SubscriptionCreationOptions()
                 {
-                    Query = @"
-declare function areAllGrandchildsGrandchilds(doc){
-        return doc.Children.every(function (child) { 
-            return child.Children.every(function (grandchild){ 
+                    Query = $@"
+declare function areAllGrandchildsGrandchilds(doc){{
+        return (doc.Children{optEmptyArray}).every(function (child) {{ 
+            return (child.Children{optEmptyArray}).every(function (grandchild){{ 
                 return grandchild.Name == 'Grandchild'
-            });
-        });
-}
+            }});
+        }});
+}}
 
 From Nodes as n Where areAllGrandchildsGrandchilds(n)"
                 });
