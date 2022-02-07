@@ -165,10 +165,10 @@ namespace SlowTests.Issues
 
                     var queryString = query.ToString();
                     Assert.Equal("from 'People' as x select { " +  
-                                 "BirthHour : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getUTCHours()):null, " +
-                                 "BirthDay : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getUTCDate()):null, " +
-                                 "BirthMonth : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getUTCMonth()+1):null, " +
-                                 "BirthYear : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getUTCFullYear()):null }", queryString);
+                                 "BirthHour : x?.BirthDate!=null?(x?.BirthDate?.getHours()):null, " +
+                                 "BirthDay : x?.BirthDate!=null?(x?.BirthDate?.getDate()):null, " +
+                                 "BirthMonth : x?.BirthDate!=null?(x?.BirthDate?.getMonth()+1):null, " +
+                                 "BirthYear : x?.BirthDate!=null?(x?.BirthDate?.getFullYear()):null }", queryString);
 
                     var list = query.ToList();
                     Assert.Equal(1, list.Count);
@@ -206,10 +206,10 @@ namespace SlowTests.Issues
 
                     var queryString = query.ToString();
                     Assert.Equal("from 'People' as x select { " +
-                                 "BirthHour : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getHours()):null, " +
-                                 "BirthDay : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getDate()):null, " +
-                                 "BirthMonth : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getMonth()+1):null, " +
-                                 "BirthYear : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getFullYear()):null }", queryString);
+                                 "BirthHour : x?.BirthDate!=null?(x?.BirthDate?.getHours()):null, " +
+                                 "BirthDay : x?.BirthDate!=null?(x?.BirthDate?.getDate()):null, " +
+                                 "BirthMonth : x?.BirthDate!=null?(x?.BirthDate?.getMonth()+1):null, " +
+                                 "BirthYear : x?.BirthDate!=null?(x?.BirthDate?.getFullYear()):null }", queryString);
 
                     var list = query.ToList();
                     Assert.Equal(1, list.Count);

@@ -1905,17 +1905,17 @@ namespace Raven.Client.Util
 
                         WrapperAction objWrapper2 = (context, obj) =>
                         {
-                            writer.Write("new Date(");
+                            //writer.Write("new Date(");
 
                             if (memberExpression.Member.DeclaringType != typeof(DateTime))
                             {
-                                writer.Write("Date.parse(");
+                                //writer.Write("Date.parse(");
 
                                 obj2(context);
-                                writer.Write(")");
+                                //writer.Write(")");
                             }
 
-                            writer.Write(")");
+                            //writer.Write(")");
                         };
 
                         WriterAction access2 = writer =>
@@ -1923,31 +1923,31 @@ namespace Raven.Client.Util
                             switch (node.Member.Name)
                             {
                                 case "Year":
-                                    writer.Write(IsUtc() ? ".getUTCFullYear()" : ".getFullYear()");
+                                    writer.Write(".getFullYear()");
                                     break;
 
                                 case "Month":
-                                    writer.Write(IsUtc() ? ".getUTCMonth()+1" : ".getMonth()+1");
+                                    writer.Write(".getMonth()+1");
                                     break;
 
                                 case "Day":
-                                    writer.Write(IsUtc() ? ".getUTCDate()" : ".getDate()");
+                                    writer.Write(".getDate()");
                                     break;
 
                                 case "Hour":
-                                    writer.Write(IsUtc() ? ".getUTCHours()" : ".getHours()");
+                                    writer.Write(".getHours()");
                                     break;
 
                                 case "Minute":
-                                    writer.Write(IsUtc() ? ".getUTCMinutes()" : ".getMinutes()");
+                                    writer.Write(".getMinutes()");
                                     break;
 
                                 case "Second":
-                                    writer.Write(IsUtc() ? ".getUTCSeconds()" : ".getSeconds()");
+                                    writer.Write(".getSeconds()");
                                     break;
 
                                 case "Millisecond":
-                                    writer.Write(IsUtc() ? ".getUTCMilliseconds()" : ".getMilliseconds()");
+                                    writer.Write(".getMilliseconds()");
                                     break;
 
                                 case "Ticks":
@@ -1957,11 +1957,6 @@ namespace Raven.Client.Util
                         };
 
                         WriteObjectPropertyAccess(context, obj2, access2, objWrapper2);
-                        
-                        bool IsUtc()
-                        {
-                            return true; //memberExpression.Member.Name == "UtcNow";
-                        }
                     }
                 }
             }
