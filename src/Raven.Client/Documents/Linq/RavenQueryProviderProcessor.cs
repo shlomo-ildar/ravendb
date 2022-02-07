@@ -3149,8 +3149,7 @@ The recommended method is to use full text search (mark the field as Analyzed an
                 extensions[newSize - 2] = new JavascriptConversionExtensions.IdentityPropertySupport(DocumentQuery.Conventions, _typedParameterSupport?.Name);
             }
 
-            var serverVersion = QueryGenerator?.Session?.RequestExecutor?.LastServerVersion;
-            var useOptionalChaining = serverVersion != null && string.Compare(serverVersion, "5.3", StringComparison.Ordinal) >= 0; // TODO [shlomo] change to 6.0
+            var useOptionalChaining = JavaScriptExtensions.UseOptionalChaining(QueryGenerator?.Session?.RequestExecutor);
             return expression.CompileToJavascript(new JavascriptCompilationOptions(extensions)
             {
                 CustomMetadataProvider = new PropertyNameConventionJSMetadataProvider(_conventions, useOptionalChaining)

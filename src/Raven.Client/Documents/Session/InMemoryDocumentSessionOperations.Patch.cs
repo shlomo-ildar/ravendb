@@ -112,8 +112,7 @@ namespace Raven.Client.Documents.Session
         {
             var extension = new JavascriptConversionExtensions.CustomMethods {Suffix = _customCount++};
             var pathScript = path.CompileToJavascript(_javascriptCompilationOptionsWoOptChaining);
-            var serverVersion = _requestExecutor?.LastServerVersion;
-            var useOptionalChaining = serverVersion != null && string.Compare(serverVersion, "5.3", StringComparison.Ordinal) >= 0; // TODO [shlomo] change to 6.0
+            var useOptionalChaining = JavaScriptExtensions.UseOptionalChaining(RequestExecutor);
             var adderScript = arrayAdder.CompileToJavascript(
                 new JavascriptCompilationOptions(
                     JsCompilationFlags.BodyOnly | JsCompilationFlags.ScopeParameter,
@@ -148,8 +147,7 @@ namespace Raven.Client.Documents.Session
 
         public void AddOrPatch<T, TU>(string id, T entity, Expression<Func<T, TU>> path, TU value)
         {
-            var serverVersion = RequestExecutor?.LastServerVersion;
-            var useOptionalChaining = serverVersion != null && string.Compare(serverVersion, "5.3", StringComparison.Ordinal) >= 0; // TODO [shlomo] change to 6.0
+            var useOptionalChaining = JavaScriptExtensions.UseOptionalChaining(RequestExecutor);
             var pathScript = path.CompileToJavascript(useOptionalChaining ? _javascriptCompilationOptionsWithOptChaining : _javascriptCompilationOptionsWoOptChaining);
             pathScript = AddThisToPathScript(pathScript);
             var valueToUse = AddTypeNameToValueIfNeeded(path.Body.Type, value);
@@ -238,8 +236,7 @@ namespace Raven.Client.Documents.Session
         {
             var extension = new JavascriptConversionExtensions.CustomMethods {Suffix = _customCount++};
             var pathScript = path.CompileToJavascript(_javascriptCompilationOptionsWoOptChaining);
-            var serverVersion = _requestExecutor?.LastServerVersion;
-            var useOptionalChaining = serverVersion != null && string.Compare(serverVersion, "5.3", StringComparison.Ordinal) >= 0; // TODO [shlomo] change to 6.0
+            var useOptionalChaining = JavaScriptExtensions.UseOptionalChaining(RequestExecutor);
             var adderScript = arrayAdder.CompileToJavascript(
                 new JavascriptCompilationOptions(
                     JsCompilationFlags.BodyOnly | JsCompilationFlags.ScopeParameter,
