@@ -21,7 +21,8 @@ Object.map = function (o, f, ctx) {
 };
 
 
-var isUtc = dateStr => dateStr.endsWith("Z") || dateStr.includes("+")
+var isUtc = dateStr => dateStr.endsWith("Z") || dateStr.endsWith("+00:00") || dateStr.endsWith("-00:00") || 
+    dateStr.endsWith("GMT") || dateStr.includes("GMT+0") || dateStr.includes("GMT-0")
 
 if (!String.prototype.getFullYear) {
     String.prototype.getFullYear = function () {
