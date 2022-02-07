@@ -12,10 +12,10 @@ namespace Raven.Client.Documents.Operations
     {
         private readonly DocumentStoreBase _store;
         private readonly string _databaseName;
-        public RequestExecutor _requestExecutor;
+        private RequestExecutor _requestExecutor;
         private ServerOperationExecutor ServerOperationExecutor;
 
-        private RequestExecutor RequestExecutor => _requestExecutor ?? (_databaseName != null ? _requestExecutor = _store.GetRequestExecutor(_databaseName) : null);
+        internal RequestExecutor RequestExecutor => _requestExecutor ?? (_databaseName != null ? _requestExecutor = _store.GetRequestExecutor(_databaseName) : null);
 
         public MaintenanceOperationExecutor(DocumentStoreBase store, string databaseName = null)
         {

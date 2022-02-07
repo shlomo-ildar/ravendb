@@ -124,7 +124,7 @@ namespace Raven.Client.Documents.Subscriptions
                 criteria.Query = queryBuilder.Append(" as doc").ToString();
             }
 
-            var serverVersion = _store?.MaintenanceOperationExecutor?._requestExecutor?.LastServerVersion;
+            var serverVersion = _store?.MaintenanceOperationExecutor?.RequestExecutor?.LastServerVersion;
             var useOptionalChaining = serverVersion != null && string.Compare(serverVersion, "5.3", StringComparison.Ordinal) >= 0; // TODO [shlomo] change to 6.0
             if (predicate != null)
             {
