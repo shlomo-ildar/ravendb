@@ -206,18 +206,17 @@ namespace SlowTests.Issues
 
                     var queryString = query.ToString();
                     Assert.Equal("from 'People' as x select { " +
-                                 "BirthHour : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getUTCHours()):null, " +
-                                 "BirthDay : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getUTCDate()):null, " +
-                                 "BirthMonth : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getUTCMonth()+1):null, " +
-                                 "BirthYear : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getUTCFullYear()):null }", queryString);
+                                 "BirthHour : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getHours()):null, " +
+                                 "BirthDay : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getDate()):null, " +
+                                 "BirthMonth : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getMonth()+1):null, " +
+                                 "BirthYear : x?.BirthDate!=null?(new Date(Date.parse(x?.BirthDate))?.getFullYear()):null }", queryString);
 
                     var list = query.ToList();
-                    var nowUTC = now.ToUniversalTime();
                     Assert.Equal(1, list.Count);
-                    Assert.Equal(nowUTC.Hour, list[0].BirthHour);
-                    Assert.Equal(nowUTC.Day, list[0].BirthDay);
-                    Assert.Equal(nowUTC.Month, list[0].BirthMonth);
-                    Assert.Equal(nowUTC.Year, list[0].BirthYear);
+                    Assert.Equal(now.Hour, list[0].BirthHour);
+                    Assert.Equal(now.Day, list[0].BirthDay);
+                    Assert.Equal(now.Month, list[0].BirthMonth);
+                    Assert.Equal(now.Year, list[0].BirthYear);
                 }
             }
         }
