@@ -157,8 +157,12 @@ namespace SlowTests.Client
         {
             using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
-                var d = new DateTime(1942, 8, 1);
-                var birthday = DateTime.SpecifyKind(d, DateTimeKind.Utc);
+                var birthdayLocal = new DateTime(1942, 8, 1);
+                var birthday = DateTime.SpecifyKind(birthdayLocal, DateTimeKind.Utc);
+
+                var todayLocal = DateTime.Today;
+                var today = DateTime.SpecifyKind(todayLocal, DateTimeKind.Utc);
+
                 using (var session = store.OpenSession())
                 {
                     session.Store(new User { Name = "Jerry", LastName = "Garcia", Birthday = birthday }, "users/1");
@@ -172,7 +176,7 @@ namespace SlowTests.Client
                         {
                             DayOfBirth = u.Birthday.Day,
                             MonthOfBirth = u.Birthday.Month,
-                            Age = DateTime.Today.Year - u.Birthday.Year
+                            Age = DateTime.UtcNow.Year - u.Birthday.Year
                         });
 
                     Assert.Equal("from 'Users' as u select { " +
@@ -183,7 +187,7 @@ namespace SlowTests.Client
 
                     var queryResult = query.ToList();
 
-                    var age = DateTime.Today.Year - birthday.Year;
+                    var age = today.Year - birthday.Year;
 
                     Assert.Equal(1, queryResult.Count);
                     Assert.Equal(birthday.Day, queryResult[0].DayOfBirth);
@@ -199,8 +203,12 @@ namespace SlowTests.Client
         {
             using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
-                var d = new DateTime(1942, 8, 1);
-                var birthday = DateTime.SpecifyKind(d, DateTimeKind.Utc);
+                var birthdayLocal = new DateTime(1942, 8, 1);
+                var birthday = DateTime.SpecifyKind(birthdayLocal, DateTimeKind.Utc);
+
+                var todayLocal = DateTime.Today;
+                var today = DateTime.SpecifyKind(todayLocal, DateTimeKind.Utc);
+
                 using (var session = store.OpenAsyncSession())
                 {
                     await session.StoreAsync(new User { Name = "Jerry", LastName = "Garcia", Birthday = birthday }, "users/1");
@@ -214,7 +222,7 @@ namespace SlowTests.Client
                         {
                             DayOfBirth = u.Birthday.Day,
                             MonthOfBirth = u.Birthday.Month,
-                            Age = DateTime.Today.Year - u.Birthday.Year
+                            Age = DateTime.UtcNow.Year - u.Birthday.Year
                         });
 
                     Assert.Equal("from 'Users' as u select { " +
@@ -225,7 +233,7 @@ namespace SlowTests.Client
 
                     var queryResult = await query.ToListAsync();
 
-                    var age = DateTime.Today.Year - birthday.Year;
+                    var age = today.Year - birthday.Year;
 
                     Assert.Equal(1, queryResult.Count);
                     Assert.Equal(birthday.Day, queryResult[0].DayOfBirth);
@@ -3630,20 +3638,26 @@ from 'Orders' as o load o?.Company as company select output(o, company)", query.
         {
             using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
+                var birthdayLocal = new DateTime(1942, 8, 1);
+                var birthday = DateTime.SpecifyKind(birthdayLocal, DateTimeKind.Utc);
+
+                var todayLocal = DateTime.Today;
+                var today = DateTime.SpecifyKind(todayLocal, DateTimeKind.Utc);
+
                 using (var session = store.OpenSession())
                 {
                     session.Store(new User
                     {
                         Name = "Jerry",
                         LastName = "Garcia",
-                        Birthday = new DateTime(1942, 8, 1)
+                        Birthday = birthday
                     });
 
                     session.Store(new User
                     {
                         Name = "Bobby",
                         LastName = "Weir",
-                        Birthday = DateTime.Today.AddYears(-30)
+                        Birthday = today.AddYears(-30)
                     });
 
                     session.SaveChanges();
@@ -3651,7 +3665,6 @@ from 'Orders' as o load o?.Company as company select output(o, company)", query.
 
                 using (var session = store.OpenSession())
                 {
-                    var today = DateTime.Today;
                     var query = from user in session.Query<User>()
                                 select new
                                 {
