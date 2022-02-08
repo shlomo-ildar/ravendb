@@ -31,7 +31,7 @@ namespace Raven.Server.Documents.Patch
 
         IDisposable WriteLock { get;  }
         
-        void SetContext()
+        //void SetContext()
         
         JavaScriptEngineType EngineType { get;  }
             
