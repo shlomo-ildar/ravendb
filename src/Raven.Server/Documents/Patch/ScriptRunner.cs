@@ -70,8 +70,6 @@ namespace Raven.Server.Documents.Patch
             JsOptions = db?.JsOptions ?? _configuration.JavaScript;
             _enableClr = enableClr;
             _creationTime = DateTime.UtcNow;
-
-            var engineType = JsOptions?.EngineType ?? JavaScriptEngineType.Jint;
         }
 
         public DynamicJsonValue GetDebugInfo(bool detailed = false)
@@ -255,6 +253,18 @@ namespace Raven.Server.Documents.Patch
                 DeleteRangeTimeSeries.Dispose();
                 GetRangeTimeSeries.Dispose();
                 GetStatsTimeSeries.Dispose();
+                
+                switch (_jsEngineType)
+                {
+                    case JavaScriptEngineType.Jint:
+                        DisposeJint();
+                        break;
+                    case JavaScriptEngineType.V8:
+                        DisposeV8();
+                        break;
+                    default:
+                        throw new NotSupportedException($"Not supported JS engine kind '{_jsEngineType}'.");
+                }
             }
 
             public static InternalHandle DummyJsCallbackV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args)
@@ -281,95 +291,114 @@ namespace Raven.Server.Documents.Patch
                         throw new NotSupportedException($"Not supported JS engine kind '{_jsEngineType}'.");
                 }
 
-                ScriptEngineHandle.SetGlobalClrCallBack("getMetadata", (JsUtilsJint != null ? JsUtilsJint.GetMetadata : DummyJsCallbackJint, JsUtilsV8 != null ? JsUtilsV8.GetMetadata : DummyJsCallbackV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("metadataFor", (JsUtilsJint != null ? JsUtilsJint.GetMetadata : DummyJsCallbackJint, JsUtilsV8 != null ? JsUtilsV8.GetMetadata : DummyJsCallbackV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("id", (JsUtilsJint != null ? JsUtilsJint.GetDocumentId : DummyJsCallbackJint, JsUtilsV8 != null ? JsUtilsV8.GetDocumentId : DummyJsCallbackV8));
-
-                ScriptEngineHandle.SetGlobalClrCallBack("output", (OutputDebugJint, OutputDebugV8));
-
-                //console.log
-                var consoleObject = ScriptEngineHandle.CreateObject();
-                var jsFuncLog = ScriptEngineHandle.CreateClrCallBack("log", (OutputDebugJint, OutputDebugV8), true);
-                consoleObject.FastAddProperty("log", jsFuncLog, false, false, false);
-                ScriptEngineHandle.SetGlobalProperty("console", consoleObject);
-
-                //spatial.distance
-                var spatialObject = ScriptEngineHandle.CreateObject();
-                var jsFuncSpatial = ScriptEngineHandle.CreateClrCallBack("distance", (Spatial_DistanceJint, Spatial_DistanceV8), true);
-                spatialObject.FastAddProperty("distance", jsFuncSpatial.Clone(), false, false, false);
-                ScriptEngineHandle.SetGlobalProperty("spatial", spatialObject);
-                ScriptEngineHandle.SetGlobalProperty("spatial.distance", jsFuncSpatial);
-
-                // includes
-                var includesObject = ScriptEngineHandle.CreateObject();
-                var jsFuncIncludeDocument = ScriptEngineHandle.CreateClrCallBack("include", (IncludeDocJint, IncludeDocV8), true);
-                includesObject.FastAddProperty("document", jsFuncIncludeDocument.Clone(), false, false, false);
-                // includes - backward compatibility
-                ScriptEngineHandle.SetGlobalProperty("include", jsFuncIncludeDocument);
-
-                var jsFuncIncludeCompareExchangeValue = ScriptEngineHandle.CreateClrCallBack("cmpxchg", (IncludeCompareExchangeValueJint, IncludeCompareExchangeValueV8), true);
-                includesObject.FastAddProperty("cmpxchg", jsFuncIncludeCompareExchangeValue, false, false, false);
-
-                var jsFuncIncludeRevisions = ScriptEngineHandle.CreateClrCallBack("revisions", (IncludeRevisionsJint, IncludeRevisionsV8), true);
-                includesObject.FastAddProperty("revisions", jsFuncIncludeRevisions, false, false, false);
-                ScriptEngineHandle.SetGlobalProperty("includes", includesObject);
-
-                ScriptEngineHandle.SetGlobalClrCallBack("load", (LoadDocumentJint, LoadDocumentV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("LoadDocument", (ThrowOnLoadDocumentJint, ThrowOnLoadDocumentV8));
-
-                ScriptEngineHandle.SetGlobalClrCallBack("loadPath", (LoadDocumentByPathJint, LoadDocumentByPathV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("del", (DeleteDocumentJint, DeleteDocumentV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("DeleteDocument", (ThrowOnDeleteDocumentJint, ThrowOnDeleteDocumentV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("put", (PutDocumentJint, PutDocumentV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("PutDocument", (ThrowOnPutDocumentJint, ThrowOnPutDocumentV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("cmpxchg", (CompareExchangeJint, CompareExchangeV8));
-
-                ScriptEngineHandle.SetGlobalClrCallBack("counter", (GetCounterJint, GetCounterV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("counterRaw", (GetCounterRawJint, GetCounterRawV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("incrementCounter", (IncrementCounterJint, IncrementCounterV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("deleteCounter", (DeleteCounterJint, DeleteCounterV8));
-
-                ScriptEngineHandle.SetGlobalClrCallBack("lastModified", (GetLastModifiedJint, GetLastModifiedV8));
-
-                ScriptEngineHandle.SetGlobalClrCallBack("startsWith", (StartsWithJint, StartsWithV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("endsWith", (EndsWithJint, EndsWithV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("regex", (RegexJint, RegexV8));
-
-                ScriptEngineHandle.SetGlobalClrCallBack("Raven_ExplodeArgs", (ExplodeArgsJint, ExplodeArgsV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("Raven_Min", (Raven_MinJint, Raven_MinV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("Raven_Max", (Raven_MaxJint, Raven_MaxV8));
-
-                ScriptEngineHandle.SetGlobalClrCallBack("convertJsTimeToTimeSpanString", (ConvertJsTimeToTimeSpanStringJint, ConvertJsTimeToTimeSpanStringV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("convertToTimeSpanString", (ConvertToTimeSpanStringJint, ConvertToTimeSpanStringV8));
-                ScriptEngineHandle.SetGlobalClrCallBack("compareDates", (CompareDatesJint, CompareDatesV8));
-
-                ScriptEngineHandle.SetGlobalClrCallBack("toStringWithFormat", (ToStringWithFormatJint, ToStringWithFormatV8));
-
-                ScriptEngineHandle.SetGlobalClrCallBack("scalarToRawString", (ScalarToRawStringJint, ScalarToRawStringV8));
-
-                //TimeSeries
-                ScriptEngineHandle.SetGlobalClrCallBack("timeseries", (TimeSeriesJint, TimeSeriesV8));
-                ScriptEngineHandle.Execute(ScriptRunnerCache.PolyfillJs, "polyfill.js");
-
-                AppendTimeSeries = CreateJsHandle((null, AppendTimeSeriesV8));
-                IncrementTimeSeries = CreateJsHandle((null, IncrementTimeSeriesV8));
-                DeleteRangeTimeSeries = CreateJsHandle((null, DeleteRangeTimeSeriesV8));
-                GetRangeTimeSeries = CreateJsHandle((null, GetRangeTimeSeriesV8));
-                GetStatsTimeSeries = CreateJsHandle((null, GetStatsTimeSeriesV8));
-
-                if (executeScriptsSource)
+                using (ScriptEngineHandle.WriteLock)
                 {
-                    ExecuteScriptsSource();
-                }
+                    switch (_jsEngineType)
+                    {
+                        case JavaScriptEngineType.Jint:
+                            InitializeLockedJint();
+                            break;
+                        case JavaScriptEngineType.V8:
+                            InitializeLockedV8();
+                            break;
+                        default:
+                            throw new NotSupportedException($"Not supported JS engine kind '{_jsEngineType}'.");
+                    }
+                    
+                    ScriptEngineHandle.SetGlobalClrCallBack("getMetadata",
+                        (JsUtilsJint != null ? JsUtilsJint.GetMetadata : DummyJsCallbackJint, JsUtilsV8 != null ? JsUtilsV8.GetMetadata : DummyJsCallbackV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("metadataFor",
+                        (JsUtilsJint != null ? JsUtilsJint.GetMetadata : DummyJsCallbackJint, JsUtilsV8 != null ? JsUtilsV8.GetMetadata : DummyJsCallbackV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("id",
+                        (JsUtilsJint != null ? JsUtilsJint.GetDocumentId : DummyJsCallbackJint, JsUtilsV8 != null ? JsUtilsV8.GetDocumentId : DummyJsCallbackV8));
 
-                foreach (var ts in _runnerBase.TimeSeriesDeclaration)
-                {
-                    ScriptEngineHandle.SetGlobalClrCallBack(ts.Key, 
-                        (
-                            (self, args) => InvokeTimeSeriesFunctionJint(ts.Key, args), 
-                            (engine, isConstructCall, self, args) => InvokeTimeSeriesFunctionV8(ts.Key, args)
-                        )
-                    );
+                    ScriptEngineHandle.SetGlobalClrCallBack("output", (OutputDebugJint, OutputDebugV8));
+
+                    //console.log
+                    var consoleObject = ScriptEngineHandle.CreateObject();
+                    var jsFuncLog = ScriptEngineHandle.CreateClrCallBack("log", (OutputDebugJint, OutputDebugV8), true);
+                    consoleObject.FastAddProperty("log", jsFuncLog, false, false, false);
+                    ScriptEngineHandle.SetGlobalProperty("console", consoleObject);
+
+                    //spatial.distance
+                    var spatialObject = ScriptEngineHandle.CreateObject();
+                    var jsFuncSpatial = ScriptEngineHandle.CreateClrCallBack("distance", (Spatial_DistanceJint, Spatial_DistanceV8), true);
+                    spatialObject.FastAddProperty("distance", jsFuncSpatial.Clone(), false, false, false);
+                    ScriptEngineHandle.SetGlobalProperty("spatial", spatialObject);
+                    ScriptEngineHandle.SetGlobalProperty("spatial.distance", jsFuncSpatial);
+
+                    // includes
+                    var includesObject = ScriptEngineHandle.CreateObject();
+                    var jsFuncIncludeDocument = ScriptEngineHandle.CreateClrCallBack("include", (IncludeDocJint, IncludeDocV8), true);
+                    includesObject.FastAddProperty("document", jsFuncIncludeDocument.Clone(), false, false, false);
+                    // includes - backward compatibility
+                    ScriptEngineHandle.SetGlobalProperty("include", jsFuncIncludeDocument);
+
+                    var jsFuncIncludeCompareExchangeValue =
+                        ScriptEngineHandle.CreateClrCallBack("cmpxchg", (IncludeCompareExchangeValueJint, IncludeCompareExchangeValueV8), true);
+                    includesObject.FastAddProperty("cmpxchg", jsFuncIncludeCompareExchangeValue, false, false, false);
+
+                    var jsFuncIncludeRevisions = ScriptEngineHandle.CreateClrCallBack("revisions", (IncludeRevisionsJint, IncludeRevisionsV8), true);
+                    includesObject.FastAddProperty("revisions", jsFuncIncludeRevisions, false, false, false);
+                    ScriptEngineHandle.SetGlobalProperty("includes", includesObject);
+
+                    ScriptEngineHandle.SetGlobalClrCallBack("load", (LoadDocumentJint, LoadDocumentV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("LoadDocument", (ThrowOnLoadDocumentJint, ThrowOnLoadDocumentV8));
+
+                    ScriptEngineHandle.SetGlobalClrCallBack("loadPath", (LoadDocumentByPathJint, LoadDocumentByPathV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("del", (DeleteDocumentJint, DeleteDocumentV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("DeleteDocument", (ThrowOnDeleteDocumentJint, ThrowOnDeleteDocumentV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("put", (PutDocumentJint, PutDocumentV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("PutDocument", (ThrowOnPutDocumentJint, ThrowOnPutDocumentV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("cmpxchg", (CompareExchangeJint, CompareExchangeV8));
+
+                    ScriptEngineHandle.SetGlobalClrCallBack("counter", (GetCounterJint, GetCounterV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("counterRaw", (GetCounterRawJint, GetCounterRawV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("incrementCounter", (IncrementCounterJint, IncrementCounterV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("deleteCounter", (DeleteCounterJint, DeleteCounterV8));
+
+                    ScriptEngineHandle.SetGlobalClrCallBack("lastModified", (GetLastModifiedJint, GetLastModifiedV8));
+
+                    ScriptEngineHandle.SetGlobalClrCallBack("startsWith", (StartsWithJint, StartsWithV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("endsWith", (EndsWithJint, EndsWithV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("regex", (RegexJint, RegexV8));
+
+                    ScriptEngineHandle.SetGlobalClrCallBack("Raven_ExplodeArgs", (ExplodeArgsJint, ExplodeArgsV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("Raven_Min", (Raven_MinJint, Raven_MinV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("Raven_Max", (Raven_MaxJint, Raven_MaxV8));
+
+                    ScriptEngineHandle.SetGlobalClrCallBack("convertJsTimeToTimeSpanString", (ConvertJsTimeToTimeSpanStringJint, ConvertJsTimeToTimeSpanStringV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("convertToTimeSpanString", (ConvertToTimeSpanStringJint, ConvertToTimeSpanStringV8));
+                    ScriptEngineHandle.SetGlobalClrCallBack("compareDates", (CompareDatesJint, CompareDatesV8));
+
+                    ScriptEngineHandle.SetGlobalClrCallBack("toStringWithFormat", (ToStringWithFormatJint, ToStringWithFormatV8));
+
+                    ScriptEngineHandle.SetGlobalClrCallBack("scalarToRawString", (ScalarToRawStringJint, ScalarToRawStringV8));
+
+                    //TimeSeries
+                    ScriptEngineHandle.SetGlobalClrCallBack("timeseries", (TimeSeriesJint, TimeSeriesV8));
+                    ScriptEngineHandle.Execute(ScriptRunnerCache.PolyfillJs, "polyfill.js");
+
+                    AppendTimeSeries = CreateJsHandle((null, AppendTimeSeriesV8));
+                    IncrementTimeSeries = CreateJsHandle((null, IncrementTimeSeriesV8));
+                    DeleteRangeTimeSeries = CreateJsHandle((null, DeleteRangeTimeSeriesV8));
+                    GetRangeTimeSeries = CreateJsHandle((null, GetRangeTimeSeriesV8));
+                    GetStatsTimeSeries = CreateJsHandle((null, GetStatsTimeSeriesV8));
+
+                    if (executeScriptsSource)
+                    {
+                        ExecuteScriptsSource();
+                    }
+
+                    foreach (var ts in _runnerBase.TimeSeriesDeclaration)
+                    {
+                        ScriptEngineHandle.SetGlobalClrCallBack(ts.Key,
+                            (
+                                (self, args) => InvokeTimeSeriesFunctionJint(ts.Key, args),
+                                (engine, isConstructCall, self, args) => InvokeTimeSeriesFunctionV8(ts.Key, args)
+                            )
+                        );
+                    }
                 }
             }
 
@@ -470,55 +499,60 @@ namespace Raven.Server.Documents.Patch
 
             public ScriptRunnerResult Run(JsonOperationContext jsonCtx, DocumentsOperationContext docCtx, string method, string documentId, object[] args, QueryTimingsScope scope = null, CancellationToken token = default)
             {
-                _docsCtx = docCtx;
-                _jsonCtx = jsonCtx ?? ThrowArgumentNull();
-                _scope = scope;
-                _token = token;
-
-                JsUtilsBase.Reset(_jsonCtx);
-
-                Reset();
-                OriginalDocumentId = documentId;
-
-                SetArgs(jsonCtx, method, args);
-
-                try
+                using (ScriptEngineHandle.WriteLock)
                 {
-                    using (var jsMethod = ScriptEngineHandle.GetGlobalProperty(method))
+                    ScriptEngineHandle.SetContext(_contextEx);
+                        
+                    _docsCtx = docCtx;
+                    _jsonCtx = jsonCtx ?? ThrowArgumentNull();
+                    _scope = scope;
+                    _token = token;
+
+                    JsUtilsBase.Reset(_jsonCtx);
+
+                    Reset();
+                    OriginalDocumentId = documentId;
+
+                    SetArgs(jsonCtx, method, args);
+
+                    try
                     {
-                        using (var jsRes = jsMethod.StaticCall(_args))
+                        using (var jsMethod = ScriptEngineHandle.GetGlobalProperty(method))
                         {
-                            jsRes.ThrowOnError();
-                            return new ScriptRunnerResult(this, jsRes);
+                            using (var jsRes = jsMethod.StaticCall(_args))
+                            {
+                                jsRes.ThrowOnError();
+                                return new ScriptRunnerResult(this, jsRes);
+                            }
                         }
                     }
-                }
-                catch (JavaScriptException e)
-                {
-                    //ScriptRunnerResult is in charge of disposing of the disposable but it is not created (the clones did)
-                    JsUtilsJint.Clear();
-                    throw CreateFullError(e);
-                }
-                catch (V8Exception e)
-                {
-                    //ScriptRunnerResult is in charge of disposing of the disposable but it is not created (the clones did)
-                    JsUtilsV8.Clear();
-                    throw CreateFullError(e);
-                }
-                catch (Exception)
-                {
-                    JsUtilsBase.Clear();
-                    throw;
-                }
-                finally
-                {
-                    ScriptEngineHandle.ForceGarbageCollection();
-                    DisposeArgs();
-                    _scope = null;
-                    _loadScope = null;
-                    _docsCtx = null;
-                    _jsonCtx = null;
-                    _token = default;
+                    catch (JavaScriptException e)
+                    {
+                        //ScriptRunnerResult is in charge of disposing of the disposable but it is not created (the clones did)
+                        JsUtilsJint.Clear();
+                        throw CreateFullError(e);
+                    }
+                    catch (V8Exception e)
+                    {
+                        //ScriptRunnerResult is in charge of disposing of the disposable but it is not created (the clones did)
+                        JsUtilsV8.Clear();
+                        throw CreateFullError(e);
+                    }
+                    catch (Exception)
+                    {
+                        JsUtilsBase.Clear();
+                        throw;
+                    }
+                    finally
+                    {
+                        ScriptEngineHandle.ForceGarbageCollection();
+                        DisposeArgs();
+                        _scope = null;
+                        _loadScope = null;
+                        _docsCtx = null;
+                        _jsonCtx = null;
+                        _token = default;
+                    }
                 }
             }
 

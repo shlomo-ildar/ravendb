@@ -3,6 +3,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading;
 using System.Threading.Tasks;
 using V8.Net;
 using Raven.Client.ServerWide.JavaScript;
@@ -21,15 +22,33 @@ namespace Raven.Server.Documents.Patch.V8
 {
     public class V8EngineEx : V8Engine, IJsEngineHandle
     {
-        public static readonly V8EngineEx Instance = new();
-        
-        public class ContextEx
+        private static PoolWithLevels<V8EngineEx>? _Pool;
+
+        public static PoolWithLevels<V8EngineEx> GetPool()
+        {
+            if (_Pool == null)
+            {
+                _Pool = new PoolWithLevels<V8EngineEx>(20, 50);
+            }
+
+            return _Pool;
+        }
+    
+        public class ContextEx : IDisposable
         {
             private Context _contextNative;
+            public V8Engine Engine;
+            public V8EngineEx EngineEx { get { return (V8EngineEx)Engine; } }
             
             public ContextEx(V8Engine engine, ObjectTemplate? globalTemplate = null)
             {
                 _contextNative = engine.CreateContext(globalTemplate);
+                Engine = engine;
+            }
+
+            public void Dispose()
+            {
+                // TODO
             }
 
             public Context ContextNative
@@ -131,7 +150,11 @@ var process = {
 
         }
 
+        private readonly ReaderWriterLock _locker = new ReaderWriterLock();
         private ContextEx? _contextEx;
+
+        
+        public IDisposable WriteLock { get { return _locker.WriteLock();  } }
 
         public void SetContext(ContextEx ctx)
         {
@@ -375,6 +398,10 @@ var process = {
         public TypeBinder? TypeBinderLazyNumberValue;
         public TypeBinder? TypeBinderRavenServer;
         public TypeBinder? TypeBinderDocumentDatabase;
+
+        public V8EngineEx() : base(false, jsConverter: JsConverter.Instance)
+        {
+        }
 
         public V8EngineEx(IJavaScriptOptions? jsOptions = null) : base(false, jsConverter: JsConverter.Instance)
         {

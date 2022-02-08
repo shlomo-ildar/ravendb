@@ -95,6 +95,14 @@ namespace Raven.Server.Documents.Patch
                 JsUtilsBase = JsUtilsJint;
             }
 
+            public void DisposeJint()
+            {
+            }
+            
+            public void InitializeLockedJint()
+            {
+            }
+            
             private (string Id, BlittableJsonReaderObject Doc) GetIdAndDocFromArg(JsValue docArg, string signature)
             {
                 if (docArg.IsObject() && docArg.AsObject() is BlittableObjectInstanceJint doc)

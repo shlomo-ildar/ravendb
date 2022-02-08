@@ -72,20 +72,34 @@ namespace Raven.Server.Documents.Patch
 
         public partial class SingleRun
         {
-            public V8Engine ScriptEngineV8;
+            private PoolWithLevels<V8EngineEx>.PooledValue _scriptEngineV8Pooled;
+            public V8EngineEx ScriptEngineExV8 { get { return _scriptEngineV8Pooled.Value;  } }
+            public V8Engine ScriptEngineV8 { get { return _scriptEngineV8Pooled.Value;  } }
             public JavaScriptUtilsV8 JsUtilsV8;
+
+            private V8EngineEx.ContextEx _contextEx; 
 
             public void InitializeV8()
             {
-                var scriptEngineExV8 = new V8EngineEx();
-                scriptEngineExV8.CreateAndSetContextEx(_jsOptions);
-                ScriptEngineV8 = scriptEngineExV8;
+                var poolOfEngines = V8EngineEx.GetPool();
+                _scriptEngineV8Pooled = poolOfEngines.GetValue();
+                var scriptEngineExV8 = ScriptEngineExV8;
                 ScriptEngineHandle = scriptEngineExV8;
 
                 JsUtilsV8 = new JavaScriptUtilsV8(_runnerBase, scriptEngineExV8);
                 JsUtilsBase = JsUtilsV8;
             }
-
+            
+            public void InitializeLockedV8()
+            {
+                _contextEx = ScriptEngineExV8.CreateAndSetContextEx(_jsOptions);
+            }
+            
+            public void DisposeV8()
+            {
+                _scriptEngineV8Pooled.Dispose();
+            }
+            
             private (string Id, BlittableJsonReaderObject Doc) GetIdAndDocFromArg(InternalHandle docArg, string signature)
             {
                 if (docArg.BoundObject is BlittableObjectInstanceV8 doc)
