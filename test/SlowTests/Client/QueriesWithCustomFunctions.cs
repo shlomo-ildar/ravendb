@@ -1432,15 +1432,20 @@ from 'Users' as u select output(u)", query.ToString());
 
         [Theory]
         [JavaScriptEngineClassData]
-        public void Custom_Functions_With_Escape_Hatch_Inside_Let(string jsEngineType)
+        public void Custom_Functions_With_Escape_Hatch_Inside_LetUTC(string jsEngineType)
         {
             using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
+                var birthdayLocal = new DateTime(1942, 8, 1);
+                var birthday = DateTime.SpecifyKind(birthdayLocal, DateTimeKind.Utc);
+
+                var now = DateTime.Now;
+
                 using (var session = store.OpenSession())
                 {
                     session.Store(new User
                     {
-                        Birthday = new DateTime(1942, 8, 1)
+                        Birthday = birthday
                     }, "users/1");
                     session.SaveChanges();
                 }
@@ -1464,7 +1469,50 @@ from 'Users' as u select output(u)", query.ToString());
                     var queryResult = query.ToList();
 
                     Assert.Equal(1, queryResult.Count);
-                    Assert.Equal(Math.Ceiling((DateTime.UtcNow - new DateTime(1942, 8, 1)).TotalDays), queryResult[0].Days);
+                    Assert.Equal(Math.Ceiling((now - birthday).TotalDays), queryResult[0].Days);
+                }
+            }
+        }
+
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Custom_Functions_With_Escape_Hatch_Inside_LetLocal(string jsEngineType)
+        {
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
+            {
+                var birthday = new DateTime(1942, 8, 1);
+
+                var now = DateTime.Now;
+
+                using (var session = store.OpenSession())
+                {
+                    session.Store(new User
+                    {
+                        Birthday = birthday
+                    }, "users/1");
+                    session.SaveChanges();
+                }
+
+                using (var session = store.OpenSession())
+                {
+                    var query = from u in session.Query<User>()
+                        let days = RavenQuery.Raw<int>("Math.ceil((Date.now() - Date.parse(u.Birthday)) / (1000*60*60*24))")
+                        select new
+                        {
+                            Days = days
+                        };
+
+                    RavenTestHelper.AssertEqualRespectingNewLines(
+                        @"declare function output(u) {
+    var days = Math.ceil((Date.now() - Date.parse(u.Birthday)) / (1000*60*60*24));
+    return { Days : days };
+}
+from 'Users' as u select output(u)", query.ToString());
+
+                    var queryResult = query.ToList();
+
+                    Assert.Equal(1, queryResult.Count);
+                    Assert.Equal(Math.Ceiling((now - birthday).TotalDays), queryResult[0].Days);
                 }
             }
         }
