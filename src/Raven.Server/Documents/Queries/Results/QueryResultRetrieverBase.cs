@@ -88,7 +88,7 @@ namespace Raven.Server.Documents.Queries.Results
             _blittableTraverser = reduceResults ? BlittableJsonTraverser.FlatMapReduceResults : BlittableJsonTraverser.Default;
             
             _jsOptions = _database?.JsOptions ?? DocumentsStorage?.DocumentDatabase?.JsOptions ?? 
-                new JavaScriptOptions(JavaScriptEngineType.Jint, true, 10000, new TimeSetting(100, TimeUnit.Milliseconds));
+                new JavaScriptOptions();
         }
 
 

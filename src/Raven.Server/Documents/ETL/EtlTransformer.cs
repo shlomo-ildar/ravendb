@@ -41,7 +41,7 @@ namespace Raven.Server.Documents.ETL
             _mainScript = mainScript;
             _behaviorFunctions = behaviorFunctions;
             _jsOptions = Database?.JsOptions ?? Context?.DocumentDatabase?.JsOptions ?? 
-                new JavaScriptOptions(JavaScriptEngineType.Jint, true, 10000, new TimeSetting(100, TimeUnit.Milliseconds));
+                new JavaScriptOptions();
         }
 
         public virtual void Initialize(bool debugMode)

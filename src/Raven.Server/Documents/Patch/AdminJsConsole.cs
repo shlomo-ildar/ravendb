@@ -43,7 +43,7 @@ namespace Raven.Server.Documents.Patch
             {
                 DocumentsOperationContext docsCtx = null;
                 IJavaScriptOptions jsOptions = _database?.JsOptions ?? _server?.Configuration.JavaScript ?? 
-                    (IJavaScriptOptions)(new JavaScriptOptions(JavaScriptEngineType.Jint, true, 10000, new TimeSetting(100, TimeUnit.Milliseconds)));
+                    (IJavaScriptOptions)(new JavaScriptOptions());
                 using (_server.AdminScripts.GetScriptRunner(jsOptions, new AdminJsScriptKey(script.Script), false, out var run))
                 using (_server.ServerStore.ContextPool.AllocateOperationContext(out JsonOperationContext ctx))
                 using (_database?.DocumentsStorage.ContextPool.AllocateOperationContext(out docsCtx))
