@@ -42,17 +42,21 @@ namespace Raven.Server.Documents.Patch
 
         public PooledValue GetValue()
         {
-            using (_Locker.ReadLock())
+            using (_Locker.WriteLock())
             {
                 TValue obj = default;
                 using (var it = _listByLevel.GetEnumerator())
                 {
-                    if (it.MoveNext())
+                    while (it.MoveNext())
                     {
                         var (level, set) = it.Current;
-                        obj = (level >= _targetLevel && _listByLevel.Count < _maxCapacity) ? new TValue() : set.First();
+                        if (set.Count >= 1)
+                        {
+                            obj = (level >= _targetLevel && _listByLevel.Count < _maxCapacity) ? new TValue() : set.First();
+                        }
                     }
-                    else
+
+                    if (obj == null)
                     {
                         obj = new TValue();
                     }
@@ -69,52 +73,47 @@ namespace Raven.Server.Documents.Patch
         
         public void DecrementLevel(TValue obj)
         {
-            ModifyLevel(obj, -1);
+            using (_Locker.WriteLock())
+            {
+                ModifyLevel(obj, -1);
+            }
         }
         
         private void ModifyLevel(TValue obj, int delta)
         {
-            using (_Locker.WriteLock())
+            if (!_objectLevels.ContainsKey(obj))
             {
-                if (!_objectLevels.ContainsKey(obj))
+                _objectLevels[obj] = 0;
+            }
+
+            var level = _objectLevels[obj];
+
+            if (delta == 0)
+                return;
+
+            if (_listByLevel.TryGetValue(level, out HashSet<TValue> setPrev))
+            {
+                setPrev.Remove(obj);
+                // we don't remove the empty set as it will be used later and it is one per level on the whole raven server
+                //if (setPrev.Count == 0)
+                //    Remove(level);
+            }
+
+            int levelNew = level + delta;
+            _objectLevels[obj] = levelNew;
+            if (levelNew == 0)
+            {
+                obj.Dispose();
+            }
+            else
+            {
+                if (!_listByLevel.TryGetValue(levelNew, out HashSet<TValue> setNew))
                 {
-                    _objectLevels[obj] = 0;
+                    setNew = new HashSet<TValue>();
+                    _listByLevel[levelNew] = setNew;
                 }
 
-                var level = _objectLevels[obj];
-
-                if (delta == 0)
-                    return;
-
-                if (_listByLevel.TryGetValue(level, out HashSet<TValue> setPrev))
-                {
-                    setPrev.Remove(obj);
-                    /*if (setPrev.Count == 0)
-                    {
-                        Remove(level);
-                    }*/
-                }
-
-                int levelNew = level + delta;
-                _objectLevels[obj] = levelNew;
-                if (levelNew == 0)
-                {
-                    obj.Dispose();
-                }
-                else
-                {
-                    if (_listByLevel.TryGetValue(levelNew, out HashSet<TValue> setNew))
-                    {
-                        setNew = _listByLevel[levelNew];
-                    }
-                    else
-                    {
-                        setNew = new HashSet<TValue>();
-                        _listByLevel[levelNew] = setNew;
-                    }
-
-                    setNew.Add(obj);
-                }
+                setNew.Add(obj);
             }
         }
     }
