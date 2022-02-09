@@ -77,7 +77,7 @@ namespace Raven.Server.Documents.Patch
             public V8Engine ScriptEngineV8 { get { return _scriptEngineV8Pooled.Value;  } }
             public JavaScriptUtilsV8 JsUtilsV8;
 
-            private V8EngineEx.ContextEx _contextEx; 
+            private V8EngineEx.ContextEx _contextExV8; 
 
             public void InitializeV8()
             {
@@ -92,7 +92,12 @@ namespace Raven.Server.Documents.Patch
             
             public void InitializeLockedV8()
             {
-                _contextEx = ScriptEngineExV8.CreateAndSetContextEx(_jsOptions);
+                _contextExV8 = ScriptEngineExV8.CreateAndSetContextEx(_jsOptions);
+            }
+            
+            public void SetContextV8()
+            {
+                ScriptEngineExV8.SetContext(_contextExV8);
             }
             
             public void DisposeV8()

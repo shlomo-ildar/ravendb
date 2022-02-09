@@ -103,6 +103,10 @@ namespace Raven.Server.Documents.Patch
             {
             }
             
+            public void SetContextJint()
+            {
+            }
+            
             private (string Id, BlittableJsonReaderObject Doc) GetIdAndDocFromArg(JsValue docArg, string signature)
             {
                 if (docArg.IsObject() && docArg.AsObject() is BlittableObjectInstanceJint doc)
