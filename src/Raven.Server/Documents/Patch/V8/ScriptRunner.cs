@@ -73,8 +73,8 @@ namespace Raven.Server.Documents.Patch
         public partial class SingleRun
         {
             private PoolWithLevels<V8EngineEx>.PooledValue _scriptEngineV8Pooled;
-            public V8EngineEx ScriptEngineExV8 { get { return _scriptEngineV8Pooled.Value;  } }
-            public V8Engine ScriptEngineV8 { get { return _scriptEngineV8Pooled.Value;  } }
+            public V8EngineEx ScriptEngineExV8 => _scriptEngineV8Pooled.Value;
+            public V8Engine ScriptEngineV8 => _scriptEngineV8Pooled.Value;
             public JavaScriptUtilsV8 JsUtilsV8;
 
             private V8EngineEx.ContextEx _contextExV8; 
