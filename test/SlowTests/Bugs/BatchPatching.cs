@@ -16,13 +16,13 @@ namespace SlowTests.Bugs
         }
 
         // TODO [shlomo] temporary switched off the test to allow to pass the others (as it is cached and reduces the number of engines available)
-        //[Theory]
-        //[JavaScriptEngineClassData]
+        [Theory]
+        [JavaScriptEngineClassData]
         public void CanSuccessfullyPatchInBatches(string jsEngineType)
         {
             using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
-                const int count = 512; // 2406 max achieved for V8, 2415 failed
+                const int count = 10000; // 2406 V8 isolates max count achieved, 2415 failed
                 using (var s = store.OpenSession())
                 {
                     for (int i = 0; i < count; i++)
