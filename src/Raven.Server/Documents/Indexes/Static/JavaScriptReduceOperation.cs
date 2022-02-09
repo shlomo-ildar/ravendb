@@ -26,11 +26,13 @@ using JavaScriptException = Jint.Runtime.JavaScriptException;
 
 namespace Raven.Server.Documents.Indexes.Static
 {
-    public class JavaScriptReduceOperation
+    public partial class JavaScriptReduceOperation
     {
+        private readonly AbstractJavaScriptIndex _index;
         private JavaScriptIndexUtils _jsIndexUtils { get; }
         private IJavaScriptUtils _jsUtils { get; }
         private IJsEngineHandle EngineHandle { get; }
+        private JavaScriptEngineType _jsEngineType => EngineHandle.EngineType;
         private IJavaScriptEngineForParsing EngineForParsing { get; }
         public ScriptFunctionInstance KeyJint { get; }
 
@@ -41,9 +43,10 @@ namespace Raven.Server.Documents.Indexes.Static
 
         private readonly long _indexVersion;
         
-        public JavaScriptReduceOperation(JavaScriptIndexUtils jsIndexUtils, ScriptFunctionInstance keyJint, IJavaScriptEngineForParsing engineForParsing,
+        public JavaScriptReduceOperation(AbstractJavaScriptIndex index, JavaScriptIndexUtils jsIndexUtils, ScriptFunctionInstance keyJint, IJavaScriptEngineForParsing engineForParsing,
             JsHandle reduce, JsHandle key, long indexVersion)
         {
+            _index = index;
             _indexVersion = indexVersion;
             EngineHandle = jsIndexUtils.EngineHandle;
             _groupedItems = null;
@@ -184,43 +187,61 @@ namespace Raven.Server.Documents.Indexes.Static
                     }
                     list.Add(item.BlittableJson);
                 }
-                foreach (var item in _groupedItems.Values)
-                {
-                    EngineHandle.ResetCallStack();
-                    EngineHandle.ResetConstraints();
 
-                    JsHandle jsRes = JsHandle.Empty;
-                    try
+                using (EngineHandle.WriteLock)
+                {
+                    switch (EngineHandle.EngineType)
                     {
-                        using (var jsGrouping = ConstructGrouping(item))
+                        case JavaScriptEngineType.Jint:
+                            SetContextJint();
+                            break;
+                        case JavaScriptEngineType.V8:
+                            SetContextV8();
+                            break;
+                        default:
+                            throw new NotSupportedException($"Not supported JS engine kind '{_jsEngineType}'.");
+                    }
+
+                    foreach (var item in _groupedItems.Values)
+                    {
+                        EngineHandle.ResetCallStack();
+                        EngineHandle.ResetConstraints();
+
+                        JsHandle jsRes = JsHandle.Empty;
+                        try
                         {
+                            using (var jsGrouping = ConstructGrouping(item))
+                            {
 #if DEBUG
-                            EngineHandle.MakeSnapshot("reduce");
+                                EngineHandle.MakeSnapshot("reduce");
 #endif
 
-                            jsRes = Reduce.StaticCall(jsGrouping);
-                            jsRes.ThrowOnError();
-                            if (jsRes.IsObject == false)
-                                throw new JavaScriptIndexFuncException($"Failed to execute {ReduceString}", new Exception($"Reduce result is not object: {jsRes.ToString()}"));
+                                jsRes = Reduce.StaticCall(jsGrouping);
+                                jsRes.ThrowOnError();
+                                if (jsRes.IsObject == false)
+                                    throw new JavaScriptIndexFuncException($"Failed to execute {ReduceString}",
+                                        new Exception($"Reduce result is not object: {jsRes.ToString()}"));
+                            }
                         }
+                        catch (V8Exception jse)
+                        {
+                            var (message, success) = JavaScriptIndexFuncException.PrepareErrorMessageForJavaScriptIndexFuncException(ReduceString, jse);
+                            if (success == false)
+                                throw new JavaScriptIndexFuncException($"Failed to execute {ReduceString}", jse);
+                            throw new JavaScriptIndexFuncException($"Failed to execute reduce script, {message}", jse);
+                        }
+                        catch (Exception e)
+                        {
+                            jsRes.Dispose();
+                            throw new JavaScriptIndexFuncException($"Failed to execute {ReduceString}", e);
+                        }
+                        finally
+                        {
+                            EngineHandle.ForceGarbageCollection();
+                        }
+
+                        yield return jsRes;
                     }
-                    catch (V8Exception jse)
-                    {
-                        var (message, success) = JavaScriptIndexFuncException.PrepareErrorMessageForJavaScriptIndexFuncException(ReduceString, jse);
-                        if (success == false)
-                            throw new JavaScriptIndexFuncException($"Failed to execute {ReduceString}", jse);
-                        throw new JavaScriptIndexFuncException($"Failed to execute reduce script, {message}", jse);
-                    }
-                    catch (Exception e)
-                    {
-                        jsRes.Dispose();
-                        throw new JavaScriptIndexFuncException($"Failed to execute {ReduceString}", e);
-                    }
-                    finally
-                    {
-                        EngineHandle.ForceGarbageCollection();
-                    }
-                    yield return jsRes;
                 }
             }
             finally

@@ -12,7 +12,6 @@ using Raven.Server.Extensions.Jint;
 using Raven.Server.Documents.Indexes.Static.Utils;
 using Raven.Server.Documents.Patch;
 using Raven.Server.Documents.Patch.Jint;
-using V8.Net;
 using JintPreventResolvingTasksReferenceResolver = Raven.Server.Documents.Patch.Jint.JintPreventResolvingTasksReferenceResolver;
 using V8Exception = V8.Net.V8Exception;
 using JavaScriptException = Jint.Runtime.JavaScriptException;
@@ -20,10 +19,12 @@ using Raven.Server.Documents.Patch.V8;
 
 namespace Raven.Server.Documents.Indexes.Static
 {
-    public class JavaScriptMapOperation
+    public partial class JavaScriptMapOperation
     {
+        private readonly AbstractJavaScriptIndex _index;
         private readonly JavaScriptIndexUtils _jsIndexUtils;
         private readonly IJsEngineHandle _engineHandle;
+        private JavaScriptEngineType _jsEngineType => _engineHandle.EngineType;
         private IJavaScriptEngineForParsing EngineForParsing { get; }
         protected readonly Engine _engineStaticJint;
 
@@ -40,8 +41,9 @@ namespace Raven.Server.Documents.Indexes.Static
         public Dictionary<string, IndexFieldOptions> FieldOptions = new Dictionary<string, IndexFieldOptions>();
         public string IndexName { get; set; }
 
-        public JavaScriptMapOperation(JavaScriptIndexUtils jsIndexUtils, FunctionInstance mapFuncJint, JsHandle mapFunc, string indexName, string mapString)
+        public JavaScriptMapOperation(AbstractJavaScriptIndex index, JavaScriptIndexUtils jsIndexUtils, FunctionInstance mapFuncJint, JsHandle mapFunc, string indexName, string mapString)
         {
+            _index = index;
             EngineForParsing = jsIndexUtils.EngineForParsing;
             _engineStaticJint = (Engine)EngineForParsing;
 
@@ -64,109 +66,127 @@ namespace Raven.Server.Documents.Indexes.Static
         
         public IEnumerable<JsHandle> IndexingFunction(IEnumerable<object> items)
         {
-            foreach (var item in items)
+            using (_engineHandle.WriteLock)
             {
-                _engineHandle.ResetCallStack();
-                _engineHandle.ResetConstraints();
+                switch (_jsEngineType)
+                {
+                    case JavaScriptEngineType.Jint:
+                        SetContextJint();
+                        break;
+                    case JavaScriptEngineType.V8:
+                        SetContextV8();
+                        break;
+                    default:
+                        throw new NotSupportedException($"Not supported JS engine kind '{_jsEngineType}'.");
+                }
 
-                if (_jsIndexUtils.GetValue(item, out JsHandle jsItem) == false)
-                    continue;
+                foreach (var item in items)
+                {
+                    _engineHandle.ResetCallStack();
+                    _engineHandle.ResetConstraints();
+
+                    if (_jsIndexUtils.GetValue(item, out JsHandle jsItem) == false)
+                        continue;
 
 #if DEBUG
-                _engineHandle.MakeSnapshot("map");
+                    _engineHandle.MakeSnapshot("map");
 #endif
 
-                if (jsItem.IsObject)
-                {
-                    using (jsItem)
+                    if (jsItem.IsObject)
                     {
-                        JsHandle jsRes = JsHandle.Empty;
-                        try
+                        using (jsItem)
                         {
-                            if (!MapFunc.IsFunction)
+                            JsHandle jsRes = JsHandle.Empty;
+                            try
                             {
-                                throw new JavaScriptIndexFuncException($"MapFunc is not a function");
-                            }
-                            jsRes = MapFunc.StaticCall(jsItem);
-                            jsRes.ThrowOnError();
-                        }
-                        catch (JavaScriptException jse)
-                        {
-                            var (message, success) = JavaScriptIndexFuncException.PrepareErrorMessageForJavaScriptIndexFuncException(MapString, jse);
-                            if (success == false)
-                                throw new JavaScriptIndexFuncException($"Failed to execute {MapString}", jse);
-                            throw new JavaScriptIndexFuncException($"Failed to execute map script, {message}", jse);
-                        }
-                        catch (V8Exception jse)
-                        {
-                            var (message, success) = JavaScriptIndexFuncException.PrepareErrorMessageForJavaScriptIndexFuncException(MapString, jse);
-                            jsRes.Dispose();
-                            if (success == false)
-                                throw new JavaScriptIndexFuncException($"Failed to execute {MapString}", jse);
-                            throw new JavaScriptIndexFuncException($"Failed to execute map script, {message}", jse);
-                        }
-                        catch (Exception e)
-                        {
-                            jsRes.Dispose();
-                            throw new JavaScriptIndexFuncException($"Failed to execute {MapString}", e);
-                        }
-                        finally
-                        {
-                            _engineHandle.ForceGarbageCollection();
-                        }
-
-                        using (jsRes)
-                        {
-                            if (jsRes.IsArray)
-                            {
-                                var length = (uint)jsRes.ArrayLength;
-                                for (int i = 0; i < length; i++)
+                                if (!MapFunc.IsFunction)
                                 {
-                                    var arrItem = jsRes.GetProperty(i);
-                                    using (arrItem) 
-                                    { 
-                                        if (arrItem.IsObject)
+                                    throw new JavaScriptIndexFuncException($"MapFunc is not a function");
+                                }
+
+                                jsRes = MapFunc.StaticCall(jsItem);
+                                jsRes.ThrowOnError();
+                            }
+                            catch (JavaScriptException jse)
+                            {
+                                var (message, success) = JavaScriptIndexFuncException.PrepareErrorMessageForJavaScriptIndexFuncException(MapString, jse);
+                                if (success == false)
+                                    throw new JavaScriptIndexFuncException($"Failed to execute {MapString}", jse);
+                                throw new JavaScriptIndexFuncException($"Failed to execute map script, {message}", jse);
+                            }
+                            catch (V8Exception jse)
+                            {
+                                var (message, success) = JavaScriptIndexFuncException.PrepareErrorMessageForJavaScriptIndexFuncException(MapString, jse);
+                                jsRes.Dispose();
+                                if (success == false)
+                                    throw new JavaScriptIndexFuncException($"Failed to execute {MapString}", jse);
+                                throw new JavaScriptIndexFuncException($"Failed to execute map script, {message}", jse);
+                            }
+                            catch (Exception e)
+                            {
+                                jsRes.Dispose();
+                                throw new JavaScriptIndexFuncException($"Failed to execute {MapString}", e);
+                            }
+                            finally
+                            {
+                                _engineHandle.ForceGarbageCollection();
+                            }
+
+                            using (jsRes)
+                            {
+                                if (jsRes.IsArray)
+                                {
+                                    var length = (uint)jsRes.ArrayLength;
+                                    for (int i = 0; i < length; i++)
+                                    {
+                                        var arrItem = jsRes.GetProperty(i);
+                                        using (arrItem)
                                         {
-                                            yield return arrItem; // being yield it is converted to blittable object and not disposed - so disposing it here
-                                        }
-                                        else
-                                        {
-                                            // this check should be to catch map errors
-                                            throw new JavaScriptIndexFuncException($"Failed to execute {MapString}", new Exception($"At least one of map results is not object: {jsRes.ToString()}"));
+                                            if (arrItem.IsObject)
+                                            {
+                                                yield return arrItem; // being yield it is converted to blittable object and not disposed - so disposing it here
+                                            }
+                                            else
+                                            {
+                                                // this check should be to catch map errors
+                                                throw new JavaScriptIndexFuncException($"Failed to execute {MapString}",
+                                                    new Exception($"At least one of map results is not object: {jsRes.ToString()}"));
+                                            }
                                         }
                                     }
                                 }
+                                else if (jsRes.IsObject)
+                                {
+                                    yield return jsRes; // being yield it is converted to blittable object and not disposed - so disposing it here
+                                }
+                                // we ignore everything else by design, we support only
+                                // objects and arrays, anything else is discarded
                             }
-                            else if (jsRes.IsObject)
-                            {
-                                yield return jsRes;// being yield it is converted to blittable object and not disposed - so disposing it here
-                            }
-                            // we ignore everything else by design, we support only
-                            // objects and arrays, anything else is discarded
                         }
-                    }
-                    _engineHandle.ForceGarbageCollection();
+
+                        _engineHandle.ForceGarbageCollection();
 
 #if DEBUG
-                    _engineHandle.CheckForMemoryLeaks("map");
+                        _engineHandle.CheckForMemoryLeaks("map");
 #endif
-                }
-                else
-                {
-                    using (jsItem)
-                        throw new JavaScriptIndexFuncException($"Failed to execute {MapString}", new Exception($"Entry item is not document: {jsItem.ToString()}"));
-                }
-                
-                switch (_engineHandle.EngineType) // TODO [shlomo] why there is no SetArgs in indexes?
-                {
-                    case JavaScriptEngineType.Jint:
-                        _resolver.ExplodeArgsOn(null, null);
-                        break;
-                    case JavaScriptEngineType.V8:
-                        //DisposeArgsV8(); 
-                        break;
-                    default:
-                        throw new NotSupportedException($"Not supported JS engine kind '{_engineHandle.EngineType}'.");
+                    }
+                    else
+                    {
+                        using (jsItem)
+                            throw new JavaScriptIndexFuncException($"Failed to execute {MapString}", new Exception($"Entry item is not document: {jsItem.ToString()}"));
+                    }
+
+                    switch (_engineHandle.EngineType) // TODO [shlomo] why there is no SetArgs in indexes?
+                    {
+                        case JavaScriptEngineType.Jint:
+                            _resolver.ExplodeArgsOn(null, null);
+                            break;
+                        case JavaScriptEngineType.V8:
+                            //DisposeArgsV8(); 
+                            break;
+                        default:
+                            throw new NotSupportedException($"Not supported JS engine kind '{_engineHandle.EngineType}'.");
+                    }
                 }
             }
         }

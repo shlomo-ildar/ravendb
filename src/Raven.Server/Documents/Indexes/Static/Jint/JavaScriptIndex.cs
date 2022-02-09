@@ -90,6 +90,11 @@ namespace Raven.Server.Documents.Indexes.Static
         public Engine EngineJint;
         public JavaScriptUtilsJint JsUtilsJint;
 
+        public void DisposeJint()
+        {
+            EngineExJint.Dispose();
+        }
+        
         protected void InitializeJint()
         {
             var refResolver = new JintPreventResolvingTasksReferenceResolver();
@@ -104,6 +109,18 @@ namespace Raven.Server.Documents.Indexes.Static
             JsUtilsJint = (JavaScriptUtilsJint)JsUtils;
         }
 
+        public void InitializeLockedJint()
+        {
+        }
+            
+        public void InitContextJint(JavaScriptMapOperation operation)
+        {
+        }
+            
+        public void InitContextJint(JavaScriptReduceOperation operation)
+        {
+        }
+            
         private JsValue RecurseJint(JsValue self, JsValue[] args)
         {
             if (args.Length != 2)

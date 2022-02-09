@@ -133,7 +133,7 @@ function map() {{
                                     if (func.IsFunction == false)
                                         ThrowIndexCreationException($"map function #{i} {MethodProperty} property isn't a 'FunctionInstance'");
 
-                                    var operation = new JavaScriptMapOperation(JsIndexUtils, funcForParsingJint, func, Definition.Name, mapList[i]);
+                                    var operation = new JavaScriptMapOperation(this, JsIndexUtils, funcForParsingJint, func, Definition.Name, mapList[i]);
                                     if (mapForParsingJint.HasOwnProperty(MoreArgsProperty))
                                     {
                                         var moreArgsObjJint = mapForParsingJint.Get(MoreArgsProperty);

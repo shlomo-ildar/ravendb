@@ -125,7 +125,7 @@ function map(name, lambda) {
                                 if (func.IsFunction == false)
                                     ThrowIndexCreationException($"map function #{i} {MethodProperty} property isn't a function");
 
-                                JavaScriptMapOperation operation = new JavaScriptMapOperation(JsIndexUtils, funcForParsingJint, func, Definition.Name, mapList[i]); 
+                                JavaScriptMapOperation operation = new JavaScriptMapOperation(this, JsIndexUtils, funcForParsingJint, func, Definition.Name, mapList[i]);
                                 if (mapObjForParsingJint != null && mapObjForParsingJint.HasOwnProperty(MoreArgsProperty))
                                 {
                                     var moreArgsObjJint = mapObjForParsingJint.Get(MoreArgsProperty);
@@ -211,28 +211,54 @@ function map(name, lambda) {
 
             InitializeEngineSpecific2();
 
-            using (EngineHandle.DisableConstraints())
-            using (_engineForParsing.DisableConstraints())
+            using (EngineHandle.WriteLock)
             {
-                var maps = GetMappingFunctions(modifyMappingFunctions);
+                switch (_jsEngineType)
+                {
+                    case JavaScriptEngineType.Jint:
+                        InitializeLockedJint();
+                        break;
+                    case JavaScriptEngineType.V8:
+                        InitializeLockedV8();
+                        break;
+                    default:
+                        throw new NotSupportedException($"Not supported JS engine kind '{_jsEngineType}'.");
+                }
 
-                var mapReferencedCollections = InitializeEngine(maps);
+                using (EngineHandle.DisableConstraints())
+                using (_engineForParsing.DisableConstraints())
+                {
+                    var maps = GetMappingFunctions(modifyMappingFunctions);
 
-                _definitionsForParsingJint = GetDefinitionsForParsing();
-                _definitions = GetDefinitions();
+                    var mapReferencedCollections = InitializeEngine(maps);
 
-                ProcessMaps(maps, mapReferencedCollections, out var collectionFunctions);
+                    _definitionsForParsingJint = GetDefinitionsForParsing();
+                    _definitions = GetDefinitions();
 
-                ProcessReduce();
+                    ProcessMaps(maps, mapReferencedCollections, out var collectionFunctions);
 
-                ProcessFields(collectionFunctions);
+                    ProcessReduce();
+
+                    ProcessFields(collectionFunctions);
+                }
             }
         }
 
         ~AbstractJavaScriptIndex()
         {
-            EngineHandle?.Dispose();
             _definitions.Dispose();
+            
+            switch (_jsEngineType)
+            {
+                case JavaScriptEngineType.Jint:
+                    DisposeJint();
+                    break;
+                case JavaScriptEngineType.V8:
+                    DisposeV8();
+                    break;
+                default:
+                    throw new NotSupportedException($"Not supported JS engine kind '{_jsEngineType}'.");
+            }
         }
 
         protected void InitializeEngineSpecific()
@@ -283,7 +309,7 @@ function map(name, lambda) {
 
                         using (var groupByKey = reduceObj.GetProperty(KeyProperty))
                         using (var reduce = reduceObj.GetProperty(AggregateByProperty))
-                            ReduceOperation = new JavaScriptReduceOperation(JsIndexUtils, groupByKeyForParsingJint, _engineForParsing, reduce, groupByKey, _indexVersion) { ReduceString = Definition.Reduce };
+                            ReduceOperation = new JavaScriptReduceOperation(this, JsIndexUtils, groupByKeyForParsingJint, _engineForParsing, reduce, groupByKey, _indexVersion) { ReduceString = Definition.Reduce };
                         GroupByFields = ReduceOperation.GetReduceFieldsNames();
                         Reduce = ReduceOperation.IndexingFunction;
                     }

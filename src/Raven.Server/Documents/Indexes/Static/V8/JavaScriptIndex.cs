@@ -117,24 +117,38 @@ namespace Raven.Server.Documents.Indexes.Static
 
     public abstract partial class AbstractJavaScriptIndex
     {
-        public V8EngineEx EngineExV8;
-        public V8Engine EngineV8;
+        public V8EngineEx EngineExV8 => _scriptEngineV8Pooled.Value;
+        public V8Engine EngineV8 => _scriptEngineV8Pooled.Value;
         public JavaScriptUtilsV8 JsUtilsV8;
+
+        private PoolWithLevels<V8EngineEx>.PooledValue _scriptEngineV8Pooled;
+        public V8EngineEx.ContextEx ContextExV8; 
 
         protected void InitializeV8()
         {
-            EngineExV8 = new V8EngineEx();
+            var poolOfEngines = V8EngineEx.GetPool(JsOptions);
+            _scriptEngineV8Pooled = poolOfEngines.GetValue();
+
             EngineExV8.CreateAndSetContextEx(JsOptions);
-            EngineV8 = EngineExV8;
             EngineHandle = EngineExV8;
             _engineForParsing = new JintEngineExForV8();
+        }
+        
+        public void InitializeLockedV8()
+        {
+            ContextExV8 = EngineExV8.CreateAndSetContextEx(JsOptions);
+        }
+            
+        public void DisposeV8()
+        {
+            _scriptEngineV8Pooled.Dispose();
         }
 
         protected void InitializeV82()
         {
             JsUtilsV8 = (JavaScriptUtilsV8)JsUtils;
         }
-
+        
         private InternalHandle RecurseV8(V8Engine engine, bool isConstructCall, InternalHandle self, params InternalHandle[] args) // callback
         {
             try
