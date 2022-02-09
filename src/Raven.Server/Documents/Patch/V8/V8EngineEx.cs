@@ -24,11 +24,11 @@ namespace Raven.Server.Documents.Patch.V8
     {
         private static PoolWithLevels<V8EngineEx>? _Pool;
 
-        public static PoolWithLevels<V8EngineEx> GetPool()
+        public static PoolWithLevels<V8EngineEx> GetPool(IJavaScriptOptions jsOptions)
         {
             if (_Pool == null)
             {
-                _Pool = new PoolWithLevels<V8EngineEx>(2, 2);
+                _Pool = new PoolWithLevels<V8EngineEx>(jsOptions.TargetContextCountPerEngine, jsOptions.MaxEngineCount);
             }
 
             return _Pool;
