@@ -501,8 +501,18 @@ namespace Raven.Server.Documents.Patch
             {
                 using (ScriptEngineHandle.WriteLock)
                 {
-                    ScriptEngineHandle.SetContext(_contextEx);
-                        
+                    switch (_jsEngineType)
+                    {
+                        case JavaScriptEngineType.Jint:
+                            SetContextJint();
+                            break;
+                        case JavaScriptEngineType.V8:
+                            SetContextV8();
+                            break;
+                        default:
+                            throw new NotSupportedException($"Not supported JS engine kind '{_jsEngineType}'.");
+                    }
+                    
                     _docsCtx = docCtx;
                     _jsonCtx = jsonCtx ?? ThrowArgumentNull();
                     _scope = scope;
