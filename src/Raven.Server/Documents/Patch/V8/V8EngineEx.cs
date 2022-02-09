@@ -28,7 +28,7 @@ namespace Raven.Server.Documents.Patch.V8
         {
             if (_Pool == null)
             {
-                _Pool = new PoolWithLevels<V8EngineEx>(20, 50);
+                _Pool = new PoolWithLevels<V8EngineEx>(2, 2);
             }
 
             return _Pool;
@@ -150,7 +150,7 @@ var process = {
 
         }
 
-        private readonly ReaderWriterLock _locker = new ReaderWriterLock();
+        private readonly ReaderWriterLock _locker = new();
         private ContextEx? _contextEx;
 
         
