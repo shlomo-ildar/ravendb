@@ -26,6 +26,8 @@ namespace Raven.Server.Documents.Patch
                 _pool.DecrementLevel(Value);
             }
         }
+
+        public int EngineCount { get => _objectLevels.Count; }
         
         private readonly ReaderWriterLock _Locker = new ReaderWriterLock();
         
@@ -52,7 +54,7 @@ namespace Raven.Server.Documents.Patch
                         var (level, set) = it.Current;
                         if (set.Count >= 1)
                         {
-                            obj = (level >= _targetLevel && _listByLevel.Count < _maxCapacity) ? new TValue() : set.First();
+                            obj = (level >= _targetLevel && EngineCount < _maxCapacity) ? new TValue() : set.First();
                         }
                     }
 
@@ -81,15 +83,10 @@ namespace Raven.Server.Documents.Patch
         
         private void ModifyLevel(TValue obj, int delta)
         {
-            if (!_objectLevels.ContainsKey(obj))
-            {
-                _objectLevels[obj] = 0;
-            }
-
-            var level = _objectLevels[obj];
-
             if (delta == 0)
                 return;
+
+            var level = _objectLevels.ContainsKey(obj) ? _objectLevels[obj] : 0;
 
             if (_listByLevel.TryGetValue(level, out HashSet<TValue> setPrev))
             {
@@ -100,13 +97,14 @@ namespace Raven.Server.Documents.Patch
             }
 
             int levelNew = level + delta;
-            _objectLevels[obj] = levelNew;
             if (levelNew == 0)
             {
+                _objectLevels.Remove(obj);
                 obj.Dispose();
             }
             else
             {
+                _objectLevels[obj] = levelNew;
                 if (!_listByLevel.TryGetValue(levelNew, out HashSet<TValue> setNew))
                 {
                     setNew = new HashSet<TValue>();
