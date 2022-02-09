@@ -13,6 +13,9 @@ namespace Raven.Client.Documents.Smuggler
 
         public int MaxDuration { get; set; } = 1000; // TODO [shlomo] may be decreased when tests get stable
 
+        private int TargetContextCountPerEngine { get; set; } = 10;
+
+        private int MaxEngineCount { get; set; } = 50;
     }
 
     public class DatabaseSmugglerOptions : IDatabaseSmugglerOptions

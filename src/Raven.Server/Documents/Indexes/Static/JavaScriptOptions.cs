@@ -13,12 +13,32 @@ namespace Raven.Server.Documents.Indexes.Static
         public int MaxSteps { get; set; }
         public TimeSetting MaxDuration { get; set; }
 
-        public JavaScriptOptions(JavaScriptEngineType engineType, bool strictMode, int maxSteps, TimeSetting maxDuration)
+        public int TargetContextCountPerEngine { get; set; }
+
+        public int MaxEngineCount { get; set; }
+
+        public JavaScriptOptions(JavaScriptEngineType engineType = JavaScriptEngineType.Jint, bool strictMode = true, int maxSteps = 10_000, TimeSetting? maxDuration = null, int targetContextCountPerEngine = 10, int maxEngineCount = 50)
         {
+            maxDuration ??= new TimeSetting(100, TimeUnit.Milliseconds);
             EngineType = engineType;
             StrictMode = strictMode;
             MaxSteps = maxSteps;
-            MaxDuration = maxDuration;
+            MaxDuration = maxDuration.Value;
+            TargetContextCountPerEngine = targetContextCountPerEngine;
+            MaxEngineCount = maxEngineCount;
+        }
+
+        public JavaScriptOptions(RavenConfiguration configuration)
+        {
+            var patchingConfig = configuration.Patching;
+            var jsConfig = configuration.JavaScript;
+            
+            EngineType = jsConfig.EngineType;
+            StrictMode = patchingConfig.StrictMode ?? jsConfig.StrictMode; // patching is of priority for backward compatibility
+            MaxSteps = configuration.Patching.MaxStepsForScript ?? jsConfig.MaxSteps; // patching is of priority for backward compatibility
+            MaxDuration = jsConfig.MaxDuration;
+            TargetContextCountPerEngine = jsConfig.TargetContextCountPerEngine;
+            MaxEngineCount = jsConfig.MaxEngineCount;
         }
 
         public JavaScriptOptions(IndexingConfiguration indexConfiguration, RavenConfiguration configuration)
@@ -28,8 +48,10 @@ namespace Raven.Server.Documents.Indexes.Static
             
             EngineType = indexConfiguration.JsEngineType ?? jsConfig.EngineType;
             StrictMode = indexConfiguration.JsStrictMode ?? patchingConfig.StrictMode ?? jsConfig.StrictMode; // patching is of priority for backward compatibility
-            MaxSteps = indexConfiguration.JsMaxSteps ?? jsConfig.MaxSteps;
+            MaxSteps = indexConfiguration.JsMaxSteps ?? configuration.Patching.MaxStepsForScript ?? jsConfig.MaxSteps; // patching is of priority for backward compatibility
             MaxDuration = indexConfiguration.JsMaxDuration ?? jsConfig.MaxDuration;
+            TargetContextCountPerEngine = jsConfig.TargetContextCountPerEngine;
+            MaxEngineCount = jsConfig.MaxEngineCount;
         }
 
         public JavaScriptOptions(IJavaScriptOptions indexConfiguration)

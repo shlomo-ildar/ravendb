@@ -14,6 +14,8 @@ namespace Raven.Server.Config.Categories
         bool StrictMode { get; set; }
         int MaxSteps { get; set; }
         TimeSetting MaxDuration { get; set; }
+        int TargetContextCountPerEngine { get; set; }
+        int MaxEngineCount { get; set; }
     }
     
     [ConfigurationCategory(ConfigurationCategoryType.JavaScript)]
@@ -34,10 +36,20 @@ namespace Raven.Server.Config.Categories
         [ConfigurationEntry("JsConfiguration.MaxSteps", ConfigurationEntryScope.ServerWideOrPerDatabase)]
         public int MaxSteps { get; set; }
 
-        [Description("EXPERT: Maximum duration in milliseconds of the JS script execution (V8)")]  // TODO In Jint TimeConstraint2 is the internal class so the approach applied to MaxStatements doesn't work here
+        [Description("EXPERT: Maximum duration in milliseconds of the JS script execution")]
         [DefaultValue(1000)] // TODO [shlomo] may be decreased when tests get stable
         [TimeUnit(TimeUnit.Milliseconds)]
         [ConfigurationEntry("JsConfiguration.MaxDuration", ConfigurationEntryScope.ServerWideOrPerDatabase)]
         public TimeSetting MaxDuration { get; set; }
+        
+        [Description("EXPERT: Target number of contexts per engine (isolate) (V8)")]
+        [DefaultValue(10)]
+        [ConfigurationEntry("JsConfiguration.TargetContextCountPerEngine", ConfigurationEntryScope.ServerWideOrPerDatabase)]
+        public int TargetContextCountPerEngine { get; set; }
+        
+        [Description("EXPERT: Maximum number of engines (isolates) (V8)")]
+        [DefaultValue(50)]
+        [ConfigurationEntry("JsConfiguration.MaxEngineCount", ConfigurationEntryScope.ServerWideOrPerDatabase)]
+        public int MaxEngineCount { get; set; }
     }
 }
