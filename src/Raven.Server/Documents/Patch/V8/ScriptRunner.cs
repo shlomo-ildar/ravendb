@@ -81,7 +81,7 @@ namespace Raven.Server.Documents.Patch
 
             public void InitializeV8()
             {
-                var poolOfEngines = V8EngineEx.GetPool();
+                var poolOfEngines = V8EngineEx.GetPool(_jsOptions);
                 _scriptEngineV8Pooled = poolOfEngines.GetValue();
                 var scriptEngineExV8 = ScriptEngineExV8;
                 ScriptEngineHandle = scriptEngineExV8;
