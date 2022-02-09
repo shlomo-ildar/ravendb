@@ -221,12 +221,7 @@ namespace Raven.Server.Documents
 
         public static IJavaScriptOptions GetJsOptions(RavenConfiguration configuration)
         {
-            var jsOptions = new IndexesStatic.JavaScriptOptions(configuration.JavaScript);
-
-            // for backward compatibility overloading with Patching values in case they are set by the user
-            jsOptions.StrictMode = configuration.Patching.StrictMode ?? jsOptions.StrictMode; 
-            jsOptions.MaxSteps = configuration.Patching.MaxStepsForScript ?? jsOptions.MaxSteps; 
-
+            var jsOptions = new IndexesStatic.JavaScriptOptions(configuration);
             return jsOptions;
         }
 
