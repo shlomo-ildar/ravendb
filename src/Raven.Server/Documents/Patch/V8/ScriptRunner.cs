@@ -95,7 +95,7 @@ namespace Raven.Server.Documents.Patch
                 _contextExV8 = ScriptEngineExV8.CreateAndSetContextEx(_jsOptions);
             }
             
-            public void SetContextV8()
+            private void SetContextV8()
             {
                 ScriptEngineExV8.SetContext(_contextExV8);
             }

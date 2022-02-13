@@ -103,7 +103,7 @@ namespace Raven.Server.Documents.Patch
             {
             }
             
-            public void SetContextJint()
+            private void SetContextJint()
             {
             }
             
