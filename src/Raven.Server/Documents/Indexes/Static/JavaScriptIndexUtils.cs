@@ -185,7 +185,7 @@ namespace Raven.Server.Documents.Indexes.Static.Utils
                 jsItem = EngineHandle.FromObjectGen(item);
                 jsItem.ThrowOnError();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 jsItem.Dispose();
                 return false;
