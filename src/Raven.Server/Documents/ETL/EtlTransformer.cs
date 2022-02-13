@@ -74,56 +74,73 @@ namespace Raven.Server.Documents.ETL
                     throw new NotSupportedException($"Not supported JS engine type '{jsEngineType}'.");
             }
 
-            DocumentEngineHandle?.SetGlobalClrCallBack(Transformation.LoadTo, (LoadToFunctionTranslatorJint, LoadToFunctionTranslatorV8));
-
-            foreach (var collection in LoadToDestinations)
-            {
-                var name = Transformation.LoadTo + collection;
-                DocumentEngineHandle?.SetGlobalClrCallBack(name, 
-                    ((Func<JsValue, JsValue[], JsValue>)((value, values) => LoadToFunctionTranslatorInnerJint(collection, value, values)),
-                    (engine, isConstructCall, self, args) => LoadToFunctionTranslatorInnerV8(collection, self, args))
-                );
-                BehaviorsEngineHandle?.SetGlobalClrCallBack(name, (StubJint, StubV8));
-            }
-            
             const string loadAttachment = Transformation.LoadAttachment;
-            DocumentEngineHandle?.SetGlobalClrCallBack(loadAttachment, (LoadAttachmentJint, LoadAttachmentV8));
-            BehaviorsEngineHandle?.SetGlobalClrCallBack(loadAttachment, (StubJint, StubV8));
-
             const string loadCounter = Transformation.CountersTransformation.Load;
-            DocumentEngineHandle?.SetGlobalClrCallBack(loadCounter, (LoadCounterJint, LoadCounterV8));
-            BehaviorsEngineHandle?.SetGlobalClrCallBack(loadCounter, (StubJint, StubV8));
-
             const string loadTimeSeries = Transformation.TimeSeriesTransformation.LoadTimeSeries.Name;
-            DocumentEngineHandle?.SetGlobalClrCallBack(loadTimeSeries, (LoadTimeSeriesJint, LoadTimeSeriesV8));
-            BehaviorsEngineHandle?.SetGlobalClrCallBack(loadTimeSeries, (StubJint, StubV8));
-
             const string getAttachments = "getAttachments";
-            DocumentEngineHandle?.SetGlobalClrCallBack(getAttachments, (GetAttachmentsJint, GetAttachmentsV8));
-            BehaviorsEngineHandle?.SetGlobalClrCallBack(getAttachments, (StubJint, StubV8));
-
             const string hasAttachment = "hasAttachment";
-            DocumentEngineHandle?.SetGlobalClrCallBack(hasAttachment, (HasAttachmentJint, HasAttachmentV8));
-            BehaviorsEngineHandle?.SetGlobalClrCallBack(hasAttachment, (StubJint, StubV8));
-
             const string getCounters = "getCounters";
-            DocumentEngineHandle?.SetGlobalClrCallBack(getCounters, (GetCountersJint, GetCountersV8));
-            BehaviorsEngineHandle?.SetGlobalClrCallBack(getCounters, (StubJint, StubV8));
-
             const string hasCounter = "hasCounter";
-            DocumentEngineHandle?.SetGlobalClrCallBack(hasCounter, (HasCounterJint, HasCounterV8));
-            BehaviorsEngineHandle?.SetGlobalClrCallBack(hasCounter, (StubJint, StubV8));
-            
             const string hasTimeSeries = Transformation.TimeSeriesTransformation.HasTimeSeries.Name;
-            DocumentEngineHandle?.SetGlobalClrCallBack(hasTimeSeries, (HasTimeSeriesJint, HasTimeSeriesV8));
-            BehaviorsEngineHandle?.SetGlobalClrCallBack(hasTimeSeries, (StubJint, StubV8));
-            
             const string getTimeSeries = Transformation.TimeSeriesTransformation.GetTimeSeries.Name;
-            DocumentEngineHandle?.SetGlobalClrCallBack(getTimeSeries, (GetTimeSeriesJint, GetTimeSeriesV8));
-            BehaviorsEngineHandle?.SetGlobalClrCallBack(getTimeSeries, (StubJint, StubV8));
-            
-            DocumentScript?.ExecuteScriptsSource();
-            BehaviorsScript?.ExecuteScriptsSource();
+
+            if (DocumentEngineHandle != null)
+            {
+                using (DocumentEngineHandle.WriteLock)
+                {
+                    DocumentScript.SetContext();
+
+                    DocumentEngineHandle.SetGlobalClrCallBack(Transformation.LoadTo, (LoadToFunctionTranslatorJint, LoadToFunctionTranslatorV8));
+
+                    foreach (var collection in LoadToDestinations)
+                    {
+                        var name = Transformation.LoadTo + collection;
+                        DocumentEngineHandle.SetGlobalClrCallBack(name,
+                            ((Func<JsValue, JsValue[], JsValue>)((value, values) => LoadToFunctionTranslatorInnerJint(collection, value, values)),
+                                (engine, isConstructCall, self, args) => LoadToFunctionTranslatorInnerV8(collection, self, args))
+                        );
+                    }
+
+                    DocumentEngineHandle.SetGlobalClrCallBack(loadAttachment, (LoadAttachmentJint, LoadAttachmentV8));
+                    DocumentEngineHandle.SetGlobalClrCallBack(loadCounter, (LoadCounterJint, LoadCounterV8));
+                    DocumentEngineHandle.SetGlobalClrCallBack(loadTimeSeries, (LoadTimeSeriesJint, LoadTimeSeriesV8));
+                    DocumentEngineHandle.SetGlobalClrCallBack(getAttachments, (GetAttachmentsJint, GetAttachmentsV8));
+                    DocumentEngineHandle.SetGlobalClrCallBack(hasAttachment, (HasAttachmentJint, HasAttachmentV8));
+                    DocumentEngineHandle.SetGlobalClrCallBack(getCounters, (GetCountersJint, GetCountersV8));
+                    DocumentEngineHandle.SetGlobalClrCallBack(hasCounter, (HasCounterJint, HasCounterV8));
+                    DocumentEngineHandle.SetGlobalClrCallBack(hasTimeSeries, (HasTimeSeriesJint, HasTimeSeriesV8));
+                    DocumentEngineHandle.SetGlobalClrCallBack(getTimeSeries, (GetTimeSeriesJint, GetTimeSeriesV8));
+
+                    DocumentScript?.ExecuteScriptsSource();
+                }
+            }
+
+
+            if (BehaviorsEngineHandle != null)
+            {
+                using (BehaviorsEngineHandle.WriteLock)
+                {
+                    BehaviorsScript.SetContext();
+                    
+                    foreach (var collection in LoadToDestinations)
+                    {
+                        var name = Transformation.LoadTo + collection;
+                        BehaviorsEngineHandle.SetGlobalClrCallBack(name, (StubJint, StubV8));
+                    }
+
+                    BehaviorsEngineHandle.SetGlobalClrCallBack(loadAttachment, (StubJint, StubV8));
+                    BehaviorsEngineHandle.SetGlobalClrCallBack(loadCounter, (StubJint, StubV8));
+                    BehaviorsEngineHandle.SetGlobalClrCallBack(loadTimeSeries, (StubJint, StubV8));
+                    BehaviorsEngineHandle.SetGlobalClrCallBack(getAttachments, (StubJint, StubV8));
+                    BehaviorsEngineHandle.SetGlobalClrCallBack(hasAttachment, (StubJint, StubV8));
+                    BehaviorsEngineHandle.SetGlobalClrCallBack(getCounters, (StubJint, StubV8));
+                    BehaviorsEngineHandle.SetGlobalClrCallBack(hasCounter, (StubJint, StubV8));
+                    BehaviorsEngineHandle.SetGlobalClrCallBack(hasTimeSeries, (StubJint, StubV8));
+                    BehaviorsEngineHandle.SetGlobalClrCallBack(getTimeSeries, (StubJint, StubV8));
+
+                    BehaviorsScript.ExecuteScriptsSource();
+                }
+            }
         }
         
         protected abstract string[] LoadToDestinations { get; }

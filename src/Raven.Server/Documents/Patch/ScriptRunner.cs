@@ -278,7 +278,7 @@ namespace Raven.Server.Documents.Patch
                 throw new InvalidOperationException("Failed to set JS callback for Jint");
             }
 
-            private void SetContext()
+            public void SetContext()
             {
                 switch (_jsEngineType)
                 {
@@ -403,7 +403,7 @@ namespace Raven.Server.Documents.Patch
 
                     if (executeScriptsSource)
                     {
-                        ExecuteScriptsSourceInternal();
+                        ExecuteScriptsSource();
                     }
 
                     foreach (var ts in _runnerBase.TimeSeriesDeclaration)
@@ -419,16 +419,6 @@ namespace Raven.Server.Documents.Patch
             }
 
             public void ExecuteScriptsSource()
-            {
-                using (ScriptEngineHandle.WriteLock)
-                {
-                    SetContext();
-                    ExecuteScriptsSourceInternal();
-                }
-            }
-            
-
-            public void ExecuteScriptsSourceInternal()
             {
                 foreach (var script in _scriptsSource)
                 {
