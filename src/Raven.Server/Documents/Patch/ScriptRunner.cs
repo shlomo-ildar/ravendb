@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -276,6 +277,21 @@ namespace Raven.Server.Documents.Patch
             {
                 throw new InvalidOperationException("Failed to set JS callback for Jint");
             }
+
+            private void SetContext()
+            {
+                switch (_jsEngineType)
+                {
+                    case JavaScriptEngineType.Jint:
+                        SetContextJint();
+                        break;
+                    case JavaScriptEngineType.V8:
+                        SetContextV8();
+                        break;
+                    default:
+                        throw new NotSupportedException($"Not supported JS engine kind '{_jsEngineType}'.");
+                }
+            }
                 
             public void InitializeEngineSpecific(bool executeScriptsSource = true)
             {
@@ -387,7 +403,7 @@ namespace Raven.Server.Documents.Patch
 
                     if (executeScriptsSource)
                     {
-                        ExecuteScriptsSource();
+                        ExecuteScriptsSourceInternal();
                     }
 
                     foreach (var ts in _runnerBase.TimeSeriesDeclaration)
@@ -403,6 +419,16 @@ namespace Raven.Server.Documents.Patch
             }
 
             public void ExecuteScriptsSource()
+            {
+                using (ScriptEngineHandle.WriteLock)
+                {
+                    SetContext();
+                    ExecuteScriptsSourceInternal();
+                }
+            }
+            
+
+            public void ExecuteScriptsSourceInternal()
             {
                 foreach (var script in _scriptsSource)
                 {
@@ -501,17 +527,7 @@ namespace Raven.Server.Documents.Patch
             {
                 using (ScriptEngineHandle.WriteLock)
                 {
-                    switch (_jsEngineType)
-                    {
-                        case JavaScriptEngineType.Jint:
-                            SetContextJint();
-                            break;
-                        case JavaScriptEngineType.V8:
-                            SetContextV8();
-                            break;
-                        default:
-                            throw new NotSupportedException($"Not supported JS engine kind '{_jsEngineType}'.");
-                    }
+                    SetContext();
                     
                     _docsCtx = docCtx;
                     _jsonCtx = jsonCtx ?? ThrowArgumentNull();
