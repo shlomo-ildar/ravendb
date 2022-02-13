@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Raven.Client.ServerWide.JavaScript;
 using Sparrow;
 using Raven.Server.Documents.Queries.AST;
 using Sparrow.Json;
@@ -69,10 +70,10 @@ namespace Raven.Server.Documents.Patch
                     runner.AddScript(function.Value.FunctionText);
                 }
             }
-            runner.AddScript(GenerateRootScript());
+            runner.AddScript(GenerateRootScript(runner.JsOptions.EngineType));
         }
 
-        protected virtual string GenerateRootScript()
+        protected virtual string GenerateRootScript(JavaScriptEngineType jsEngineType)
         {
             switch (Type)
             {
@@ -84,11 +85,14 @@ namespace Raven.Server.Documents.Patch
                 case PatchRequestType.OlapEtl:
                 // modify and return the document
                 case PatchRequestType.Patch:
+                    var transformUnwrapper = Script.Replace(" ", "").Contains("transformDocument=()=>") || Script.Contains("function transformDocument()") 
+                        ? "transformDocument();" : "";
                     return $@"
  function __actual_func(args) {{ 
 Raven_ExplodeArgs(this, args);
 {Script}
 
+{transformUnwrapper}
 }};
 
 function execute(doc, args){{ 
