@@ -1857,6 +1857,11 @@ namespace Raven.Server.Documents.Patch
                     }
                 }
             }
+            
+            public object TranslateV8(JsonOperationContext context, object o)
+            {
+                return JsUtilsV8.TranslateToJs(context, o);
+            }
         }
     }
 }

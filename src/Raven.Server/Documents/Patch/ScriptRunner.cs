@@ -661,6 +661,16 @@ namespace Raven.Server.Documents.Patch
             }
 
 
+            public object Translate(JsonOperationContext context, object o)
+            {
+                return _jsEngineType switch
+                {
+                    JavaScriptEngineType.Jint => TranslateJint(context, o),
+                    JavaScriptEngineType.V8 => TranslateV8(context, o),
+                    _ => throw new NotSupportedException($"Not supported JS engine type '{_jsEngineType}'.")
+                };
+            }
+
             public JsHandle CreateEmptyObject()
             {
                 return ScriptEngineHandle.CreateObject();

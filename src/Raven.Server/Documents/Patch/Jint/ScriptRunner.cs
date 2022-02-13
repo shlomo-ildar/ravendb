@@ -1579,6 +1579,11 @@ namespace Raven.Server.Documents.Patch
             {
                 _refResolverJint.ExplodeArgsOn(null, null);
             }
+            
+            public object TranslateJint(JsonOperationContext context, object o)
+            {
+                return JsUtilsJint.TranslateToJs(context, o);
+            }
         }
     }
 }
