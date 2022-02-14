@@ -150,12 +150,8 @@ var process = {
 
         }
 
-        private readonly ReaderWriterLock _locker = new();
         private ContextEx? _contextEx;
-
         
-        public IDisposable WriteLock { get { return _locker.WriteLock();  } }
-
         public void SetContext(ContextEx ctx)
         {
             _contextEx = ctx;

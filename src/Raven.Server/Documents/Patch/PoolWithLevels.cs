@@ -29,7 +29,7 @@ namespace Raven.Server.Documents.Patch
 
         public int EngineCount { get => _objectLevels.Count; }
         
-        private readonly ReaderWriterLock _Locker = new ReaderWriterLock();
+        private readonly object _Lock = new();
         
         private int _maxCapacity;
         private int _targetLevel;
@@ -44,7 +44,7 @@ namespace Raven.Server.Documents.Patch
 
         public PooledValue GetValue()
         {
-            using (_Locker.WriteLock())
+            lock (_Lock)
             {
                 TValue obj = default;
                 using (var it = _listByLevel.GetEnumerator())
@@ -75,7 +75,7 @@ namespace Raven.Server.Documents.Patch
         
         public void DecrementLevel(TValue obj)
         {
-            using (_Locker.WriteLock())
+            lock (_Lock)
             {
                 ModifyLevel(obj, -1);
             }

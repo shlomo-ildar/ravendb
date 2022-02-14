@@ -307,7 +307,7 @@ namespace Raven.Server.Documents.Patch
                         throw new NotSupportedException($"Not supported JS engine kind '{_jsEngineType}'.");
                 }
 
-                using (ScriptEngineHandle.WriteLock)
+                lock (ScriptEngineHandle)
                 {
                     switch (_jsEngineType)
                     {
@@ -515,7 +515,7 @@ namespace Raven.Server.Documents.Patch
 
             public ScriptRunnerResult Run(JsonOperationContext jsonCtx, DocumentsOperationContext docCtx, string method, string documentId, object[] args, QueryTimingsScope scope = null, CancellationToken token = default)
             {
-                using (ScriptEngineHandle.WriteLock)
+                lock (ScriptEngineHandle)
                 {
                     SetContext();
                     

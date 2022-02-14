@@ -188,7 +188,7 @@ namespace Raven.Server.Documents.Indexes.Static
                     list.Add(item.BlittableJson);
                 }
 
-                using (EngineHandle.WriteLock)
+                lock (EngineHandle)
                 {
                     switch (EngineHandle.EngineType)
                     {

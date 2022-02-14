@@ -86,7 +86,7 @@ namespace Raven.Server.Documents.ETL
 
             if (DocumentEngineHandle != null)
             {
-                using (DocumentEngineHandle.WriteLock)
+                lock (DocumentEngineHandle)
                 {
                     DocumentScript.SetContext();
 
@@ -118,7 +118,7 @@ namespace Raven.Server.Documents.ETL
 
             if (BehaviorsEngineHandle != null)
             {
-                using (BehaviorsEngineHandle.WriteLock)
+                lock (BehaviorsEngineHandle)
                 {
                     BehaviorsScript.SetContext();
                     

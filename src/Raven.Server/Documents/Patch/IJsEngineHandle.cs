@@ -29,8 +29,6 @@ namespace Raven.Server.Documents.Patch
     public interface IJsEngineHandle : IJavaScriptEngineForParsing, IDisposable
     {
 
-        IDisposable WriteLock { get;  }
-        
         JavaScriptEngineType EngineType { get;  }
             
         [CanBeNull]

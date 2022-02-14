@@ -211,7 +211,7 @@ function map(name, lambda) {
 
             InitializeEngineSpecific2();
 
-            using (EngineHandle.WriteLock)
+            lock (EngineHandle)
             {
                 switch (_jsEngineType)
                 {

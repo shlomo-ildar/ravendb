@@ -34,8 +34,6 @@ var process = {
         public DynamicJsNullJint ImplicitNullJint;
         public DynamicJsNullJint ExplicitNullJint;
 
-        public IDisposable WriteLock { get { return null;  } }
-        
         public JsHandle ImplicitNull => new(ImplicitNullJint);
         public JsHandle ExplicitNull => new(ExplicitNullJint);
 

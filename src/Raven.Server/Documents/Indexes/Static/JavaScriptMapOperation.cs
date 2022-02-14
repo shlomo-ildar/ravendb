@@ -66,7 +66,7 @@ namespace Raven.Server.Documents.Indexes.Static
         
         public IEnumerable<JsHandle> IndexingFunction(IEnumerable<object> items)
         {
-            using (_engineHandle.WriteLock)
+            lock (_engineHandle)
             {
                 switch (_jsEngineType)
                 {
