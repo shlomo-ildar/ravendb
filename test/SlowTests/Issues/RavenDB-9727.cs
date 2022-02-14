@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -11,10 +12,11 @@ namespace SlowTests.Issues
         {
         }
 
-        [Fact]
-        public void Can_Load_with_Argument_that_has_String_Interpolation()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Load_with_Argument_that_has_String_Interpolation(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -59,10 +61,11 @@ from 'Users' as u where u.LastName = $p0 select output(u)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Can_Load_inside_Select_with_Argument_Predefined_in_Let_that_has_Complex_String_Interpolation()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Load_inside_Select_with_Argument_Predefined_in_Let_that_has_Complex_String_Interpolation(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
@@ -114,10 +117,11 @@ from 'Users' as u select output(u, $p0, $p1)", query.ToString());
             }
         }
 
-        [Fact]
-        public void Can_Load_inside_Let_with_Argument_Predefined_in_Let_that_has_String_Interpolation()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Can_Load_inside_Let_with_Argument_Predefined_in_Let_that_has_String_Interpolation(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {

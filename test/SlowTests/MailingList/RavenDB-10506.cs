@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using FastTests;
+using FastTests.Server.JavaScript;
 using Raven.Client.Documents.Linq;
 using Raven.Client.Documents.Queries;
 using Xunit;
@@ -13,10 +14,11 @@ namespace SlowTests.MailingList
         {
         }
 
-        [Fact]
-        public void Projections_with_multiple_Loads_using_complex_id_reference()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Projections_with_multiple_Loads_using_complex_id_reference(string jsEngineType)
         {
-            using (var store = GetDocumentStore())
+            using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 using (var session = store.OpenSession())
                 {
