@@ -535,6 +535,12 @@ namespace Raven.Server.Documents.Patch
                     {
                         using (var jsMethod = ScriptEngineHandle.GetGlobalProperty(method))
                         {
+                            if (jsMethod.IsUndefined)
+                                throw new InvalidOperationException($"Failed to get global function {method}");
+                            
+                            if (!jsMethod.IsFunction)
+                                throw new InvalidOperationException($"Obtained {method} global property is not a function: {ScriptEngineHandle.JsonStringify.StaticCall(method)}");
+                            
                             using (var jsRes = jsMethod.StaticCall(_args))
                             {
                                 jsRes.ThrowOnError();
