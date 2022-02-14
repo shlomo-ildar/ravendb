@@ -102,6 +102,7 @@ namespace Raven.Server.Documents.Patch
             
             public void DisposeV8()
             {
+                _contextExV8.Dispose();
                 _scriptEngineV8Pooled.Dispose();
             }
             
