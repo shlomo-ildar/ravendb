@@ -58,8 +58,8 @@ var process = {
                     .AddObjectConverter(new JintStringConverter())
                     .AddObjectConverter(new JintEnumConverter())
                     .AddObjectConverter(new JintDateTimeConverter())
-                    .AddObjectConverter(new JintTimeSpanConverter());
-                    //.LocalTimeZone(TimeZoneInfo.Utc);
+                    .AddObjectConverter(new JintTimeSpanConverter())
+                    .LocalTimeZone(TimeZoneInfo.Utc);
 
                 //options.TimeoutInterval(maxDurationMs == 0 ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(maxDurationMs)); // TODO [shlomo] to switch it on when tests get stable to exclude break because of operation timeout
             }
