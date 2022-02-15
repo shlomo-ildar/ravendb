@@ -13,7 +13,7 @@ namespace Raven.Server.Documents.Indexes.Static.Counters.Jint
     public class CounterEntryObjectInstanceJint : ObjectInstance, IObjectInstance
     {
         private JintEngineEx _engineEx;
-        private new Engine _engine;
+        private Engine _engine;
 
         private readonly DynamicCounterEntry _entry;
 

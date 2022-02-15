@@ -15,7 +15,7 @@ namespace Raven.Server.Documents.Indexes.Static.TimeSeries.Jint
     public class TimeSeriesSegmentObjectInstanceJint : ObjectInstance, IObjectInstance
     {
         private JintEngineEx _engineEx;
-        private new Engine _engine;
+        private Engine _engine;
 
         private readonly DynamicTimeSeriesSegment _segment;
 
