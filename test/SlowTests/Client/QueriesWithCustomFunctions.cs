@@ -1439,7 +1439,7 @@ from 'Users' as u select output(u)", query.ToString());
                 var birthdayLocal = new DateTime(1942, 8, 1);
                 var birthday = DateTime.SpecifyKind(birthdayLocal, DateTimeKind.Utc);
 
-                var now = DateTime.Now;
+                var now = DateTime.UtcNow;
 
                 using (var session = store.OpenSession())
                 {
@@ -1453,22 +1453,36 @@ from 'Users' as u select output(u)", query.ToString());
                 using (var session = store.OpenSession())
                 {
                     var query = from u in session.Query<User>()
-                                let days = RavenQuery.Raw<int>("Math.ceil((Date.now() - Date.parse(u.Birthday)) / (1000*60*60*24))")
+                                let msBd = RavenQuery.Raw<int>("Date.parse(u.Birthday)")
+                                let msNow = RavenQuery.Raw<int>("Date.now()")
+                                let days = RavenQuery.Raw<int>("Math.ceil((msNow - msBd) / (1000*60*60*24))")
+                                let hourBd = RavenQuery.Raw<int>("(new Date(msBd)).getUTCHours()")
+                                let hourNow = RavenQuery.Raw<int>("(new Date(msNow)).getUTCHours()")
                                 select new
                                 {
-                                    Days = days
+                                    Days = days,
+                                    HourBd = hourBd,
+                                    HourNow = hourNow,
+                                    SecNow = msNow
                                 };
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
 @"declare function output(u) {
-    var days = Math.ceil((Date.now() - Date.parse(u.Birthday)) / (1000*60*60*24));
-    return { Days : days };
+    var msBd = Date.parse(u.Birthday);
+    var msNow = Date.now();
+    var days = Math.ceil((msNow - msBd) / (1000*60*60*24));
+    var hourBd = (new Date(msBd)).getUTCHours();
+    var hourNow = (new Date(msNow)).getUTCHours();
+    return { Days : days, HourBd : hourBd, HourNow : hourNow, SecNow : msNow };
 }
 from 'Users' as u select output(u)", query.ToString());
 
                     var queryResult = query.ToList();
 
                     Assert.Equal(1, queryResult.Count);
+                    Assert.Equal(now.Ticks / 1_000_000, queryResult[0].SecNow);
+                    Assert.Equal(birthday.Hour, queryResult[0].HourBd);
+                    Assert.Equal(now.Hour, queryResult[0].HourNow);
                     Assert.Equal(Math.Ceiling((now - birthday).TotalDays), queryResult[0].Days);
                 }
             }
@@ -1496,22 +1510,41 @@ from 'Users' as u select output(u)", query.ToString());
                 using (var session = store.OpenSession())
                 {
                     var query = from u in session.Query<User>()
-                        let days = RavenQuery.Raw<int>("Math.ceil((Date.now() - Date.parse(u.Birthday)) / (1000*60*60*24))")
+                        let msBd = RavenQuery.Raw<int>("Date.parse(u.Birthday)")
+                        let msNow = RavenQuery.Raw<int>("Date.now()")
+                        let dateNow = RavenQuery.Raw<DateTime>("(new Date(msNow))")
+                        let timeNow = RavenQuery.Raw<long>("dateNow.getTime()")
+                        let days = RavenQuery.Raw<int>("Math.ceil((msNow - msBd) / (1000*60*60*24))")
+                        let hourBd = RavenQuery.Raw<int>("(new Date(msBd)).getHours()")
+                        let hourNow = RavenQuery.Raw<int>("dateNow.getHours()")
                         select new
                         {
-                            Days = days
+                            Days = days,
+                            HourBd = hourBd,
+                            HourNow = hourNow,
+                            SecNow = msNow / 1000,
+                            TimeNow = timeNow
                         };
 
                     RavenTestHelper.AssertEqualRespectingNewLines(
                         @"declare function output(u) {
-    var days = Math.ceil((Date.now() - Date.parse(u.Birthday)) / (1000*60*60*24));
-    return { Days : days };
+    var msBd = Date.parse(u.Birthday);
+    var msNow = Date.now();
+    var dateNow = (new Date(msNow));
+    var timeNow = dateNow.getTime();
+    var days = Math.ceil((msNow - msBd) / (1000*60*60*24));
+    var hourBd = (new Date(msBd)).getHours();
+    var hourNow = dateNow.getHours();
+    return { Days : days, HourBd : hourBd, HourNow : hourNow, SecNow : msNow/1000, TimeNow : timeNow };
 }
 from 'Users' as u select output(u)", query.ToString());
 
                     var queryResult = query.ToList();
 
                     Assert.Equal(1, queryResult.Count);
+                    //Assert.Equal(now.Ticks / 1_000_000, queryResult[0].SecNow);
+                    Assert.Equal(birthday.Hour, queryResult[0].HourBd);
+                    Assert.Equal(now.Hour, queryResult[0].HourNow);
                     Assert.Equal(Math.Ceiling((now - birthday).TotalDays), queryResult[0].Days);
                 }
             }
