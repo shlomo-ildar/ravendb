@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using FastTests.Server.JavaScript;
 using Raven.Tests.Core.Utils.Entities;
 using Xunit;
 using Xunit.Abstractions;
@@ -170,11 +171,12 @@ function deleteDocumentsOfEmployeesBehavior(docId) {
         }
 
         
-        [Fact]
-        public void Should_filter_out_deletions_using_generic_delete_behavior()
+        [Theory]
+        [JavaScriptEngineClassData]
+        public void Should_filter_out_deletions_using_generic_delete_behavior(string jsEngineType)
         {
-            using (var src = GetDocumentStore())
-            using (var dest = GetDocumentStore())
+            using (var src = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
+            using (var dest = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 AddEtl(src, dest, collections: new string[0], script:
                     @"
@@ -332,12 +334,14 @@ function deleteDocumentsOfEmployeesBehavior(docId) {
         }
 
         [Theory]
-        [InlineData(new string[0], true)]
-        [InlineData(new[] { "Users", "Employees" }, false)]
-        public void Should_filter_out_deletions_using_generic_delete_behavior_function_and_marker_document(string[] collections, bool applyToAllDocuments)
+        [InlineData(new string[0], true, "Jint")]
+        [InlineData(new[] { "Users", "Employees" }, false, "Jint")]
+        [InlineData(new string[0], true, "V8")]
+        [InlineData(new[] { "Users", "Employees" }, false, "V8")]
+        public void Should_filter_out_deletions_using_generic_delete_behavior_function_and_marker_document(string[] collections, bool applyToAllDocuments, string jsEngineType)
         {
-            using (var src = GetDocumentStore())
-            using (var dest = GetDocumentStore())
+            using (var src = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
+            using (var dest = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 AddEtl(src, dest, collections: collections, script:
                     @"
@@ -459,8 +463,8 @@ function deleteDocumentsOfEmployeesBehavior(docId) {
             }
         }
 
-        [Theory]
-        [InlineData(@"
+        
+        const string Should_choose_more_specific_delete_behavior_function_Script1 = @"
     loadToUsers(this);
 
     function deleteDocumentsBehavior(docId, collection) {
@@ -471,8 +475,9 @@ function deleteDocumentsOfEmployeesBehavior(docId) {
     function deleteDocumentsOfEmployeesBehavior(docId) {
         return true;
     }
-")]
-        [InlineData(@"
+";
+
+        private const string Should_choose_more_specific_delete_behavior_function_Script2 = @"
     loadToUsers(this);
 
     function deleteDocumentsBehavior(docId, collection) {
@@ -488,11 +493,17 @@ function deleteDocumentsOfEmployeesBehavior(docId) {
     function deleteDocumentsOfEmployeesBehavior(docId) {
         return true;
     }
-")]
-        public void Should_choose_more_specific_delete_behavior_function(string script)
+";
+        
+        [Theory]
+        [InlineData(Should_choose_more_specific_delete_behavior_function_Script1, "Jint")]
+        [InlineData(Should_choose_more_specific_delete_behavior_function_Script2, "Jint")]
+        [InlineData(Should_choose_more_specific_delete_behavior_function_Script1, "V8")]
+        [InlineData(Should_choose_more_specific_delete_behavior_function_Script2, "V8")]
+        public void Should_choose_more_specific_delete_behavior_function(string script, string jsEngineType)
         {
-            using (var src = GetDocumentStore())
-            using (var dest = GetDocumentStore())
+            using (var src = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
+            using (var dest = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
                 AddEtl(src, dest, collections: new[] { "Users", "Employees" }, script: script);
 
