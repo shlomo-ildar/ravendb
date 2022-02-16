@@ -37,7 +37,7 @@ namespace Raven.Server.Config.Categories
         public int MaxSteps { get; set; }
 
         [Description("EXPERT: Maximum duration in milliseconds of the JS script execution")]
-        [DefaultValue(1000)] // TODO [shlomo] may be decreased when tests get stable
+        [DefaultValue(-1)]
         [TimeUnit(TimeUnit.Milliseconds)]
         [ConfigurationEntry("JsConfiguration.MaxDuration", ConfigurationEntryScope.ServerWideOrPerDatabase)]
         public TimeSetting MaxDuration { get; set; }
