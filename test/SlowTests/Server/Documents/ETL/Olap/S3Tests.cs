@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using FastTests.Server.JavaScript;
 using Newtonsoft.Json;
 using Parquet;
 using Parquet.Data;
@@ -36,14 +37,15 @@ namespace SlowTests.Server.Documents.ETL.Olap
         private const string CollectionName = "Orders";
         private static readonly HashSet<char> SpecialChars = new HashSet<char> { '&', '@', ':', ',', '$', '=', '+', '?', ';', ' ', '"', '^', '`', '>', '<', '{', '}', '[', ']', '#', '\'', '~', '|' };
 
-        [AmazonS3Fact]
-        public async Task CanUploadToS3()
+        [AmazonS3Theory]
+        [JavaScriptEngineClassData]
+        public async Task CanUploadToS3(string jsEngineType)
         {
             var settings = GetS3Settings();
 
             try
             {
-                using (var store = GetDocumentStore())
+                using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
                 {
                     var baseline = new DateTime(2020, 1, 1);
 
@@ -110,14 +112,15 @@ loadToOrders(partitionBy(key),
             }
         }
 
-        [AmazonS3Fact]
-        public async Task SimpleTransformation()
+        [AmazonS3Theory]
+        [JavaScriptEngineClassData]
+        public async Task SimpleTransformation(string jsEngineType)
         {
             var settings = GetS3Settings();
 
             try
             {
-                using (var store = GetDocumentStore())
+                using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
                 {
                     var baseline = new DateTime(2020, 1, 1);
 
@@ -216,15 +219,16 @@ loadToOrders(partitionBy(key),
             }
         }
 
-        [AmazonS3Fact]
-        public async Task CanLoadToMultipleTables()
+        [AmazonS3Theory]
+        [JavaScriptEngineClassData]
+        public async Task CanLoadToMultipleTables(string jsEngineType)
         {
             const string salesTableName = "Sales";
             var settings = GetS3Settings();
 
             try
             {
-                using (var store = GetDocumentStore())
+                using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
                 {
                     var baseline = new DateTime(2020, 1, 1);
 
@@ -418,14 +422,15 @@ loadToOrders(partitionBy(key), orderData);
             return JsonConvert.SerializeObject(stats);
         }
 
-        [AmazonS3Fact]
-        public async Task CanModifyPartitionColumnName()
+        [AmazonS3Theory]
+        [JavaScriptEngineClassData]
+        public async Task CanModifyPartitionColumnName(string jsEngineType)
         {
             var settings = GetS3Settings();
 
             try
             {
-                using (var store = GetDocumentStore())
+                using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
                 {
                     const string partitionColumn = "order_date";
 
@@ -513,13 +518,14 @@ loadToOrders(partitionBy(['order_date', key]),
             }
         }
 
-        [AmazonS3Fact]
-        public async Task SimpleTransformation_NoPartition()
+        [AmazonS3Theory]
+        [JavaScriptEngineClassData]
+        public async Task SimpleTransformation_NoPartition(string jsEngineType)
         {
             var settings = GetS3Settings();
             try
             {
-                using (var store = GetDocumentStore())
+                using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
                 {
                     var baseline = new DateTime(2020, 1, 1).ToUniversalTime();
 
@@ -621,13 +627,14 @@ loadToOrders(noPartition(),
             }
         }
 
-        [AmazonS3Fact]
-        public async Task SimpleTransformation_MultiplePartitions()
+        [AmazonS3Theory]
+        [JavaScriptEngineClassData]
+        public async Task SimpleTransformation_MultiplePartitions(string jsEngineType)
         {
             var settings = GetS3Settings();
             try
             {
-                using (var store = GetDocumentStore())
+                using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
                 {
                     var baseline = DateTime.SpecifyKind(new DateTime(2020, 1, 1), DateTimeKind.Utc);
 
@@ -756,13 +763,14 @@ loadToOrders(partitionBy(
             }
         }
 
-        [AmazonS3Fact]
-        public async Task CanPartitionByCustomDataFieldViaScript()
+        [AmazonS3Theory]
+        [JavaScriptEngineClassData]
+        public async Task CanPartitionByCustomDataFieldViaScript(string jsEngineType)
         {
             var settings = GetS3Settings();
             try
             {
-                using (var store = GetDocumentStore())
+                using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
                 {
                     var baseline = new DateTime(2020, 1, 1);
 
@@ -831,13 +839,14 @@ loadToOrders(partitionBy(['year', year], ['month', month], ['source', $customPar
             }
         }
 
-        [AmazonS3Fact]
-        public async Task CanHandleSpecialCharsInEtlName()
+        [AmazonS3Theory]
+        [JavaScriptEngineClassData]
+        public async Task CanHandleSpecialCharsInEtlName(string jsEngineType)
         {
             var settings = GetS3Settings();
             try
             {
-                using (var store = GetDocumentStore())
+                using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
                 {
                     await store.Maintenance.SendAsync(new CreateSampleDataOperation());
 
@@ -873,13 +882,14 @@ loadToOrders(noPartition(), {
             }
         }
 
-        [AmazonS3Fact]
-        public async Task CanHandleSpecialCharsInFolderPath()
+        [AmazonS3Theory]
+        [JavaScriptEngineClassData]
+        public async Task CanHandleSpecialCharsInFolderPath(string jsEngineType)
         {
             var settings = GetS3Settings();
             try
             {
-                using (var store = GetDocumentStore())
+                using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
                 {
                     using (var session = store.OpenAsyncSession())
                     {
@@ -983,13 +993,14 @@ for (var i = 0; i < this.Lines.length; i++){
             }
         }
 
-        [AmazonS3Fact]
-        public async Task CanHandleSlashInPartitionValue()
+        [AmazonS3Theory]
+        [JavaScriptEngineClassData]
+        public async Task CanHandleSlashInPartitionValue(string jsEngineType)
         {
             var settings = GetS3Settings();
             try
             {
-                using (var store = GetDocumentStore())
+                using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
                 {
                     using (var session = store.OpenAsyncSession())
                     {
@@ -1038,14 +1049,15 @@ for (var i = 0; i < this.Lines.length; i++){
             }
         }
 
-        [AmazonS3Fact]
-        public async Task CanUpdateS3Settings()
+        [AmazonS3Theory]
+        [JavaScriptEngineClassData]
+        public async Task CanUpdateS3Settings(string jsEngineType)
         {
             var settings = GetS3Settings();
             S3Settings settings1 = default, settings2 = default;
             try
             {
-                using (var store = GetDocumentStore())
+                using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
                 {
                     var dt = new DateTime(2020, 1, 1);
 
@@ -1213,13 +1225,14 @@ loadToOrders(partitionBy(['year', orderDate.getFullYear()]),
             }
         }
 
-        [AmazonS3Fact]
-        public async Task ShouldTrimRedundantSlashInRemoteFolderName()
+        [AmazonS3Theory]
+        [JavaScriptEngineClassData]
+        public async Task ShouldTrimRedundantSlashInRemoteFolderName(string jsEngineType)
         {
             var settings = GetS3Settings();
             try
             {
-                using (var store = GetDocumentStore())
+                using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
                 {
                     using (var session = store.OpenAsyncSession())
                     {
@@ -1318,7 +1331,7 @@ loadToOrders(partitionBy(['year', orderDate.getFullYear()]),
 
         private S3Settings GetS3Settings([CallerMemberName] string caller = null)
         {
-            var s3Settings = AmazonS3FactAttribute.S3Settings;
+            var s3Settings = AmazonS3TheoryAttribute.S3Settings;
             if (s3Settings == null)
                 return null;
 
