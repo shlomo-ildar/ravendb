@@ -732,7 +732,7 @@ this.Value = another.Value;
             }
         }
 
-        [Theory(Skip = "TODO [shlomo] temporary switched off the test as it brokes the test session")]
+        [Theory]
         [JavaScriptEngineClassData]
         public async Task CreateDocumentShouldThrowInvalidEtagException(string jsEngineType)
         {
@@ -755,7 +755,7 @@ this.Value = another.Value;
             }
         }
 
-        [Theory(Skip = "TODO [shlomo] temporary switched off the test as it brokes the test session")]
+        [Theory]
         [JavaScriptEngineClassData]
         public async Task ShouldThrowConcurrencyExceptionIfNonCurrentEtagWasSpecified(string jsEngineType)
         {
@@ -880,9 +880,12 @@ this.Value = another.Value;
             }
         }
 
-        [Theory(Skip = "TODO [shlomo] temporary switched off the test as it brokes the test session")]
-        [JavaScriptEngineClassData]
-        public async Task PreventRecursion(string jsEngineType)
+        [Theory]
+        [InlineData(true, "Jint")]
+        [InlineData(false, "Jint")]
+        [InlineData(true, "V8")]
+        [InlineData(false, "V8")]
+        public async Task PreventRecursion(bool isNative, string jsEngineType)
         {
             using (var store = GetDocumentStore(Options.ForJavaScriptEngine(jsEngineType)))
             {
@@ -896,28 +899,42 @@ this.Value = another.Value;
                     await session.SaveChangesAsync();
                 }
 
-                await store.Operations.SendAsync(new PatchOperation("Item/1", null, new PatchRequest
+                var op = new PatchOperation("Item/1", null, new PatchRequest
                 {
-                    Script = @"
+                    Script = isNative ? 
+                        @"
 var a = {};
 var b = {};
 b.a = a;
 a.b = b;
-this.Test = this;
 this.Else = a;
+" : @"
+this.Test = this;
 ",
-                }));
-
-                using (var commands = store.Commands())
+                });
+                
+                if (jsEngineType == "Jint")
                 {
-                    dynamic resultDoc = await commands.GetAsync("Item/1");
-                    Assert.Equal("1", resultDoc.Value<string>("Value"));
+                    var e = await Assert.ThrowsAsync<JavaScriptException>(async () => await store.Operations.SendAsync(op));
+                    Assert.Contains("Cyclic reference detected", e.Message);
+                }
+                else
+                {
+                    await store.Operations.SendAsync(op);
+                    using (var commands = store.Commands())
+                    {
+                        dynamic resultDoc = await commands.GetAsync("Item/1");
+                        Assert.Equal("1", resultDoc.Value<string>("Value"));
 
-                    var patchedField = resultDoc.Test;
-                    Assert.Equal("1", patchedField.Value.ToString());
+                        if (!isNative)
+                        {
+                            var patchedField = resultDoc.Test;
+                            Assert.Equal("1", patchedField.Value.ToString());
 
-                    patchedField = patchedField.Test;
-                    Assert.True(patchedField == null);
+                            patchedField = patchedField.Test;
+                            Assert.True(patchedField == null);
+                        }
+                    }
                 }
             }
         }
