@@ -915,25 +915,35 @@ this.Test = this;
                 
                 if (jsEngineType == "Jint")
                 {
-                    var e = await Assert.ThrowsAsync<JavaScriptException>(async () => await store.Operations.SendAsync(op));
-                    Assert.Contains("Cyclic reference detected", e.Message);
+                    try
+                    {
+                        await store.Operations.SendAsync(op);
+                    }
+                    catch (Exception e)
+                    {
+                        var eType = ((object) e).GetType();
+                        Assert.Equal(nameof (JavaScriptException), eType.Name);
+                        Assert.Contains("Cyclic reference detected", e.Message);
+                        return;
+                    }
                 }
                 else
                 {
                     await store.Operations.SendAsync(op);
-                    using (var commands = store.Commands())
+                }
+
+                using (var commands = store.Commands())
+                {
+                    dynamic resultDoc = await commands.GetAsync("Item/1");
+                    Assert.Equal("1", resultDoc.Value<string>("Value"));
+
+                    if (!isNative)
                     {
-                        dynamic resultDoc = await commands.GetAsync("Item/1");
-                        Assert.Equal("1", resultDoc.Value<string>("Value"));
+                        var patchedField = resultDoc.Test;
+                        Assert.Equal("1", patchedField.Value.ToString());
 
-                        if (!isNative)
-                        {
-                            var patchedField = resultDoc.Test;
-                            Assert.Equal("1", patchedField.Value.ToString());
-
-                            patchedField = patchedField.Test;
-                            Assert.True(patchedField == null);
-                        }
+                        patchedField = patchedField.Test;
+                        Assert.True(patchedField == null);
                     }
                 }
             }
