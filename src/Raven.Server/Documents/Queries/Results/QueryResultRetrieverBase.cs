@@ -961,7 +961,8 @@ namespace Raven.Server.Documents.Queries.Results
                     {
                         using (var jsMetadataNew = engine.CreateObject())
                             jsMetadata.Set(jsMetadataNew);
-                        json.SetProperty(Constants.Documents.Metadata.Key, jsMetadata);
+                        InternalHandle jsMetadata1 = jsMetadata;
+                        json.SetProperty(Constants.Documents.Metadata.Key, new InternalHandle(ref jsMetadata1, true));
                     }
 
                     jsMetadata.SetProperty(Constants.Documents.Metadata.Projection, engine.CreateValue(true));
