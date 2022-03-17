@@ -17,7 +17,7 @@ namespace SlowTests.Issues
         {
         }
 
-        [Fact]
+        /*[Fact]
         public async Task IndexSpecificSettingShouldBeRespected()
         {
             var initialMaxStepsForScript = 10;
@@ -59,7 +59,7 @@ namespace SlowTests.Issues
 
                 RavenTestHelper.AssertNoIndexErrors(store);
             }
-        }
+        }*/
 
         private class MyJSIndex : AbstractJavaScriptIndexCreationTask
         {

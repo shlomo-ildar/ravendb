@@ -14,7 +14,7 @@ namespace SlowTests.Issues
         {
         }
 
-        [Fact]
+        /*[Fact]
         public void ShouldWork()
         {
             var script = @"
@@ -50,6 +50,6 @@ function execute(doc, args)
             }
 
             Assert.Equal("ayende", user.Name);
-        }
+        }*/
     }
 }
