@@ -9,6 +9,7 @@ using Raven.Client.Documents.Indexes.TimeSeries;
 using Raven.Client.Documents.Queries;
 using Raven.Client.Documents.Session;
 using Raven.Client.Exceptions;
+using Raven.Client.Exceptions.Documents.Patching;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -335,8 +336,38 @@ namespace SlowTests.Issues
             }
         }
 
-        [Fact]
-        public void Can_Use_Projection_Behavior_Query_JavaScript()
+        [Theory]
+        [InlineData(1)]
+        [InlineData(2)]
+        [InlineData(3)]
+        [InlineData(4)]
+        [InlineData(5)]
+        [InlineData(6)]
+        [InlineData(7)]
+        [InlineData(8)]
+        [InlineData(9)]
+        [InlineData(10)]
+        [InlineData(11)]
+        [InlineData(12)]
+        [InlineData(13)]
+        [InlineData(14)]
+        [InlineData(15)]
+        [InlineData(16)]
+        [InlineData(17)]
+        [InlineData(18)]
+        [InlineData(19)]
+        [InlineData(20)]
+        [InlineData(21)]
+        [InlineData(22)]
+        [InlineData(23)]
+        [InlineData(24)]
+        [InlineData(25)]
+        [InlineData(26)]
+        [InlineData(27)]
+        [InlineData(28)]
+        [InlineData(29)]
+        [InlineData(30)]
+        public void Can_Use_Projection_Behavior_Query_JavaScript(int dummy)
         {
             using (var store = GetDocumentStore())
             {
@@ -433,7 +464,7 @@ namespace SlowTests.Issues
 
                     Assert.Null(fax.Fax);
 
-                    Assert.Throws<InvalidQueryException>(() =>
+                    Assert.Throws<JavaScriptException>(() =>
                     {
                         session.Advanced
                             .RawQuery<ClassWithFax>("from index 'Companies/ByName' as c select { Fax : c.Fax }")
@@ -451,7 +482,7 @@ namespace SlowTests.Issues
                     Assert.NotNull(fax);
                     Assert.Equal("123", fax.Fax);
 
-                    Assert.Throws<InvalidQueryException>(() =>
+                    Assert.Throws<JavaScriptException>(() =>
                     {
                         session.Advanced
                             .RawQuery<Company_WithExtraField>("from index 'Companies/ByName' as c select { ExtraField : c.ExtraField }")
@@ -492,7 +523,7 @@ namespace SlowTests.Issues
                     Assert.Equal("HR_Stored", values.Name);
                     Assert.Equal(null, values.Fax);
 
-                    Assert.Throws<InvalidQueryException>(() =>
+                    Assert.Throws<JavaScriptException>(() =>
                     {
                         values = session.Advanced
                             .RawQuery<ClassWithNameAndFax>("from index 'Companies/ByName' as c select { Name : c.Name, Fax: c.Fax }")
@@ -511,7 +542,7 @@ namespace SlowTests.Issues
                     Assert.Equal("HR", values.Name);
                     Assert.Equal("123", values.Fax);
 
-                    Assert.Throws<InvalidQueryException>(() =>
+                    Assert.Throws<JavaScriptException>(() =>
                     {
                         session.Advanced
                             .RawQuery<Company_WithExtraField>("from index 'Companies/ByName' as c select { Name : c.Name, ExtraField: c.ExtraField }")
