@@ -61,7 +61,7 @@ namespace Raven.Server.Documents.Indexes.Static
                 }
 
 #if DEBUG
-                _engine.MakeSnapshot("map");
+                _engine.MakeMemorySnapshot("map");
 #endif
 
                 if (jsItem.IsBinder)

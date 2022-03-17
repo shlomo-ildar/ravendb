@@ -185,7 +185,7 @@ namespace Raven.Server.Documents.Indexes.Static
                         using (var jsGrouping = ConstructGrouping(item))
                         {
 #if DEBUG
-                            Engine.MakeSnapshot("reduce");
+                            Engine.MakeMemorySnapshot("reduce");
 #endif
 
                             bool res = false;
